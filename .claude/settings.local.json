@@ -19,7 +19,12 @@
       "Bash(cmd.exe /c 'where gh')",
       "Bash(winget list:*)",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(xargs head:*)",
+      "Bash(xargs cat:*)",
+      "Bash(find /d/Desktop/my_projects/Blog -maxdepth 2 -type d -not -path */public/* -not -path */.git/* -not -path */.github/*)",
+      "Bash(hugo --gc --minify)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
