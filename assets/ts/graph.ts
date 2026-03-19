@@ -1,35 +1,57 @@
 /**
  * Interactive Mind-Map Graph Navigation
  * D3.js force-directed layout with glassmorphism nodes
- * Features: hierarchical expansion, focus/zoom, state persistence
+ * Features: hierarchical folder expansion, focus/zoom, state persistence
  */
 
 declare const d3: any;
 
-interface PostData {
+interface PageData {
+    path: string;   // e.g. "Computer Science/大模型应用开发/2"
     title: string;
     url: string;
     tags?: string[];
 }
 
-interface SectionData {
-    name: string;
-    children: SectionData[];
-    posts: PostData[];
-}
-
 interface TagData {
     name: string;
     count: number;
-    posts: PostData[];
+    posts: { title: string; url: string }[];
 }
 
 interface GraphData {
     center: { name: string; github: string; bilibili: string };
-    categories: SectionData[];
+    pages: PageData[];
     tags: TagData[];
 }
 
+// ---- Tree node built from flat paths ----
+interface TreeNode {
+    name: string;
+    children: Map<string, TreeNode>;
+    pages: PageData[];
+}
+
+function buildTree(pages: PageData[]): TreeNode {
+    const root: TreeNode = { name: '', children: new Map(), pages: [] };
+
+    for (const page of pages) {
+        const parts = page.path.split('/');
+        let current = root;
+
+        for (const part of parts) {
+            if (!current.children.has(part)) {
+                current.children.set(part, { name: part, children: new Map(), pages: [] });
+            }
+            current = current.children.get(part)!;
+        }
+        current.pages.push(page);
+    }
+
+    return root;
+}
+
+// ---- Graph types ----
 interface GraphNode {
     id: string;
     label: string;
@@ -39,8 +61,8 @@ interface GraphNode {
     bilibili?: string;
     parentId?: string;
     expanded?: boolean;
-    sectionRef?: SectionData;
-    sectionPath?: string;   // e.g. "Computer Science/后端开发"
+    treeRef?: TreeNode;
+    treePath?: string;
     x?: number;
     y?: number;
     fx?: number | null;
@@ -56,14 +78,14 @@ interface GraphLink {
 const STATE_KEY = 'graph-expanded-paths';
 const FOCUS_KEY = 'graph-focus-path';
 
-function saveGraphState(expandedPaths: string[], focusPath: string) {
+function saveState(expandedPaths: string[], focusPath: string) {
     try {
         sessionStorage.setItem(STATE_KEY, JSON.stringify(expandedPaths));
         sessionStorage.setItem(FOCUS_KEY, focusPath);
     } catch {}
 }
 
-function loadGraphState(): { expandedPaths: string[]; focusPath: string } | null {
+function loadState(): { expandedPaths: string[]; focusPath: string } | null {
     try {
         const paths = sessionStorage.getItem(STATE_KEY);
         const focus = sessionStorage.getItem(FOCUS_KEY) || '';
@@ -72,7 +94,7 @@ function loadGraphState(): { expandedPaths: string[]; focusPath: string } | null
     return null;
 }
 
-function clearGraphState() {
+function clearState() {
     try {
         sessionStorage.removeItem(STATE_KEY);
         sessionStorage.removeItem(FOCUS_KEY);
@@ -85,6 +107,7 @@ function initGraph() {
     if (!dataEl) return;
 
     const data: GraphData = JSON.parse(dataEl.textContent || '{}');
+    const tree = buildTree(data.pages);
     const container = document.getElementById('graph-container')!;
     const svg = d3.select('#graph-svg');
 
@@ -100,11 +123,10 @@ function initGraph() {
     let activeNodes: any;
     let activeLinks: any;
     let nodeIdCounter = 0;
-    let focusedNodeId: string | null = null;  // currently focused node
+    let focusedNodeId: string | null = null;
 
     // SVG groups
     const defs = svg.append('defs');
-
     const filter = defs.append('filter').attr('id', 'node-shadow')
         .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
     filter.append('feDropShadow')
@@ -115,10 +137,6 @@ function initGraph() {
     const nodeGroup = svg.append('g').attr('class', 'graph-nodes');
 
     // ---- Focus helpers ----
-    function getDirectChildIds(parentId: string): string[] {
-        return nodes.filter(n => n.parentId === parentId).map(n => n.id);
-    }
-
     function isFocused(d: GraphNode): boolean {
         if (!focusedNodeId) return d.type === 'center' || d.parentId === 'center' || !d.parentId;
         return d.id === focusedNodeId;
@@ -133,63 +151,62 @@ function initGraph() {
         return !isFocused(d) && !isFocusChild(d);
     }
 
-    // ---- Node dimensions based on focus ----
     function getNodeScale(d: GraphNode): number {
-        if (isFocused(d)) return 1.0;
-        if (isFocusChild(d)) return 1.0;
         if (!focusedNodeId) return 1.0;
-        return 0.65;
+        if (isFocused(d) || isFocusChild(d)) return 1.0;
+        return 0.6;
     }
 
+    // ---- Node dimensions ----
     function getNodeWidth(d: GraphNode): number {
-        const base = d.type === 'center' ? 140 : (d.type === 'category' || d.type === 'tag') ? 160 : 150;
-        return base;
+        if (d.type === 'center') return 160;
+        if (d.type === 'category' || d.type === 'tag') return 180;
+        return 170;
     }
 
     function getNodeHeight(d: GraphNode): number {
-        const base = d.type === 'center' ? 80 : (d.type === 'category' || d.type === 'tag') ? 50 : 42;
-        return base;
+        if (d.type === 'center') return 90;
+        if (d.type === 'category' || d.type === 'tag') return 56;
+        return 48;
     }
 
-    // ---- Apply focus styling to all nodes ----
+    // ---- Check if a tree node has expandable content ----
+    function hasContent(treeNode: TreeNode): boolean {
+        return treeNode.children.size > 0 || treeNode.pages.length > 0;
+    }
+
+    // ---- Apply focus styling ----
     function applyFocusStyles() {
         nodeGroup.selectAll('.graph-node-group').each(function(this: any, d: GraphNode) {
-            const el = d3.select(this);
-            const innerDiv = el.select('.graph-node');
+            const innerDiv = d3.select(this).select('.graph-node');
             if (innerDiv.empty()) return;
 
             const scale = getNodeScale(d);
-            const bg = isBackground(d) && focusedNodeId;
+            const bg = isBackground(d) && !!focusedNodeId;
             const node = innerDiv.node() as HTMLElement;
 
             node.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
             node.style.transform = `scale(${scale})`;
-            node.style.opacity = bg ? '0.45' : '1';
+            node.style.opacity = bg ? '0.4' : '1';
         });
     }
 
-    // ---- Get section path for a node ----
-    function buildSectionPath(sectionRef: SectionData, parentPath: string): string {
-        return parentPath ? `${parentPath}/${sectionRef.name}` : sectionRef.name;
-    }
-
-    // ---- Collect all expanded section paths ----
+    // ---- Get expanded paths ----
     function getExpandedPaths(): string[] {
         return nodes
-            .filter(n => n.type === 'category' && n.expanded && n.sectionPath)
-            .map(n => n.sectionPath!);
+            .filter(n => n.type === 'category' && n.expanded && n.treePath)
+            .map(n => n.treePath!);
     }
 
-    // ---- Persist state before navigation ----
     function persistState() {
         const paths = getExpandedPaths();
         const focus = focusedNodeId
-            ? (nodes.find(n => n.id === focusedNodeId)?.sectionPath || '')
+            ? (nodes.find(n => n.id === focusedNodeId)?.treePath || '')
             : '';
-        saveGraphState(paths, focus);
+        saveState(paths, focus);
     }
 
-    // ---- Build main view data ----
+    // ---- Build main view ----
     function buildMainData() {
         nodes = [];
         links = [];
@@ -204,49 +221,23 @@ function initGraph() {
             bilibili: data.center.bilibili,
         });
 
-        data.categories.forEach((cat) => {
-            const catId = `sec-${nodeIdCounter++}`;
+        // Top-level folders from the tree
+        tree.children.forEach((child, name) => {
+            const catId = `node-${nodeIdCounter++}`;
             nodes.push({
                 id: catId,
-                label: cat.name,
+                label: name,
                 type: 'category',
                 expanded: false,
-                sectionRef: cat,
-                sectionPath: cat.name,
+                treeRef: child,
+                treePath: name,
                 parentId: 'center',
             });
             links.push({ source: 'center', target: catId });
         });
     }
 
-    // ---- Build tags view data ----
-    function buildTagsData() {
-        nodes = [];
-        links = [];
-        nodeIdCounter = 0;
-        focusedNodeId = null;
-
-        nodes.push({
-            id: 'center',
-            label: data.center.name,
-            type: 'center',
-            github: data.center.github,
-            bilibili: data.center.bilibili,
-        });
-
-        data.tags.forEach((tag) => {
-            const tagId = `tag-${nodeIdCounter++}`;
-            nodes.push({
-                id: tagId,
-                label: tag.name,
-                type: 'tag',
-                parentId: 'center',
-            });
-            links.push({ source: 'center', target: tagId });
-        });
-    }
-
-    // ---- Update indicator on node ----
+    // ---- Update indicator ----
     function updateIndicator(nodeId: string, expanded: boolean) {
         nodeGroup.selectAll('.graph-node-group').each(function(this: any, d: any) {
             if (d.id === nodeId) {
@@ -258,64 +249,63 @@ function initGraph() {
         });
     }
 
-    // ---- Collect all descendant node IDs ----
+    // ---- Collect descendants ----
     function collectDescendantIds(parentId: string): string[] {
         const ids: string[] = [];
-        const directChildren = nodes.filter(n => n.parentId === parentId);
-        for (const child of directChildren) {
+        for (const child of nodes.filter(n => n.parentId === parentId)) {
             ids.push(child.id);
             ids.push(...collectDescendantIds(child.id));
         }
         return ids;
     }
 
-    // ---- Expand a section without updating graph (for state restore) ----
-    function expandSectionSilent(nodeId: string) {
+    // ---- Expand a section silently (for state restore) ----
+    function expandSilent(nodeId: string) {
         const node = nodes.find(n => n.id === nodeId);
-        if (!node || !node.sectionRef || node.expanded) return;
+        if (!node || !node.treeRef || node.expanded) return;
 
-        const section = node.sectionRef;
+        const treeNode = node.treeRef;
 
-        if (section.children.length > 0) {
-            section.children.forEach((child) => {
-                const childId = `sec-${nodeIdCounter++}`;
-                const childPath = buildSectionPath(child, node.sectionPath || '');
-                nodes.push({
-                    id: childId,
-                    label: child.name,
-                    type: 'category',
-                    expanded: false,
-                    sectionRef: child,
-                    sectionPath: childPath,
-                    parentId: nodeId,
-                    x: width / 2 + (Math.random() - 0.5) * 100,
-                    y: height / 2 + (Math.random() - 0.5) * 100,
-                });
-                links.push({ source: nodeId, target: childId });
+        // Add child folders
+        treeNode.children.forEach((child, name) => {
+            const childId = `node-${nodeIdCounter++}`;
+            const childPath = node.treePath ? `${node.treePath}/${name}` : name;
+            nodes.push({
+                id: childId,
+                label: name,
+                type: 'category',
+                expanded: false,
+                treeRef: child,
+                treePath: childPath,
+                parentId: nodeId,
+                x: width / 2 + (Math.random() - 0.5) * 100,
+                y: height / 2 + (Math.random() - 0.5) * 100,
             });
-        }
-        if (section.posts.length > 0) {
-            section.posts.forEach((post) => {
-                const postId = `post-${nodeIdCounter++}`;
-                nodes.push({
-                    id: postId,
-                    label: post.title,
-                    type: 'post',
-                    url: post.url,
-                    parentId: nodeId,
-                    x: width / 2 + (Math.random() - 0.5) * 100,
-                    y: height / 2 + (Math.random() - 0.5) * 100,
-                });
-                links.push({ source: nodeId, target: postId });
+            links.push({ source: nodeId, target: childId });
+        });
+
+        // Add direct pages (files in this folder)
+        treeNode.pages.forEach((page) => {
+            const postId = `post-${nodeIdCounter++}`;
+            nodes.push({
+                id: postId,
+                label: page.title,
+                type: 'post',
+                url: page.url,
+                parentId: nodeId,
+                x: width / 2 + (Math.random() - 0.5) * 100,
+                y: height / 2 + (Math.random() - 0.5) * 100,
             });
-        }
+            links.push({ source: nodeId, target: postId });
+        });
+
         node.expanded = true;
     }
 
-    // ---- Toggle a section node ----
+    // ---- Toggle section ----
     function toggleSection(nodeId: string) {
         const node = nodes.find(n => n.id === nodeId);
-        if (!node || !node.sectionRef) return;
+        if (!node || !node.treeRef) return;
 
         if (node.expanded) {
             // Collapse
@@ -327,61 +317,15 @@ function initGraph() {
                 return !removeIds.includes(sid) && !removeIds.includes(tid);
             });
             node.expanded = false;
-
-            // Focus moves to parent
             focusedNodeId = node.parentId || null;
             if (focusedNodeId === 'center') focusedNodeId = null;
         } else {
-            // Expand
-            expandSectionSilent(nodeId);
-
-            // Focus on this node
+            expandSilent(nodeId);
             focusedNodeId = nodeId;
         }
 
         updateGraph(false);
         updateIndicator(nodeId, node.expanded!);
-        applyFocusStyles();
-    }
-
-    // ---- Toggle tag expansion ----
-    function toggleTag(tagId: string) {
-        const tagNode = nodes.find(n => n.id === tagId);
-        if (!tagNode) return;
-
-        const tag = data.tags.find(t => t.name === tagNode.label);
-        if (!tag) return;
-
-        if ((tagNode as any).expanded) {
-            const removeIds = collectDescendantIds(tagId);
-            nodes = nodes.filter(n => !removeIds.includes(n.id));
-            links = links.filter(l => {
-                const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
-                const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
-                return !removeIds.includes(sid) && !removeIds.includes(tid);
-            });
-            (tagNode as any).expanded = false;
-            focusedNodeId = null;
-        } else {
-            tag.posts.forEach((post) => {
-                const postId = `tpost-${nodeIdCounter++}`;
-                nodes.push({
-                    id: postId,
-                    label: post.title,
-                    type: 'post',
-                    url: post.url,
-                    parentId: tagId,
-                    x: (tagNode.x || width / 2) + (Math.random() - 0.5) * 60,
-                    y: (tagNode.y || height / 2) + (Math.random() - 0.5) * 60,
-                });
-                links.push({ source: tagId, target: postId });
-            });
-            (tagNode as any).expanded = true;
-            focusedNodeId = tagId;
-        }
-
-        updateGraph(false);
-        updateIndicator(tagId, (tagNode as any).expanded);
         applyFocusStyles();
     }
 
@@ -427,7 +371,6 @@ function initGraph() {
             .attr('class', (d: GraphNode) => `graph-node-group graph-node-group--${d.type}`)
             .style('cursor', (d: GraphNode) => d.type === 'post' ? 'pointer' : 'grab');
 
-        // foreignObject for HTML rendering
         nodeEnter.append('foreignObject')
             .attr('width', (d: GraphNode) => getNodeWidth(d))
             .attr('height', (d: GraphNode) => getNodeHeight(d))
@@ -443,11 +386,9 @@ function initGraph() {
                     socialHtml += '</div>';
                     return `<div class="graph-node__label">${d.label}</div>${socialHtml}`;
                 }
-                if (d.type === 'category' || d.type === 'tag') {
-                    const hasChildren = d.sectionRef
-                        ? (d.sectionRef.children.length > 0 || d.sectionRef.posts.length > 0)
-                        : true;
-                    const indicator = hasChildren ? ((d as any).expanded ? '−' : '+') : '';
+                if (d.type === 'category') {
+                    const expandable = d.treeRef ? hasContent(d.treeRef) : false;
+                    const indicator = expandable ? (d.expanded ? '−' : '+') : '';
                     return `<div class="graph-node__label">${d.label}${indicator ? `<span class="graph-node__indicator">${indicator}</span>` : ''}</div>`;
                 }
                 return `<div class="graph-node__label">${d.label}</div>`;
@@ -464,10 +405,10 @@ function initGraph() {
                 .style('transition', `transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms, opacity 0.4s ease ${delay}ms`);
             setTimeout(() => {
                 const scale = getNodeScale(d);
-                const bg = isBackground(d) && focusedNodeId;
+                const bg = isBackground(d) && !!focusedNodeId;
                 innerDiv
                     .style('transform', `scale(${scale})`)
-                    .style('opacity', bg ? '0.45' : '1');
+                    .style('opacity', bg ? '0.4' : '1');
             }, 50);
         });
 
@@ -486,8 +427,6 @@ function initGraph() {
                     window.location.href = d.url;
                 } else if (d.type === 'category') {
                     toggleSection(d.id);
-                } else if (d.type === 'tag') {
-                    toggleTag(d.id);
                 }
             });
         });
@@ -496,67 +435,49 @@ function initGraph() {
         const drag = d3.drag()
             .on('start', (event: any, d: any) => {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
+                d.fx = d.x; d.fy = d.y;
             })
             .on('drag', (event: any, d: any) => {
-                d.fx = event.x;
-                d.fy = event.y;
+                d.fx = event.x; d.fy = event.y;
             })
             .on('end', (event: any, d: any) => {
                 if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
+                d.fx = null; d.fy = null;
             });
 
         activeNodes.call(drag);
 
-        // Update simulation
+        // Simulation
         if (simulation) simulation.stop();
 
-        // Determine the focus center point
-        const focusNode = focusedNodeId ? nodes.find(n => n.id === focusedNodeId) : null;
         const cx = width / 2;
         const cy = height / 2;
 
         simulation = d3.forceSimulation(nodes)
             .force('charge', d3.forceManyBody().strength((d: GraphNode) => {
-                if (isFocused(d)) return -500;
-                if (isFocusChild(d)) return -350;
-                if (d.type === 'center' && !focusedNodeId) return -500;
-                if ((d.type === 'category' || d.type === 'tag') && !focusedNodeId) return -350;
+                if (isFocused(d)) return -600;
+                if (isFocusChild(d)) return -400;
+                if (d.type === 'center' && !focusedNodeId) return -600;
+                if (!focusedNodeId) return -400;
                 return -150;
             }))
             .force('link', d3.forceLink(links).id((d: any) => d.id).distance((l: any) => {
                 const src = typeof l.source === 'string' ? nodes.find(n => n.id === l.source) : l.source;
-                const tgt = typeof l.target === 'string' ? nodes.find(n => n.id === l.target) : l.target;
-                // Focused node to its children: standard distance
-                if (src && src.id === focusedNodeId) return 140;
-                if (tgt && tgt.id === focusedNodeId) return 140;
-                // Center to categories (no focus)
-                if (!focusedNodeId && src && src.type === 'center') return 180;
-                return 120;
+                if (src && src.id === focusedNodeId) return 160;
+                if (!focusedNodeId && src && src.type === 'center') return 200;
+                return 130;
             }).strength(0.8))
             .force('collision', d3.forceCollide().radius((d: GraphNode) => {
                 const s = getNodeScale(d);
-                return Math.max(getNodeWidth(d), getNodeHeight(d)) / 2 * s + 10;
+                return Math.max(getNodeWidth(d), getNodeHeight(d)) / 2 * s + 12;
             }))
-            .force('x', d3.forceX((d: GraphNode) => {
-                // Pull focused node to center
-                if (focusedNodeId && d.id === focusedNodeId) return cx;
-                if (isFocusChild(d)) return cx;
-                return cx;
-            }).strength((d: GraphNode) => {
+            .force('x', d3.forceX((d: GraphNode) => cx).strength((d: GraphNode) => {
                 if (focusedNodeId && d.id === focusedNodeId) return 0.3;
                 if (isFocusChild(d)) return 0.05;
                 if (isBackground(d) && focusedNodeId) return 0.02;
                 return 0.05;
             }))
-            .force('y', d3.forceY((d: GraphNode) => {
-                if (focusedNodeId && d.id === focusedNodeId) return cy;
-                if (isFocusChild(d)) return cy;
-                return cy;
-            }).strength((d: GraphNode) => {
+            .force('y', d3.forceY((d: GraphNode) => cy).strength((d: GraphNode) => {
                 if (focusedNodeId && d.id === focusedNodeId) return 0.3;
                 if (isFocusChild(d)) return 0.05;
                 if (isBackground(d) && focusedNodeId) return 0.02;
@@ -575,32 +496,25 @@ function initGraph() {
                 .attr('x2', (d: any) => d.target.x)
                 .attr('y2', (d: any) => d.target.y);
         }
-
         if (activeNodes) {
-            activeNodes
-                .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+            activeNodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
         }
     }
 
     // ---- Mouse parallax ----
-    let parallaxEnabled = !('ontouchstart' in window);
-    if (parallaxEnabled) {
+    if (!('ontouchstart' in window)) {
         container.addEventListener('mousemove', (e) => {
-            const mcx = width / 2;
-            const mcy = height / 2;
-            const dx = (e.clientX - mcx) / mcx;
-            const dy = (e.clientY - mcy) / mcy;
+            const dx = (e.clientX - width / 2) / (width / 2);
+            const dy = (e.clientY - height / 2) / (height / 2);
             svg.style('transform', `translate(${dx * -5}px, ${dy * -5}px)`);
         });
-
         container.addEventListener('mouseleave', () => {
             svg.transition().duration(600).style('transform', 'translate(0px, 0px)');
         });
     }
 
-    // ---- View switching ----
+    // ---- Back button ----
     const backBtn = document.getElementById('graph-back-btn');
-
     backBtn?.addEventListener('click', () => {
         buildMainData();
         updateGraph(true);
@@ -612,7 +526,6 @@ function initGraph() {
         width = container.clientWidth || window.innerWidth;
         height = container.clientHeight || window.innerHeight;
         svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
-
         if (simulation) {
             simulation.force('x', d3.forceX(width / 2).strength(0.05));
             simulation.force('y', d3.forceY(height / 2).strength(0.05));
@@ -620,39 +533,32 @@ function initGraph() {
         }
     });
 
-    // ---- Restore state or fresh init ----
+    // ---- Restore or init ----
     function restoreState() {
-        const saved = loadGraphState();
+        const saved = loadState();
         if (!saved || saved.expandedPaths.length === 0) {
             buildMainData();
             updateGraph(true);
             return;
         }
 
-        clearGraphState();
+        clearState();
         buildMainData();
 
-        // Sort paths by depth so parents expand before children
+        // Sort by depth so parents expand first
         const sortedPaths = [...saved.expandedPaths].sort((a, b) => a.split('/').length - b.split('/').length);
 
         for (const path of sortedPaths) {
-            const node = nodes.find(n => n.sectionPath === path && n.type === 'category');
-            if (node) {
-                expandSectionSilent(node.id);
-            }
+            const node = nodes.find(n => n.treePath === path && n.type === 'category');
+            if (node) expandSilent(node.id);
         }
 
-        // Restore focus
         if (saved.focusPath) {
-            const focusNode = nodes.find(n => n.sectionPath === saved.focusPath);
-            if (focusNode) {
-                focusedNodeId = focusNode.id;
-            }
+            const focusNode = nodes.find(n => n.treePath === saved.focusPath);
+            if (focusNode) focusedNodeId = focusNode.id;
         }
 
         updateGraph(false);
-
-        // Update all indicators
         nodes.filter(n => n.expanded).forEach(n => updateIndicator(n.id, true));
         applyFocusStyles();
     }

@@ -33,15 +33,17 @@
     </svg>
 </button>
 
-<!-- Graph data from Hugo (dynamically generated from content directory) -->
-{{- $categories := slice -}}
+<!-- Graph data from Hugo (flat page list with paths, tree built in JS) -->
+{{- $pages := slice -}}
 {{- $postSection := .Site.GetPage "section" "post" -}}
 {{- with $postSection -}}
-    {{- range .Sections -}}
-        {{- if or (gt (len .Sections) 0) (gt (len .RegularPagesRecursive) 0) -}}
-            {{- $cat := partial "section-tree.html" . -}}
-            {{- $categories = $categories | append $cat -}}
-        {{- end -}}
+    {{- range .RegularPagesRecursive -}}
+        {{- $dir := .File.Dir | replaceRE "\\\\" "/" -}}
+        {{- $dir = strings.TrimPrefix "post/" $dir -}}
+        {{- $dir = strings.TrimSuffix "/" $dir -}}
+        {{- $title := .Title -}}
+        {{- if not $title }}{{ $title = .File.ContentBaseName }}{{ end -}}
+        {{- $pages = $pages | append (dict "path" $dir "title" $title "url" .RelPermalink "tags" (default (slice) .Params.tags)) -}}
     {{- end -}}
 {{- end -}}
 {{- $tags := slice -}}
@@ -52,7 +54,7 @@
     {{- end -}}
     {{- $tags = $tags | append (dict "name" $name "count" (len $taxonomy.Pages) "posts" $tagPosts) -}}
 {{- end -}}
-{{- $graphData := dict "center" (dict "name" "Aries" "github" "https://github.com/kikoiio" "bilibili" "") "categories" $categories "tags" $tags -}}
+{{- $graphData := dict "center" (dict "name" "Aries" "github" "https://github.com/kikoiio" "bilibili" "") "pages" $pages "tags" $tags -}}
 <div id="graph-data" style="display:none;">
     {{- $graphData | jsonify | safeHTML -}}
 </div>
