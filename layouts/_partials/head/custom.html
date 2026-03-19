@@ -1,12 +1,24 @@
-<!-- Modern Font: Inter -->
+<!-- Modern Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
 
-<!-- Smooth scroll -->
+<!-- Apply saved theme BEFORE render to prevent flash -->
+<script>
+(function() {
+    var key = 'BlogThemeState';
+    var saved;
+    try { saved = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+    if (!saved) saved = { style: 'minimalist', color: 'teal' };
+
+    var theme = saved.style === 'cyberpunk' ? 'cyberpunk' : ('mini-' + saved.color);
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.dataset.scheme = 'dark';
+})();
+</script>
+
 <style>
   html { scroll-behavior: smooth; }
-  /* Prevent FOUC for animated elements */
   .reveal { opacity: 0; transform: translateY(30px); }
 </style>
