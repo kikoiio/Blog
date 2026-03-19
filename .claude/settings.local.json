@@ -40,7 +40,8 @@
       "Bash(taskkill //F //IM hugo.exe)",
       "Bash(hugo list:*)",
       "Bash(hugo --templateMetrics)",
-      "Bash(hugo --printPathWarnings)"
+      "Bash(hugo --printPathWarnings)",
+      "Bash(find /d/Desktop/my_projects/Blog/content -type f -name *.md)"
     ]
   }
 }

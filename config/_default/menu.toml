@@ -1,30 +1,3 @@
-[[main]]
-    identifier = "home"
-    name       = "首页"
-    url        = "/"
-    weight     = 1
-
-    [main.params]
-        icon = "home"
-
-[[main]]
-    identifier = "categories"
-    name       = "分类"
-    url        = "/categories/"
-    weight     = 2
-
-    [main.params]
-        icon = "categories"
-
-[[main]]
-    identifier = "tags"
-    name       = "标签"
-    url        = "/tags/"
-    weight     = 3
-
-    [main.params]
-        icon = "tag"
-
 [[social]]
     identifier = "github"
     name       = "GitHub"

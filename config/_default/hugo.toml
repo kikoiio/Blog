@@ -5,6 +5,8 @@ defaultContentLanguage = "zh-cn"
 hasCJKLanguage         = true
 theme                  = "hugo-theme-stack"
 
+disableKinds = ["taxonomy", "term"]
+
 [pagination]
     pagerSize = 10
 
