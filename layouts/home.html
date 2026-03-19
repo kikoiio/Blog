@@ -25,14 +25,6 @@
     <svg id="graph-svg"></svg>
 </div>
 
-<!-- Tags button -->
-<button id="tags-view-btn" class="graph-float-btn" title="Tags">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
-        <line x1="7" y1="7" x2="7.01" y2="7"/>
-    </svg>
-</button>
-
 <!-- Back button (hidden by default) -->
 <button id="graph-back-btn" class="graph-float-btn graph-float-btn--back" style="display:none;" title="返回">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -42,65 +34,28 @@
 </button>
 
 <!-- Graph data from Hugo (dynamically generated from content directory) -->
-<script id="graph-data" type="application/json">
-{
-    "center": {
-        "name": "Aries",
-        "github": "https://github.com/kikoiio",
-        "bilibili": ""
-    },
-    "categories": [
-        {{- $postSection := .Site.GetPage "section" "post" -}}
-        {{- $first := true -}}
-        {{- with $postSection -}}
-            {{- range .Sections -}}
-                {{- $pages := .RegularPagesRecursive -}}
-                {{- if gt (len $pages) 0 -}}
-                    {{- if not $first }},{{ end -}}
-                    {{- $first = false -}}
-                    {
-                        "name": "{{ .Title }}",
-                        "posts": [
-                            {{- $pfirst := true -}}
-                            {{- range $pages -}}
-                                {{- if not $pfirst }},{{ end -}}
-                                {{- $pfirst = false -}}
-                                {
-                                    "title": "{{ with .Title }}{{ . }}{{ else }}{{ .File.ContentBaseName }}{{ end }}",
-                                    "url": "{{ .RelPermalink }}",
-                                    "tags": {{ with .Params.tags }}{{ . | jsonify }}{{ else }}[]{{ end }}
-                                }
-                            {{- end -}}
-                        ]
-                    }
-                {{- end -}}
-            {{- end -}}
+{{- $categories := slice -}}
+{{- $postSection := .Site.GetPage "section" "post" -}}
+{{- with $postSection -}}
+    {{- range .Sections -}}
+        {{- if or (gt (len .Sections) 0) (gt (len .RegularPagesRecursive) 0) -}}
+            {{- $cat := partial "section-tree.html" . -}}
+            {{- $categories = $categories | append $cat -}}
         {{- end -}}
-    ],
-    "tags": [
-        {{- $tfirst := true -}}
-        {{- range $name, $taxonomy := .Site.Taxonomies.tags -}}
-            {{- if not $tfirst }},{{ end -}}
-            {{- $tfirst = false -}}
-            {
-                "name": "{{ $name }}",
-                "count": {{ len $taxonomy.Pages }},
-                "posts": [
-                    {{- $tpfirst := true -}}
-                    {{- range $page := $taxonomy.Pages -}}
-                        {{- if not $tpfirst }},{{ end -}}
-                        {{- $tpfirst = false -}}
-                        {
-                            "title": "{{ $page.Title }}",
-                            "url": "{{ $page.RelPermalink }}"
-                        }
-                    {{- end -}}
-                ]
-            }
-        {{- end -}}
-    ]
-}
-</script>
+    {{- end -}}
+{{- end -}}
+{{- $tags := slice -}}
+{{- range $name, $taxonomy := .Site.Taxonomies.tags -}}
+    {{- $tagPosts := slice -}}
+    {{- range $taxonomy.Pages -}}
+        {{- $tagPosts = $tagPosts | append (dict "title" .Title "url" .RelPermalink) -}}
+    {{- end -}}
+    {{- $tags = $tags | append (dict "name" $name "count" (len $taxonomy.Pages) "posts" $tagPosts) -}}
+{{- end -}}
+{{- $graphData := dict "center" (dict "name" "Aries" "github" "https://github.com/kikoiio" "bilibili" "") "categories" $categories "tags" $tags -}}
+<div id="graph-data" style="display:none;">
+    {{- $graphData | jsonify | safeHTML -}}
+</div>
 
 {{/* Build and include graph script */}}
 {{ $opts := dict "minify" hugo.IsProduction }}

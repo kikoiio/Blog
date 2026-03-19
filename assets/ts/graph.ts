@@ -11,8 +11,9 @@ interface PostData {
     tags?: string[];
 }
 
-interface CategoryData {
+interface SectionData {
     name: string;
+    children: SectionData[];
     posts: PostData[];
 }
 
@@ -24,7 +25,7 @@ interface TagData {
 
 interface GraphData {
     center: { name: string; github: string; bilibili: string };
-    categories: CategoryData[];
+    categories: SectionData[];
     tags: TagData[];
 }
 
@@ -37,6 +38,7 @@ interface GraphNode {
     bilibili?: string;
     parentId?: string;
     expanded?: boolean;
+    sectionRef?: SectionData;
     x?: number;
     y?: number;
     fx?: number | null;
@@ -63,12 +65,12 @@ function initGraph() {
     svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
 
     // State
-    let currentView: 'main' | 'tags' = 'main';
     let nodes: GraphNode[] = [];
     let links: GraphLink[] = [];
     let simulation: any;
-    let activeNodes: any;  // d3 selection of current (non-exiting) nodes
-    let activeLinks: any;  // d3 selection of current (non-exiting) links
+    let activeNodes: any;
+    let activeLinks: any;
+    let nodeIdCounter = 0;
 
     // SVG groups
     const defs = svg.append('defs');
@@ -87,6 +89,7 @@ function initGraph() {
     function buildMainData() {
         nodes = [];
         links = [];
+        nodeIdCounter = 0;
 
         // Center node
         nodes.push({
@@ -97,14 +100,15 @@ function initGraph() {
             bilibili: data.center.bilibili,
         });
 
-        // Category nodes
-        data.categories.forEach((cat, i) => {
-            const catId = `cat-${i}`;
+        // Top-level category nodes
+        data.categories.forEach((cat) => {
+            const catId = `sec-${nodeIdCounter++}`;
             nodes.push({
                 id: catId,
                 label: cat.name,
                 type: 'category',
                 expanded: false,
+                sectionRef: cat,
             });
             links.push({ source: 'center', target: catId });
         });
@@ -114,6 +118,7 @@ function initGraph() {
     function buildTagsData() {
         nodes = [];
         links = [];
+        nodeIdCounter = 0;
 
         nodes.push({
             id: 'center',
@@ -123,8 +128,8 @@ function initGraph() {
             bilibili: data.center.bilibili,
         });
 
-        data.tags.forEach((tag, i) => {
-            const tagId = `tag-${i}`;
+        data.tags.forEach((tag) => {
+            const tagId = `tag-${nodeIdCounter++}`;
             nodes.push({
                 id: tagId,
                 label: tag.name,
@@ -146,66 +151,97 @@ function initGraph() {
         });
     }
 
-    // ---- Toggle category expansion ----
-    function toggleCategory(catIndex: number) {
-        const catId = `cat-${catIndex}`;
-        const catNode = nodes.find(n => n.id === catId);
-        if (!catNode) return;
+    // ---- Collect all descendant node IDs from a parent ----
+    function collectDescendantIds(parentId: string): string[] {
+        const ids: string[] = [];
+        const directChildren = nodes.filter(n => n.parentId === parentId);
+        for (const child of directChildren) {
+            ids.push(child.id);
+            ids.push(...collectDescendantIds(child.id));
+        }
+        return ids;
+    }
 
-        const cat = data.categories[catIndex];
+    // ---- Toggle a section node (category/subcategory) ----
+    function toggleSection(nodeId: string) {
+        const node = nodes.find(n => n.id === nodeId);
+        if (!node || !node.sectionRef) return;
 
-        if (catNode.expanded) {
-            // Collapse: remove post nodes
-            const postIds = cat.posts.map((_, pi) => `post-${catIndex}-${pi}`);
-            nodes = nodes.filter(n => !postIds.includes(n.id));
+        const section = node.sectionRef;
+
+        if (node.expanded) {
+            // Collapse: remove all descendant nodes
+            const removeIds = collectDescendantIds(nodeId);
+            nodes = nodes.filter(n => !removeIds.includes(n.id));
             links = links.filter(l => {
                 const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
                 const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
-                return !postIds.includes(sid) && !postIds.includes(tid);
+                return !removeIds.includes(sid) && !removeIds.includes(tid);
             });
-            catNode.expanded = false;
+            node.expanded = false;
         } else {
-            // Expand: add post nodes
-            cat.posts.forEach((post, pi) => {
-                const postId = `post-${catIndex}-${pi}`;
-                nodes.push({
-                    id: postId,
-                    label: post.title,
-                    type: 'post',
-                    url: post.url,
-                    parentId: catId,
-                    x: (catNode.x || width / 2) + (Math.random() - 0.5) * 60,
-                    y: (catNode.y || height / 2) + (Math.random() - 0.5) * 60,
+            // Expand: add child sections and/or direct posts
+            if (section.children.length > 0) {
+                // Has subfolders — show them
+                section.children.forEach((child) => {
+                    const childId = `sec-${nodeIdCounter++}`;
+                    nodes.push({
+                        id: childId,
+                        label: child.name,
+                        type: 'category',
+                        expanded: false,
+                        sectionRef: child,
+                        parentId: nodeId,
+                        x: (node.x || width / 2) + (Math.random() - 0.5) * 60,
+                        y: (node.y || height / 2) + (Math.random() - 0.5) * 60,
+                    });
+                    links.push({ source: nodeId, target: childId });
                 });
-                links.push({ source: catId, target: postId });
-            });
-            catNode.expanded = true;
+            }
+            if (section.posts.length > 0) {
+                // Has direct posts — show them
+                section.posts.forEach((post) => {
+                    const postId = `post-${nodeIdCounter++}`;
+                    nodes.push({
+                        id: postId,
+                        label: post.title,
+                        type: 'post',
+                        url: post.url,
+                        parentId: nodeId,
+                        x: (node.x || width / 2) + (Math.random() - 0.5) * 60,
+                        y: (node.y || height / 2) + (Math.random() - 0.5) * 60,
+                    });
+                    links.push({ source: nodeId, target: postId });
+                });
+            }
+            node.expanded = true;
         }
 
         updateGraph(false);
-        updateIndicator(catId, catNode.expanded!);
+        updateIndicator(nodeId, node.expanded!);
     }
 
     // ---- Toggle tag expansion ----
-    function toggleTag(tagIndex: number) {
-        const tagId = `tag-${tagIndex}`;
+    function toggleTag(tagId: string) {
         const tagNode = nodes.find(n => n.id === tagId);
         if (!tagNode) return;
 
-        const tag = data.tags[tagIndex];
+        // Find matching tag data
+        const tag = data.tags.find(t => t.name === tagNode.label);
+        if (!tag) return;
 
         if ((tagNode as any).expanded) {
-            const postIds = tag.posts.map((_, pi) => `tpost-${tagIndex}-${pi}`);
-            nodes = nodes.filter(n => !postIds.includes(n.id));
+            const removeIds = collectDescendantIds(tagId);
+            nodes = nodes.filter(n => !removeIds.includes(n.id));
             links = links.filter(l => {
                 const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
                 const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
-                return !postIds.includes(sid) && !postIds.includes(tid);
+                return !removeIds.includes(sid) && !removeIds.includes(tid);
             });
             (tagNode as any).expanded = false;
         } else {
-            tag.posts.forEach((post, pi) => {
-                const postId = `tpost-${tagIndex}-${pi}`;
+            tag.posts.forEach((post) => {
+                const postId = `tpost-${nodeIdCounter++}`;
                 nodes.push({
                     id: postId,
                     label: post.title,
@@ -296,13 +332,16 @@ function initGraph() {
                     return `<div class="graph-node__label">${d.label}</div>${socialHtml}`;
                 }
                 if (d.type === 'category' || d.type === 'tag') {
-                    const indicator = (d as any).expanded ? '−' : '+';
-                    return `<div class="graph-node__label">${d.label}<span class="graph-node__indicator">${indicator}</span></div>`;
+                    const hasChildren = d.sectionRef
+                        ? (d.sectionRef.children.length > 0 || d.sectionRef.posts.length > 0)
+                        : true;
+                    const indicator = hasChildren ? ((d as any).expanded ? '−' : '+') : '';
+                    return `<div class="graph-node__label">${d.label}${indicator ? `<span class="graph-node__indicator">${indicator}</span>` : ''}</div>`;
                 }
                 return `<div class="graph-node__label">${d.label}</div>`;
             });
 
-        // Entry animation: use the inner div (not foreignObject) for CSS transforms
+        // Entry animation
         nodeEnter.each(function(this: any, d: GraphNode, i: number) {
             const el = d3.select(this);
             const delay = animate ? (d.type === 'center' ? 0 : 200 + i * 150) : 0;
@@ -318,23 +357,20 @@ function initGraph() {
 
         activeNodes = nodeEnter.merge(nodeSel);
 
-        // Click handlers — attach to inner HTML divs (foreignObject intercepts SVG events)
+        // Click handlers
         nodeEnter.each(function(this: any, d: GraphNode) {
             const div = d3.select(this).select('foreignObject div.graph-node').node() as HTMLElement;
             if (!div) return;
             div.addEventListener('click', (event: MouseEvent) => {
-                // Don't intercept clicks on actual links (github, bilibili)
                 if ((event.target as HTMLElement).closest('a')) return;
                 event.stopPropagation();
                 event.preventDefault();
                 if (d.type === 'post' && d.url) {
                     window.location.href = d.url;
                 } else if (d.type === 'category') {
-                    const idx = parseInt(d.id.split('-')[1]);
-                    toggleCategory(idx);
+                    toggleSection(d.id);
                 } else if (d.type === 'tag') {
-                    const idx = parseInt(d.id.split('-')[1]);
-                    toggleTag(idx);
+                    toggleTag(d.id);
                 }
             });
         });
@@ -417,23 +453,12 @@ function initGraph() {
     }
 
     // ---- View switching ----
-    const tagsBtn = document.getElementById('tags-view-btn');
     const backBtn = document.getElementById('graph-back-btn');
 
-    tagsBtn?.addEventListener('click', () => {
-        currentView = 'tags';
-        buildTagsData();
-        updateGraph(true);
-        tagsBtn.style.display = 'none';
-        if (backBtn) backBtn.style.display = 'flex';
-    });
-
     backBtn?.addEventListener('click', () => {
-        currentView = 'main';
         buildMainData();
         updateGraph(true);
         if (backBtn) backBtn.style.display = 'none';
-        if (tagsBtn) tagsBtn.style.display = 'flex';
     });
 
     // ---- Resize ----

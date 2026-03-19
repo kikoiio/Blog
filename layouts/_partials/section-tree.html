@@ -1,0 +1,23 @@
+{{- $section := . -}}
+{{- $name := "" -}}
+{{- with .File -}}
+    {{- $name = path.Base (path.Dir .Path) -}}
+{{- else -}}
+    {{- $name = .Title -}}
+{{- end -}}
+{{- $children := slice -}}
+{{- range .Sections -}}
+    {{- $child := partial "section-tree.html" . -}}
+    {{- $children = $children | append $child -}}
+{{- end -}}
+{{- $posts := slice -}}
+{{- range .RegularPages -}}
+    {{- $title := .Title -}}
+    {{- if not $title -}}
+        {{- $title = .File.ContentBaseName -}}
+    {{- end -}}
+    {{- $post := dict "title" $title "url" .RelPermalink "tags" (default (slice) .Params.tags) -}}
+    {{- $posts = $posts | append $post -}}
+{{- end -}}
+{{- $result := dict "name" $name "children" $children "posts" $posts -}}
+{{- return $result -}}
