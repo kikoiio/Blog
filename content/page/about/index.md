@@ -21,3 +21,4 @@ menu:
 ## 联系方式
 
 - GitHub: [kikoiio](https://github.com/kikoiio)
+- 邮箱: 3145558167@qq.com

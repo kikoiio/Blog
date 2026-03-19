@@ -17,7 +17,9 @@
       "Bash($HUGO --gc --minify)",
       "Bash(gh auth:*)",
       "Bash(cmd.exe /c 'where gh')",
-      "Bash(winget list:*)"
+      "Bash(winget list:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

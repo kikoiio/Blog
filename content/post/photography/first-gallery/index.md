@@ -16,7 +16,7 @@ tags:
 > 将照片放入本文件夹（`content/post/photography/first-gallery/`），然后在 Markdown 中引用：
 
 ```markdown
-![照片描述](photo.jpg)
+!![](1%201.jpg)
 ```
 
 ### 小贴士

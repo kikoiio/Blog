@@ -1,13 +1,12 @@
 ---
-title: "博客搭建记录"
-description: "使用 Hugo + GitHub Pages 搭建免费博客"
+title: 博客搭建记录
+description: 使用 Hugo + GitHub Pages 搭建免费博客
 date: 2026-03-19
 categories:
-    - 计算机笔记
+  - 计算机笔记
 tags:
-    - Hugo
-    - 博客
-    - GitHub Pages
+  - Hugo
+  - 博客
 ---
 
 ## 为什么选择 Hugo + GitHub Pages？
