@@ -133,8 +133,29 @@ function initGraph() {
         .attr('dx', 0).attr('dy', 4).attr('stdDeviation', 8)
         .attr('flood-color', 'rgba(0,0,0,0.15)');
 
-    const linkGroup = svg.append('g').attr('class', 'graph-links');
-    const nodeGroup = svg.append('g').attr('class', 'graph-nodes');
+    // Zoom container — all graph content goes inside this group
+    const zoomGroup = svg.append('g').attr('class', 'graph-zoom-group');
+    const linkGroup = zoomGroup.append('g').attr('class', 'graph-links');
+    const nodeGroup = zoomGroup.append('g').attr('class', 'graph-nodes');
+
+    // ---- Zoom & Pan ----
+    const zoom = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on('zoom', (event: any) => {
+            zoomGroup.attr('transform', event.transform);
+        });
+
+    svg.call(zoom);
+
+    // Disable double-click zoom (conflicts with node clicks)
+    svg.on('dblclick.zoom', null);
+
+    // Set initial zoom to 1.2x centered
+    const initialScale = 1.2;
+    const initialTransform = d3.zoomIdentity
+        .translate(width * (1 - initialScale) / 2, height * (1 - initialScale) / 2)
+        .scale(initialScale);
+    svg.call(zoom.transform, initialTransform);
 
     // ---- Focus helpers ----
     function isFocused(d: GraphNode): boolean {
@@ -499,18 +520,6 @@ function initGraph() {
         if (activeNodes) {
             activeNodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
         }
-    }
-
-    // ---- Mouse parallax ----
-    if (!('ontouchstart' in window)) {
-        container.addEventListener('mousemove', (e) => {
-            const dx = (e.clientX - width / 2) / (width / 2);
-            const dy = (e.clientY - height / 2) / (height / 2);
-            svg.style('transform', `translate(${dx * -5}px, ${dy * -5}px)`);
-        });
-        container.addEventListener('mouseleave', () => {
-            svg.transition().duration(600).style('transform', 'translate(0px, 0px)');
-        });
     }
 
     // ---- Back button ----
