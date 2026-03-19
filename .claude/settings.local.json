@@ -41,7 +41,13 @@
       "Bash(hugo list:*)",
       "Bash(hugo --templateMetrics)",
       "Bash(hugo --printPathWarnings)",
-      "Bash(find /d/Desktop/my_projects/Blog/content -type f -name *.md)"
+      "Bash(find /d/Desktop/my_projects/Blog/content -type f -name *.md)",
+      "Bash(hugo --gc)",
+      "Bash(hugo config:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
