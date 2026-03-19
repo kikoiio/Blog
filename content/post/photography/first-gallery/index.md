@@ -12,6 +12,6 @@ tags:
 ## 摄影分享
 
 这是我的第一篇摄影文章。
+![1.jpg](https://res.cloudinary.com/dmqq22x5r/image/upload/v1773900304/Blog/a3951df5c9467166b5b0d9fbbb776522.jpg)
 
-![](1.jpg)
-![](2.jpg)
+
