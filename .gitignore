@@ -12,3 +12,6 @@ Thumbs.db
 
 # Hugo lock
 .hugo_build.lock
+
+# Obsidian (配置文件不需要上传)
+.obsidian/

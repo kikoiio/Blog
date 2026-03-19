@@ -1,0 +1,10 @@
+{{/* 兼容 Obsidian 的图片引用方式 */}}
+{{ $url := .Destination }}
+{{ $alt := .Text }}
+{{ $title := .Title }}
+
+{{ with .Page.Resources.GetMatch $url }}
+  <img src="{{ .RelPermalink }}" alt="{{ $alt }}" {{ with $title }} title="{{ . }}" {{ end }} loading="lazy" />
+{{ else }}
+  <img src="{{ $url }}" alt="{{ $alt }}" {{ with $title }} title="{{ . }}" {{ end }} loading="lazy" />
+{{ end }}
