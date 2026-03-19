@@ -5,11 +5,12 @@ defaultContentLanguage = "zh-cn"
 hasCJKLanguage         = true
 theme                  = "hugo-theme-stack"
 
-disableKinds = ["taxonomy", "term"]
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "robotsTXT", "404"]
 
 [pagination]
-    pagerSize = 10
+    pagerSize = 9999
+    disableAliases = true
 
 [permalinks]
-    post = "/p/:slug/"
+    post = "/:sections/:filename/"
     page = "/:slug/"

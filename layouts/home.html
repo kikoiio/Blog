@@ -41,7 +41,7 @@
     </svg>
 </button>
 
-<!-- Graph data from Hugo -->
+<!-- Graph data from Hugo (dynamically generated from content directory) -->
 <script id="graph-data" type="application/json">
 {
     "center": {
@@ -50,30 +50,31 @@
         "bilibili": ""
     },
     "categories": [
-        {{- $categories := slice "Computer Science" "Photography" "Games" -}}
-        {{- $catMap := dict "Computer Science" "计算机笔记" "Photography" "摄影作品" "Games" "游戏" -}}
+        {{- $postSection := .Site.GetPage "section" "post" -}}
         {{- $first := true -}}
-        {{- range $displayName := $categories -}}
-            {{- if not $first }},{{ end -}}
-            {{- $first = false -}}
-            {
-                "name": "{{ $displayName }}",
-                "posts": [
-                    {{- $hugoName := index $catMap $displayName -}}
-                    {{- $pfirst := true -}}
-                    {{- if $hugoName -}}
-                        {{- range $page := (index $.Site.Taxonomies.categories ($hugoName | lower)).Pages -}}
-                            {{- if not $pfirst }},{{ end -}}
-                            {{- $pfirst = false -}}
-                            {
-                                "title": "{{ $page.Title }}",
-                                "url": "{{ $page.RelPermalink }}",
-                                "tags": {{ $page.Params.tags | jsonify }}
-                            }
-                        {{- end -}}
-                    {{- end -}}
-                ]
-            }
+        {{- with $postSection -}}
+            {{- range .Sections -}}
+                {{- $pages := .RegularPagesRecursive -}}
+                {{- if gt (len $pages) 0 -}}
+                    {{- if not $first }},{{ end -}}
+                    {{- $first = false -}}
+                    {
+                        "name": "{{ .Title }}",
+                        "posts": [
+                            {{- $pfirst := true -}}
+                            {{- range $pages -}}
+                                {{- if not $pfirst }},{{ end -}}
+                                {{- $pfirst = false -}}
+                                {
+                                    "title": "{{ with .Title }}{{ . }}{{ else }}{{ .File.ContentBaseName }}{{ end }}",
+                                    "url": "{{ .RelPermalink }}",
+                                    "tags": {{ with .Params.tags }}{{ . | jsonify }}{{ else }}[]{{ end }}
+                                }
+                            {{- end -}}
+                        ]
+                    }
+                {{- end -}}
+            {{- end -}}
         {{- end -}}
     ],
     "tags": [
