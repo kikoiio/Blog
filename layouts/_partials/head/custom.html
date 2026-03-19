@@ -10,9 +10,9 @@
     var key = 'BlogThemeState';
     var saved;
     try { saved = JSON.parse(localStorage.getItem(key)); } catch(e) {}
-    if (!saved) saved = { style: 'minimalist', color: 'teal' };
+    if (!saved) saved = { color: 'teal' };
 
-    var theme = saved.style === 'cyberpunk' ? 'cyberpunk' : ('mini-' + saved.color);
+    var theme = 'mini-' + (saved.color || 'teal');
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.dataset.scheme = 'dark';
 })();

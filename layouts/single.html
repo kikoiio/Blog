@@ -1,0 +1,77 @@
+{{ define "body-class" }}
+    article-page custom-article-page
+    {{- $TOCWidgetEnabled := false -}}
+    {{- range .Site.Params.widgets.page -}}
+        {{- if eq .type "toc" -}}
+            {{ $TOCWidgetEnabled = true -}}
+        {{- end -}}
+    {{- end -}}
+    {{- $TOCManuallyDisabled := eq .Params.toc false -}}
+    {{- $TOCEnabled := and (not $TOCManuallyDisabled) $TOCWidgetEnabled -}}
+    {{- $hasTOC := ge (len .TableOfContents) 100 -}}
+    {{- .Scratch.Set "TOCEnabled" (and $TOCEnabled $hasTOC) -}}
+    {{- .Scratch.Set "hasWidget" true -}}
+{{ end }}
+
+{{ define "left-sidebar" }}
+<aside class="sidebar left-sidebar sticky custom-left-sidebar">
+    <!-- Back arrow -->
+    <a href="{{ .Site.Home.RelPermalink }}" class="back-arrow" title="返回首页">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 17l-5-5 5-5"/>
+            <path d="M18 17l-5-5 5-5" opacity="0.4"/>
+        </svg>
+    </a>
+
+    <!-- TOC -->
+    {{ if .Scratch.Get "TOCEnabled" }}
+    <nav class="custom-toc">
+        <div class="custom-toc__title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            <span>目录</span>
+        </div>
+        <div class="toc-nav" id="TableOfContents">
+            {{ partial "article/components/toc" . | safeHTML }}
+        </div>
+    </nav>
+    {{ end }}
+</aside>
+{{ end }}
+
+{{ define "right-sidebar" }}
+<!-- Cat playground -->
+<aside class="sidebar right-sidebar sticky custom-right-sidebar">
+    <canvas id="cat-canvas"></canvas>
+</aside>
+{{ end }}
+
+{{ define "main" }}
+    {{ partial "article/article.html" . }}
+
+    {{ if .Params.links }}
+        {{ partial "article/components/links" . }}
+    {{ end }}
+
+    {{ partial "article/components/related-content" . }}
+
+    {{ if not (eq .Params.comments false) }}
+        {{ partial "comments/include" . }}
+    {{ end }}
+
+    {{ partialCached "footer/footer" . }}
+
+    {{ partialCached "article/components/photoswipe" . }}
+    {{ partial "article/components/mermaid" . }}
+
+    {{/* Cat animation script */}}
+    {{ $opts := dict "minify" hugo.IsProduction }}
+    {{ $catScript := resources.Get "ts/cat.ts" | js.Build $opts | fingerprint }}
+    <script type="text/javascript" src="{{ $catScript.RelPermalink }}" defer></script>
+{{ end }}

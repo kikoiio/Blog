@@ -25,7 +25,22 @@
       "Bash(find /d/Desktop/my_projects/Blog -maxdepth 2 -type d -not -path */public/* -not -path */.git/* -not -path */.github/*)",
       "Bash(hugo --gc --minify)",
       "mcp__Claude_Preview__preview_start",
-      "WebFetch(domain:wodniack.dev)"
+      "WebFetch(domain:wodniack.dev)",
+      "WebFetch(domain:www.yysuni.com)",
+      "WebFetch(domain:2019.makemepulse.com)",
+      "WebFetch(domain:www.nayuki.io)",
+      "WebFetch(domain:brege.org)",
+      "WebFetch(domain:www.awwwards.com)",
+      "WebFetch(domain:www.makemepulse.com)",
+      "WebFetch(domain:shortyawards.com)",
+      "WebFetch(domain:m.makemepulse.com)",
+      "WebFetch(domain:www.behance.net)",
+      "Bash(hugo server:*)",
+      "Bash(hugo)",
+      "Bash(taskkill //F //IM hugo.exe)",
+      "Bash(hugo list:*)",
+      "Bash(hugo --templateMetrics)",
+      "Bash(hugo --printPathWarnings)"
     ]
   }
 }

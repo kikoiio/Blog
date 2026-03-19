@@ -1,6 +1,6 @@
 /* ============================================================
    Multi-Theme Blog System
-   Styles: Cyberpunk | Minimalist (6 colors)
+   Styles: Minimalist (6 colors)
    ============================================================ */
 
 /* ---------- Typography Override ---------- */
@@ -191,50 +191,6 @@
     --pre-text-color: #f8f8f2;
     --pre-background-color: #1a1a2e;
     --kbd-border-color: rgba(255, 255, 255, 0.15);
-}
-
-
-/* ============================================================
-   CYBERPUNK THEME
-   ============================================================ */
-:root[data-theme="cyberpunk"] {
-    --body-background: #0a0a0f;
-    --accent-color: #00f0ff;
-    --accent-color-darker: #00c4cc;
-    --accent-color-text: #0a0a0f;
-    --body-text-color: rgba(0, 240, 255, 0.5);
-
-    --card-background: rgba(10, 10, 25, 0.9);
-    --card-background-selected: rgba(0, 240, 255, 0.08);
-    --card-text-color-main: #e0f7ff;
-    --card-text-color-secondary: rgba(0, 240, 255, 0.6);
-    --card-text-color-tertiary: rgba(0, 240, 255, 0.4);
-    --card-separator-color: rgba(0, 240, 255, 0.1);
-
-    --card-border-radius: 4px;
-    --tag-border-radius: 2px;
-
-    --shadow-l1: 0 0 10px rgba(0, 240, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.5);
-    --shadow-l2: 0 0 30px rgba(0, 240, 255, 0.08), 0 8px 20px rgba(0, 0, 0, 0.6);
-
-    --neon-cyan: #00f0ff;
-    --neon-pink: #ff00aa;
-    --neon-yellow: #f0ff00;
-    --neon-green: #00ff66;
-
-    --link-background-color: 0, 240, 255;
-    --link-background-opacity: 0.3;
-    --code-background-color: rgba(0, 240, 255, 0.08);
-    --code-text-color: #00f0ff;
-    --table-border-color: rgba(0, 240, 255, 0.15);
-    --tr-even-background-color: rgba(0, 240, 255, 0.03);
-    --blockquote-background-color: rgba(0, 240, 255, 0.04);
-    --pre-text-color: #e0f7ff;
-    --pre-background-color: #0d0d1a;
-    --kbd-border-color: rgba(0, 240, 255, 0.3);
-
-    --base-font-family: "JetBrains Mono", "Noto Sans SC", monospace;
-    --article-font-family: "Inter", "Noto Sans SC", sans-serif;
 }
 
 
@@ -445,8 +401,7 @@ main.main {
 [data-theme="mini-sage"],
 [data-theme="mini-lavender"],
 [data-theme="mini-sand"],
-[data-theme="mini-dark"],
-[data-theme="cyberpunk"] {
+[data-theme="mini-dark"] {
     @import "partials/highlight/dark.scss";
 }
 
@@ -499,276 +454,6 @@ main.main {
 
 
 /* ============================================================
-   CYBERPUNK SPECIFIC STYLES
-   ============================================================ */
-
-/* --- Scanline overlay --- */
-[data-theme="cyberpunk"] body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 240, 255, 0.015) 2px,
-        rgba(0, 240, 255, 0.015) 4px
-    );
-    pointer-events: none;
-    z-index: 9998;
-}
-
-/* --- Neon border glow on cards --- */
-[data-theme="cyberpunk"] .article-list article,
-[data-theme="cyberpunk"] .widget,
-[data-theme="cyberpunk"] .main-article {
-    border: 1px solid rgba(0, 240, 255, 0.15);
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.05), inset 0 0 10px rgba(0, 240, 255, 0.02);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-
-    &::after {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        right: -1px;
-        bottom: -1px;
-        border: 1px solid transparent;
-        border-image: linear-gradient(135deg, var(--neon-cyan), transparent 40%, transparent 60%, var(--neon-pink)) 1;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        pointer-events: none;
-    }
-
-    &:hover {
-        border-color: rgba(0, 240, 255, 0.3);
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), 0 0 40px rgba(0, 240, 255, 0.05);
-        transform: translateY(-2px);
-
-        &::after {
-            opacity: 1;
-        }
-    }
-}
-
-/* --- Cyberpunk sidebar --- */
-[data-theme="cyberpunk"] .left-sidebar {
-    border: 1px solid rgba(0, 240, 255, 0.1);
-    background: rgba(10, 10, 25, 0.95);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.05);
-
-    header .site-name a {
-        color: var(--neon-cyan);
-        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
-        font-family: "JetBrains Mono", monospace;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-    }
-
-    header .site-description {
-        color: var(--neon-pink);
-        text-shadow: 0 0 8px rgba(255, 0, 170, 0.3);
-        font-size: 1.2rem !important;
-    }
-}
-
-/* --- Cyberpunk menu --- */
-[data-theme="cyberpunk"] .menu li a {
-    border-radius: 2px;
-    font-family: "JetBrains Mono", monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.9em;
-
-    &:hover {
-        color: var(--neon-cyan);
-        background: rgba(0, 240, 255, 0.05);
-        text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-    }
-}
-
-[data-theme="cyberpunk"] .menu li.current a {
-    color: var(--neon-cyan);
-    background: rgba(0, 240, 255, 0.08);
-    border-left: 2px solid var(--neon-cyan);
-    box-shadow: inset 3px 0 10px rgba(0, 240, 255, 0.1);
-}
-
-/* --- Cyberpunk article cards --- */
-[data-theme="cyberpunk"] .article-list article .article-image {
-    overflow: hidden;
-    position: relative;
-
-    &::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-cyan));
-        background-size: 200% 100%;
-        animation: neonSlide 3s linear infinite;
-    }
-
-    img {
-        transition: transform 0.5s ease, filter 0.5s ease;
-    }
-}
-
-[data-theme="cyberpunk"] .article-list article:hover .article-image img {
-    transform: scale(1.08);
-    filter: saturate(1.3) contrast(1.1);
-}
-
-@keyframes neonSlide {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-}
-
-/* --- Cyberpunk category badge --- */
-[data-theme="cyberpunk"] .article-category a {
-    border: 1px solid var(--neon-cyan);
-    color: var(--neon-cyan) !important;
-    background: rgba(0, 240, 255, 0.08);
-    border-radius: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.8em;
-    text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
-}
-
-/* --- Cyberpunk tags --- */
-[data-theme="cyberpunk"] .article-tags a {
-    border: 1px solid rgba(255, 0, 170, 0.3) !important;
-    color: var(--neon-pink) !important;
-    background: rgba(255, 0, 170, 0.05);
-    border-radius: 2px !important;
-    font-family: "JetBrains Mono", monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-
-    &:hover {
-        border-color: var(--neon-pink) !important;
-        background: rgba(255, 0, 170, 0.15);
-        box-shadow: 0 0 10px rgba(255, 0, 170, 0.2);
-        text-shadow: 0 0 5px rgba(255, 0, 170, 0.4);
-    }
-}
-
-/* --- Cyberpunk headings glow --- */
-[data-theme="cyberpunk"] .article-content {
-    h1, h2, h3, h4 {
-        color: var(--neon-cyan);
-        text-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
-        border-inline-start-color: var(--neon-pink);
-    }
-
-    blockquote {
-        border-inline-start-color: var(--neon-pink);
-        border-radius: 0 4px 4px 0;
-    }
-
-    .highlight {
-        border: 1px solid rgba(0, 240, 255, 0.1);
-        border-radius: 4px;
-    }
-}
-
-/* --- Cyberpunk scrollbar --- */
-[data-theme="cyberpunk"]::-webkit-scrollbar-thumb {
-    background: rgba(0, 240, 255, 0.3);
-    border-radius: 0;
-
-    &:hover { background: rgba(0, 240, 255, 0.5); }
-}
-
-/* --- Cyberpunk selection --- */
-[data-theme="cyberpunk"] ::selection {
-    background: rgba(0, 240, 255, 0.25);
-    color: #fff;
-}
-
-/* --- Cyberpunk TOC --- */
-[data-theme="cyberpunk"] .toc-nav li.active-class > a {
-    border-left-color: var(--neon-cyan);
-    color: var(--neon-cyan);
-    text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
-}
-
-/* --- Cyberpunk widget titles --- */
-[data-theme="cyberpunk"] .widget .section-title {
-    font-family: "JetBrains Mono", monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-/* --- Cyberpunk search --- */
-[data-theme="cyberpunk"] .widget input[type="search"],
-[data-theme="cyberpunk"] .search-input {
-    background: rgba(0, 240, 255, 0.03) !important;
-    border: 1px solid rgba(0, 240, 255, 0.2) !important;
-    color: var(--neon-cyan) !important;
-    border-radius: 2px !important;
-
-    &:focus {
-        border-color: var(--neon-cyan) !important;
-        box-shadow: 0 0 15px rgba(0, 240, 255, 0.1) !important;
-    }
-}
-
-/* --- Glitch text animation for title --- */
-[data-theme="cyberpunk"] .site-name a {
-    position: relative;
-    display: inline-block;
-}
-
-@keyframes glitchClip {
-    0% { clip-path: inset(40% 0 61% 0); }
-    20% { clip-path: inset(92% 0 1% 0); }
-    40% { clip-path: inset(43% 0 1% 0); }
-    60% { clip-path: inset(25% 0 58% 0); }
-    80% { clip-path: inset(54% 0 7% 0); }
-    100% { clip-path: inset(58% 0 43% 0); }
-}
-
-/* --- Cyberpunk neon line at top --- */
-[data-theme="cyberpunk"] body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg,
-        transparent,
-        var(--neon-cyan) 20%,
-        var(--neon-pink) 50%,
-        var(--neon-cyan) 80%,
-        transparent
-    );
-    z-index: 9999;
-    animation: neonSlide 4s linear infinite;
-    background-size: 200% 100%;
-}
-
-/* --- Cyberpunk footer --- */
-[data-theme="cyberpunk"] .footer {
-    font-family: "JetBrains Mono", monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.85em;
-}
-
-
-/* ============================================================
    THEME SWITCHER UI
    ============================================================ */
 .theme-switcher {
@@ -800,16 +485,6 @@ main.main {
     }
 }
 
-[data-theme="cyberpunk"] .theme-switcher-btn {
-    border-radius: 4px;
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
-
-    &:hover {
-        box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
-    }
-}
-
 .theme-panel {
     position: absolute;
     bottom: 60px;
@@ -833,12 +508,6 @@ main.main {
     transform: translateY(0) scale(1);
 }
 
-[data-theme="cyberpunk"] .theme-panel {
-    border-radius: 4px;
-    border-color: rgba(0, 240, 255, 0.2);
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.1);
-}
-
 [data-theme="mini-dark"] .theme-panel {
     background: rgba(30, 41, 59, 0.95);
     border-color: rgba(255, 255, 255, 0.08);
@@ -851,45 +520,6 @@ main.main {
     color: var(--card-text-color-tertiary);
     margin-bottom: 12px;
     font-weight: 600;
-}
-
-.theme-style-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.theme-style-btn {
-    flex: 1;
-    padding: 8px 0;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--card-text-color-secondary);
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    font-family: inherit;
-
-    &:hover {
-        border-color: var(--accent-color);
-        color: var(--accent-color);
-    }
-
-    &.active {
-        background: var(--accent-color);
-        color: var(--accent-color-text);
-        border-color: var(--accent-color);
-    }
-}
-
-[data-theme="cyberpunk"] .theme-style-btn {
-    border-radius: 2px;
-    font-family: "JetBrains Mono", monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.7rem;
 }
 
 .theme-colors {
@@ -928,10 +558,6 @@ main.main {
     }
 }
 
-[data-theme="cyberpunk"] .theme-color-btn {
-    border-radius: 2px;
-}
-
 .theme-color-btn[data-color="teal"]     { background: #3a8fb7; }
 .theme-color-btn[data-color="rose"]     { background: #c2838a; }
 .theme-color-btn[data-color="sage"]     { background: #7a9e7e; }
@@ -944,5 +570,505 @@ main.main {
     .theme-panel {
         width: 260px;
         right: -8px;
+    }
+}
+
+
+/* ============================================================
+   GRAPH HOMEPAGE
+   ============================================================ */
+
+/* --- Full-screen layout override --- */
+.homepage-graph {
+    overflow: hidden;
+}
+
+.homepage-graph .left-sidebar,
+.homepage-graph .right-sidebar {
+    display: none !important;
+}
+
+.homepage-graph .container.main-container {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    display: block;
+}
+
+.homepage-graph main.main {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    animation: none;
+    opacity: 1;
+}
+
+/* --- Background blobs --- */
+.graph-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.graph-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(30px);
+    opacity: 0.2;
+    will-change: transform;
+    contain: strict;
+}
+
+.graph-blob--1 {
+    width: 45vw;
+    height: 45vw;
+    max-width: 500px;
+    max-height: 500px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+    top: -10%;
+    left: -5%;
+    animation: blobFloat1 25s ease-in-out infinite;
+}
+
+.graph-blob--2 {
+    width: 35vw;
+    height: 35vw;
+    max-width: 400px;
+    max-height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    bottom: -10%;
+    right: -5%;
+    animation: blobFloat2 30s ease-in-out infinite;
+}
+
+.graph-blob--3 {
+    width: 25vw;
+    height: 25vw;
+    max-width: 300px;
+    max-height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+    top: 40%;
+    left: 60%;
+    animation: blobFloat3 20s ease-in-out infinite;
+}
+
+@keyframes blobFloat1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(5vw, 3vh) scale(1.1); }
+    66% { transform: translate(-3vw, 5vh) scale(0.95); }
+}
+
+@keyframes blobFloat2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-4vw, -3vh) scale(1.05); }
+    66% { transform: translate(3vw, -5vh) scale(1.1); }
+}
+
+@keyframes blobFloat3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-5vw, 3vh) scale(1.15); }
+}
+
+/* --- Graph container --- */
+#graph-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+#graph-svg {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.15s ease-out;
+}
+
+/* --- Connection lines --- */
+.graph-link {
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 1.5;
+    transition: opacity 0.3s ease;
+}
+
+[data-theme="mini-dark"] .graph-link {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Graph nodes (glassmorphism) --- */
+.graph-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--card-border-radius);
+    background: var(--card-background);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-l1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    padding: 8px 16px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.graph-node:hover {
+    box-shadow: var(--shadow-l2);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Center node */
+.graph-node--center {
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    animation: centerPulse 4s ease-in-out infinite;
+}
+
+@keyframes centerPulse {
+    0%, 100% { box-shadow: var(--shadow-l1); }
+    50% { box-shadow: var(--shadow-l2), 0 0 30px rgba(255, 255, 255, 0.08); }
+}
+
+/* Category / Tag node */
+.graph-node--category,
+.graph-node--tag {
+    cursor: pointer;
+    border-radius: 25px;
+}
+
+.graph-node--category:hover,
+.graph-node--tag:hover {
+    background: var(--card-background-selected);
+    transform: translateY(-2px);
+}
+
+/* Post node */
+.graph-node--post {
+    border-radius: 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
+.graph-node--post:hover {
+    background: var(--card-background-selected);
+    transform: translateY(-2px);
+}
+
+/* --- Node label --- */
+.graph-node__label {
+    color: var(--card-text-color-main);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.3;
+}
+
+.graph-node--center .graph-node__label {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.graph-node--post .graph-node__label {
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.graph-node__indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-weight: 400;
+    opacity: 0.6;
+    font-size: 1em;
+}
+
+/* --- Social links in center node --- */
+.graph-node__social {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.graph-social-link {
+    color: var(--card-text-color-secondary);
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.graph-social-link:hover {
+    color: var(--card-text-color-main);
+    transform: scale(1.2);
+}
+
+/* --- Floating buttons --- */
+.graph-float-btn {
+    position: fixed;
+    z-index: 10000;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-color);
+    background: var(--card-background);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+    box-shadow: var(--shadow-l2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.graph-float-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+#tags-view-btn {
+    bottom: 24px;
+    left: 24px;
+}
+
+.graph-float-btn--back {
+    bottom: 24px;
+    left: 24px;
+}
+
+/* --- Footer on graph page --- */
+.homepage-graph .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    text-align: center;
+    padding: 8px;
+    pointer-events: none;
+    opacity: 0.4;
+
+    a { pointer-events: auto; }
+}
+
+/* --- Mobile --- */
+@media (max-width: 768px) {
+    .graph-node--center .graph-node__label {
+        font-size: 1.1rem;
+    }
+
+    .graph-node__label {
+        font-size: 0.8rem;
+    }
+
+    .graph-blob {
+        opacity: 0.25;
+    }
+}
+
+/* ============================================================
+   Article Page — Custom Layout
+   ============================================================ */
+
+/* Hide the theme switcher on article pages */
+.custom-article-page .theme-switcher {
+    display: none !important;
+}
+
+/* ---- Left Sidebar: Back Arrow + TOC ---- */
+.custom-left-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    padding: 30px 20px;
+    gap: 24px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-width: 220px;
+    overflow-y: auto;
+
+    /* Hide the hamburger menu */
+    .hamburger { display: none !important; }
+}
+
+.back-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--card-background);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-l1);
+    color: var(--card-text-color-main);
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+
+    &:hover {
+        transform: translateX(-3px);
+        box-shadow: var(--shadow-l2);
+    }
+
+    svg {
+        display: block;
+    }
+}
+
+/* ---- TOC ---- */
+.custom-toc {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-toc__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--card-text-color-secondary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    svg {
+        opacity: 0.6;
+        color: var(--accent-color);
+    }
+}
+
+.custom-toc .toc-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    /* Scrollbar styling */
+    &::-webkit-scrollbar {
+        width: 3px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        margin: 0;
+    }
+
+    a {
+        display: block;
+        padding: 5px 0 5px 0;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: var(--card-text-color-secondary);
+        text-decoration: none;
+        border-left: 2px solid transparent;
+        padding-left: 10px;
+        transition: color 0.2s, border-color 0.2s;
+
+        &:hover {
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+    }
+
+    /* Nested levels */
+    ul ul {
+        padding-left: 12px;
+
+        a {
+            font-size: 0.75rem;
+            opacity: 0.85;
+        }
+    }
+}
+
+/* ---- Right Sidebar: Cat Canvas ---- */
+.custom-article-page .right-sidebar.custom-right-sidebar {
+    display: flex !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    align-items: stretch;
+    width: var(--right-sidebar-max-width, 250px);
+    flex-shrink: 0;
+}
+
+#cat-canvas {
+    width: 100%;
+    min-height: 500px;
+    cursor: crosshair;
+    flex: 1;
+}
+
+/* ---- Article adjustments ---- */
+.custom-article-page {
+    /* Hide inline TOC since we moved it to sidebar */
+    .article-toc {
+        display: none !important;
+    }
+
+    /* Wider main content */
+    .main-article {
+        max-width: 100%;
+    }
+}
+
+/* ---- Mobile: Article Page ---- */
+@media (max-width: 768px) {
+    .custom-left-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px 16px;
+        max-width: 100%;
+        width: 100%;
+        background: var(--body-background) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .custom-toc {
+        display: none;
+    }
+
+    .custom-right-sidebar {
+        display: none !important;
+    }
+
+    .custom-article-page .article-toc {
+        display: block !important;
     }
 }
