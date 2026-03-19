@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(hugo version:*)",
+      "Bash(git --version)",
+      "Bash(git config:*)",
+      "Bash(winget --version)",
+      "Bash(scoop --version)",
+      "Bash(choco --version)",
+      "Bash(winget install:*)",
+      "Bash(export PATH=\"$PATH:/c/Users/Ljz/AppData/Local/Microsoft/WinGet/Links\")",
+      "Bash(cmd.exe /c \"where hugo\")",
+      "Read(//c/ProgramData/**)",
+      "Bash(HUGO=\"/c/Users/Ljz/AppData/Local/Microsoft/WinGet/Packages/Hugo.Hugo.Extended_Microsoft.Winget.Source_8wekyb3d8bbwe/hugo.exe\")",
+      "Read(//d/Desktop/my_projects/**)",
+      "Bash($HUGO new:*)",
+      "Bash($HUGO --gc --minify)"
+    ]
+  }
+}

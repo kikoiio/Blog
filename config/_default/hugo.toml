@@ -1,0 +1,13 @@
+baseURL                = "http://aries727.site/"
+languageCode           = "zh-cn"
+title                  = "Aries727's Blog"
+defaultContentLanguage = "zh-cn"
+hasCJKLanguage         = true
+theme                  = "hugo-theme-stack"
+
+[pagination]
+    pagerSize = 10
+
+[permalinks]
+    post = "/p/:slug/"
+    page = "/:slug/"
