@@ -165,26 +165,7 @@ class ThemeManager {
     }
 
     private initReadingProgress() {
-        const article = document.querySelector('.article-page .article-content');
-        if (!article) return;
-
-        const bar = document.createElement('div');
-        bar.id = 'reading-progress';
-        bar.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 0%; height: 3px;
-            z-index: 9999; transition: width 0.1s linear; border-radius: 0 2px 2px 0;
-            background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
-        `;
-        document.body.appendChild(bar);
-
-        window.addEventListener('scroll', () => {
-            const rect = article.getBoundingClientRect();
-            const top = rect.top + window.scrollY;
-            const progress = Math.min(Math.max(
-                (window.scrollY - top + window.innerHeight * 0.3) / rect.height, 0
-            ), 1);
-            bar.style.width = `${progress * 100}%`;
-        });
+        // Reading progress bar removed per user request
     }
 
     private initImageFade() {

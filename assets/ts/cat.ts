@@ -1,7 +1,6 @@
 /**
- * Interactive line-drawing cat animation.
- * A simple sketch-style cat follows the user's clicks,
- * jumping and playing like a real cat chasing a laser pointer.
+ * Pixel Cat Colony — Interactive pixel art cats on the article sidebar.
+ * 6+ cats with different colors, emotions, and click interactions.
  */
 
 (function () {
@@ -10,9 +9,12 @@
 
     const ctx = canvas.getContext('2d')!;
     let W = 0, H = 0;
+    const PX = 3; // pixel size for drawing — 3px per sprite pixel
+    let initialized = false;
 
     function resize() {
         const rect = canvas.parentElement!.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return;
         W = rect.width;
         H = rect.height;
         canvas.width = W * window.devicePixelRatio;
@@ -25,262 +27,292 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // ---- Cat state ----
-    const cat = {
-        x: W / 2,
-        y: H * 0.75,
-        targetX: W / 2,
-        targetY: H * 0.75,
-        vx: 0,
-        vy: 0,
-        jumping: false,
-        sitting: true,
-        facing: 1 as 1 | -1,    // 1 = right, -1 = left
-        tailPhase: 0,
-        earWiggle: 0,
-        blinkTimer: 0,
-        blinking: false,
-        pawPhase: 0,
-        idleTimer: 0,
-        headTilt: 0,
-        // Ground level (cat sits on this y)
-        groundY: H * 0.75,
-    };
-
-    // Dot (laser pointer)
-    const dot = {
-        x: W / 2,
-        y: H / 2,
-        visible: false,
-        alpha: 0,
-        timer: 0,
-    };
-
-    // Paw prints
-    const pawPrints: { x: number; y: number; alpha: number; facing: number }[] = [];
-
-    function getAccentColor(): string {
-        const style = getComputedStyle(document.documentElement);
-        return style.getPropertyValue('--accent-color').trim() || '#88c0d0';
+    // ---- Color palettes for each cat breed ----
+    interface CatPalette {
+        outline: string;
+        base: string;
+        shadow: string;
+        highlight: string;
+        ear: string;
+        eye: string;
+        nose: string;
+        name: string;
     }
 
-    function getLineColor(): string {
-        const style = getComputedStyle(document.documentElement);
-        const textColor = style.getPropertyValue('--card-text-color-main').trim();
-        return textColor || '#4a4a4a';
+    const PALETTES: CatPalette[] = [
+        { name: 'orange', outline: '#8B5E3C', base: '#E8A040', shadow: '#C07830', highlight: '#F0C878', ear: '#E8A0A0', eye: '#2D5016', nose: '#E88080' },
+        { name: 'black', outline: '#181818', base: '#303030', shadow: '#181818', highlight: '#505050', ear: '#504040', eye: '#E8E840', nose: '#C06060' },
+        { name: 'white', outline: '#A09088', base: '#F0E8E0', shadow: '#C8B8A8', highlight: '#FFFFFF', ear: '#E8A0A0', eye: '#5888D0', nose: '#E8A0A0' },
+        { name: 'gray', outline: '#505868', base: '#8890A0', shadow: '#606878', highlight: '#B0B8C8', ear: '#C8A0A0', eye: '#88C840', nose: '#D08888' },
+        { name: 'calico', outline: '#6B4E3C', base: '#F0E8E0', shadow: '#C8B8A8', highlight: '#FFFFFF', ear: '#E8A040', eye: '#508030', nose: '#E88080' },
+        { name: 'siamese', outline: '#584038', base: '#F0E0C8', shadow: '#C8A888', highlight: '#F8F0E8', ear: '#584038', eye: '#5888D0', nose: '#D08888' },
+        { name: 'tuxedo', outline: '#181818', base: '#282828', shadow: '#181818', highlight: '#F0E8E0', ear: '#504040', eye: '#60A840', nose: '#D08888' },
+        { name: 'ginger', outline: '#7A4420', base: '#D08030', shadow: '#A06020', highlight: '#F0B868', ear: '#E8A0A0', eye: '#306020', nose: '#E88080' },
+    ];
+
+    // ---- Pixel sprite data (16x14 grid, each row is a string) ----
+    // Legend: . = transparent, O = outline, B = base, S = shadow, H = highlight, E = ear inner, Y = eye, N = nose, P = patch (calico/tuxedo)
+
+    const SPRITE_SIT = [
+        '....OO....OO....',
+        '...OEEO..OEEO...',
+        '..OBBBO..OBBBO..',
+        '..OBBBBBBBBBBO..',
+        '.OBBBYBBBBYBBO..',
+        '.OBBBBBNBBBBBO..',
+        '.OBBBBBNBBBBBO..',
+        '..OBBBBBBBBBO...',
+        '..OBBSSSSBBBO...',
+        '.OBBSSSSSSBBBO..',
+        '.OBBSSSSSSBBBO..',
+        '.OBBOBBBBOBBO...',
+        '.OO.OBBBO.OO.OO.',
+        '....OOOOO..OBBBO',
+        '...........OOOOO',
+    ];
+
+    const SPRITE_HAPPY = [
+        '....OO....OO....',
+        '...OEEO..OEEO...',
+        '..OBBBO..OBBBO..',
+        '..OBBBBBBBBBBO..',
+        '.OB.OYO..OYO.BO.',
+        '.OBBBBBNBBBBBO..',
+        '.OBBB.OOO.BBBO..',
+        '..OBBBBBBBBBO...',
+        '..OBBSSSSBBBO...',
+        '.OBBSSSSSSBBBO..',
+        '.OBBSSSSSSBBBO..',
+        '.OBBOBBBBOBBO...',
+        '.OO.OBBBO.OO....',
+        '....OOOOO.......',
+    ];
+
+    const SPRITE_SCARED = [
+        '...OO......OO...',
+        '..OEEO....OEEO..',
+        '..OBBBO..OBBBO..',
+        '.OBBBBBBBBBBBO..',
+        '.OBOYOBBOBYOBO..',
+        '.OBBBBBNBBBBBO..',
+        '.OBBBOOOOBBBBO..',
+        '..OBBBBBBBBBO...',
+        '...OBBSSBBBO....',
+        '...OBSSSSBO.....',
+        '...OBSSSSBO.....',
+        '...OBOBBOBOO....',
+        '...OO.OO.OOBBO..',
+        '..........OBBBO.',
+        '...........OOOO.',
+    ];
+
+    // Walk frames (2 frames for animation)
+    const SPRITE_WALK1 = [
+        '....OO....OO....',
+        '...OEEO..OEEO...',
+        '..OBBBO..OBBBO..',
+        '..OBBBBBBBBBBO..',
+        '.OBBBYBBBBYBBO..',
+        '.OBBBBBNBBBBBO..',
+        '.OBBBBBNBBBBBO..',
+        '..OBBBBBBBBBO...',
+        '..OBBBSSSSBBBO..',
+        '..OBBSSSSSSBO...',
+        '..OBO.OBOB.OBO..',
+        '..OO..OO.O..OO..',
+    ];
+
+    const SPRITE_WALK2 = [
+        '....OO....OO....',
+        '...OEEO..OEEO...',
+        '..OBBBO..OBBBO..',
+        '..OBBBBBBBBBBO..',
+        '.OBBBYBBBBYBBO..',
+        '.OBBBBBNBBBBBO..',
+        '.OBBBBBNBBBBBO..',
+        '..OBBBBBBBBBO...',
+        '..OBBBSSSSBBBO..',
+        '..OBBSSSSSSBO...',
+        '.OBO..BOBO..OBO.',
+        '.OO...OO.O...OO.',
+    ];
+
+    // Run frames
+    const SPRITE_RUN1 = [
+        '..OO....OO......',
+        '.OEEO..OEEO.....',
+        '.OBBBO.OBBBO....',
+        '.OBBBBBBBBBBO...',
+        'OBBBYBBBBYBBO...',
+        'OBBBBBNBBBBBO...',
+        'OBBBBBNBBBBBO...',
+        '.OBBBBBBBBBO....',
+        '.OBBSSSSSSBO....',
+        '.OBSSSSSSSOBO...',
+        '.OBO....O..OBO..',
+        '.OO.....O...OO..',
+        '........OO......',
+    ];
+
+    const SPRITE_RUN2 = [
+        '..OO....OO......',
+        '.OEEO..OEEO.....',
+        '.OBBBO.OBBBO....',
+        '.OBBBBBBBBBBO...',
+        'OBBBYBBBBYBBO...',
+        'OBBBBBNBBBBBO...',
+        'OBBBBBNBBBBBO...',
+        '.OBBBBBBBBBO....',
+        '.OBBSSSSSSBO....',
+        '.OBSSSSSSSOBO...',
+        'OBO.....O.OBO...',
+        'OO......O..OO...',
+        '.........OO.....',
+    ];
+
+    type Emotion = 'calm' | 'happy' | 'scared';
+    type CatState = 'idle' | 'walking' | 'running' | 'reacting';
+
+    interface PixelCat {
+        x: number;
+        y: number;
+        palette: CatPalette;
+        facing: 1 | -1;
+        state: CatState;
+        emotion: Emotion;
+        targetX: number;
+        targetY: number;
+        walkFrame: number;
+        walkTimer: number;
+        reactionTimer: number;
+        idleTimer: number;
+        blinkTimer: number;
+        blinking: boolean;
+        tailPhase: number;
+        scale: number;
+        patchOffsets: number[]; // for calico/tuxedo patches
     }
 
-    // ---- Drawing helpers ----
-    function drawLine(x1: number, y1: number, x2: number, y2: number, width = 1.5) {
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.lineWidth = width;
-        ctx.stroke();
+    // ---- Create cats ----
+    function createCat(palette: CatPalette, x: number, y: number): PixelCat {
+        return {
+            x, y, palette,
+            facing: Math.random() > 0.5 ? 1 : -1,
+            state: 'idle',
+            emotion: 'calm',
+            targetX: x,
+            targetY: y,
+            walkFrame: 0,
+            walkTimer: 0,
+            reactionTimer: 0,
+            idleTimer: Math.random() * 5,
+            blinkTimer: Math.random() * 3,
+            blinking: false,
+            tailPhase: Math.random() * Math.PI * 2,
+            scale: 1,
+            patchOffsets: Array.from({ length: 8 }, () => Math.floor(Math.random() * 14)),
+        };
     }
 
-    function drawCurve(x1: number, y1: number, cx: number, cy: number, x2: number, y2: number, width = 1.5) {
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.quadraticCurveTo(cx, cy, x2, y2);
-        ctx.lineWidth = width;
-        ctx.stroke();
-    }
+    // Pick 6-8 cats with distinct palettes
+    const numCats = Math.min(6 + Math.floor(Math.random() * 3), PALETTES.length);
+    const shuffled = [...PALETTES].sort(() => Math.random() - 0.5);
+    const cats: PixelCat[] = [];
 
-    function drawEllipse(cx: number, cy: number, rx: number, ry: number, width = 1.5) {
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        ctx.lineWidth = width;
-        ctx.stroke();
-    }
-
-    // ---- Draw the cat ----
-    function drawCat(t: number) {
-        const lineColor = getLineColor();
-        const accentColor = getAccentColor();
-        ctx.strokeStyle = lineColor;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        const x = cat.x;
-        const baseY = cat.groundY;
-        const f = cat.facing;
-        const scale = 1;
-
-        // Jump offset
-        let jumpOff = 0;
-        if (cat.jumping) {
-            jumpOff = cat.vy < 0 ? Math.abs(cat.vy) * 2 : 0;
+    function initCats() {
+        if (W < 1 || H < 1) return;
+        cats.length = 0;
+        const margin = 40;
+        const catSize = 16 * PX; // sprite width in CSS px
+        const spacing = Math.max(catSize + 10, (H - margin * 2) / numCats);
+        for (let i = 0; i < numCats; i++) {
+            const px = margin + Math.random() * Math.max(1, W - margin * 2);
+            const py = margin + i * spacing + Math.random() * spacing * 0.3;
+            cats.push(createCat(shuffled[i], px, Math.min(py, H - margin)));
         }
-
-        const bodyY = baseY - jumpOff;
-
-        ctx.save();
-        ctx.translate(x, bodyY);
-        ctx.scale(f * scale, scale);
-
-        // ---- Body (oval) ----
-        const bodyW = cat.sitting ? 22 : 28;
-        const bodyH = cat.sitting ? 16 : 13;
-        const bodyYOff = cat.sitting ? -16 : -14;
-        drawEllipse(0, bodyYOff, bodyW, bodyH, 1.8);
-
-        // ---- Head ----
-        const headX = cat.sitting ? 12 : 22;
-        const headY = bodyYOff - (cat.sitting ? 18 : 15);
-        const headTilt = Math.sin(t * 2) * 0.03 + cat.headTilt * 0.05;
-
-        ctx.save();
-        ctx.translate(headX, headY);
-        ctx.rotate(headTilt);
-
-        // Head circle
-        drawEllipse(0, 0, 12, 11, 1.8);
-
-        // Ears
-        const earW = cat.earWiggle * 2;
-        // Left ear
-        drawLine(-8, -8, -12 + earW, -20, 1.5);
-        drawLine(-12 + earW, -20, -3, -10, 1.5);
-        // Right ear
-        drawLine(4, -10, 10 - earW, -22, 1.5);
-        drawLine(10 - earW, -22, 12, -8, 1.5);
-
-        // Eyes
-        if (cat.blinking) {
-            // Closed eyes — happy lines
-            drawCurve(-5, -1, -5, -3, -3, -1, 1.2);
-            drawCurve(3, -1, 5, -3, 7, -1, 1.2);
-        } else {
-            // Open eyes
-            ctx.fillStyle = lineColor;
-            ctx.beginPath();
-            ctx.ellipse(-4, -1, 2.5, 3, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(5, -1, 2.5, 3, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pupils (look toward target)
-            const lookDir = cat.facing * (cat.targetX > cat.x ? 1 : -1);
-            ctx.fillStyle = accentColor;
-            ctx.beginPath();
-            ctx.ellipse(-4 + lookDir * 1, -0.5, 1.2, 1.8, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(5 + lookDir * 1, -0.5, 1.2, 1.8, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Nose
-        ctx.fillStyle = accentColor;
-        ctx.beginPath();
-        ctx.moveTo(0.5, 3);
-        ctx.lineTo(-1, 5);
-        ctx.lineTo(2, 5);
-        ctx.closePath();
-        ctx.fill();
-
-        // Whiskers
-        ctx.strokeStyle = lineColor;
-        ctx.globalAlpha = 0.5;
-        drawLine(-12, 2, -22, -1, 0.8);
-        drawLine(-12, 4, -22, 4, 0.8);
-        drawLine(8, 2, 18, -1, 0.8);
-        drawLine(8, 4, 18, 4, 0.8);
-        ctx.globalAlpha = 1;
-
-        // Mouth
-        drawCurve(-1, 5, 0.5, 8, 2, 5, 1);
-
-        ctx.restore(); // head
-
-        // ---- Legs ----
-        ctx.strokeStyle = lineColor;
-        if (cat.sitting) {
-            // Front legs
-            drawLine(-8, -6, -10, 0, 1.5);
-            drawLine(-10, 0, -6, 0, 1.2);
-            drawLine(2, -6, 0, 0, 1.5);
-            drawLine(0, 0, 4, 0, 1.2);
-            // Back leg (tucked)
-            drawCurve(-18, -10, -24, -4, -20, 0, 1.5);
-        } else {
-            // Walking/running animation
-            const p = cat.pawPhase;
-            const stride = 8;
-            // Front legs
-            const fl1 = Math.sin(p) * stride;
-            const fl2 = Math.sin(p + Math.PI) * stride;
-            drawLine(10, -6, 10 + fl1, 0, 1.5);
-            drawLine(5, -6, 5 + fl2, 0, 1.5);
-            // Back legs
-            const bl1 = Math.sin(p + Math.PI * 0.5) * stride;
-            const bl2 = Math.sin(p + Math.PI * 1.5) * stride;
-            drawLine(-15, -8, -15 + bl1, 0, 1.5);
-            drawLine(-20, -8, -20 + bl2, 0, 1.5);
-        }
-
-        // ---- Tail ----
-        const tailBase = cat.sitting ? -22 : -28;
-        const tailY = bodyYOff + 2;
-        const tailWave = Math.sin(t * 3 + cat.tailPhase) * 12;
-        const tailWave2 = Math.sin(t * 3 + cat.tailPhase + 1) * 8;
-        ctx.beginPath();
-        ctx.moveTo(tailBase, tailY);
-        ctx.bezierCurveTo(
-            tailBase - 10, tailY - 15 + tailWave2,
-            tailBase - 20, tailY - 25 + tailWave,
-            tailBase - 15, tailY - 35 + tailWave
-        );
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-
-        ctx.restore(); // body transform
+        initialized = true;
     }
 
-    // ---- Draw paw prints ----
-    function drawPawPrints() {
-        const lineColor = getLineColor();
-        pawPrints.forEach(p => {
-            if (p.alpha <= 0) return;
-            ctx.save();
-            ctx.globalAlpha = p.alpha * 0.3;
-            ctx.strokeStyle = lineColor;
-            ctx.translate(p.x, p.y);
-            ctx.scale(p.facing, 1);
+    initCats();
 
-            // Main pad
-            drawEllipse(0, 0, 4, 3, 1);
-            // Toe pads
-            drawEllipse(-3, -5, 1.5, 1.5, 0.8);
-            drawEllipse(0, -6, 1.5, 1.5, 0.8);
-            drawEllipse(3, -5, 1.5, 1.5, 0.8);
-
-            ctx.restore();
-        });
+    // ---- Sprite rendering ----
+    function drawPixel(x: number, y: number, color: string) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, PX, PX);
     }
 
-    // ---- Draw dot (laser pointer) ----
-    function drawDot() {
-        if (!dot.visible || dot.alpha <= 0) return;
-        const accentColor = getAccentColor();
+    function getColor(char: string, palette: CatPalette, patchOffsets: number[], row: number, col: number): string | null {
+        switch (char) {
+            case '.': return null;
+            case 'O': return palette.outline;
+            case 'B': {
+                // For calico, add orange/dark patches
+                if (palette.name === 'calico') {
+                    const hash = (row * 7 + col * 13 + patchOffsets[row % 8]) % 20;
+                    if (hash < 4) return '#E8A040'; // orange patch
+                    if (hash < 6) return '#383030'; // dark patch
+                }
+                if (palette.name === 'tuxedo') {
+                    // White chest area
+                    if (row >= 7 && row <= 11 && col >= 5 && col <= 10) return '#F0E8E0';
+                }
+                return palette.base;
+            }
+            case 'S': return palette.shadow;
+            case 'H': return palette.highlight;
+            case 'E': return palette.ear;
+            case 'Y': return palette.eye;
+            case 'N': return palette.nose;
+            case 'P': return palette.highlight;
+            default: return null;
+        }
+    }
+
+    function drawSprite(cat: PixelCat, sprite: string[], t: number) {
         ctx.save();
-        ctx.globalAlpha = dot.alpha * 0.7;
+        const s = cat.scale;
+        const spriteW = 16 * PX;
+        const spriteH = sprite.length * PX;
 
-        // Glow
-        ctx.fillStyle = accentColor;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.translate(cat.x, cat.y);
+        ctx.scale(cat.facing * s, s);
+        ctx.translate(-spriteW / 2, -spriteH / 2);
 
-        // Core
-        ctx.globalAlpha = dot.alpha;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
-        ctx.fill();
+        for (let row = 0; row < sprite.length; row++) {
+            for (let col = 0; col < sprite[row].length; col++) {
+                const char = sprite[row][col];
+                const color = getColor(char, cat.palette, cat.patchOffsets, row, col);
+                if (color) {
+                    // Handle blinking: replace eye pixels with closed eyes
+                    if (char === 'Y' && cat.blinking) {
+                        drawPixel(col * PX, row * PX, cat.palette.outline);
+                        // Draw the "closed eye" line
+                        drawPixel(col * PX, (row + 0.5) * PX, cat.palette.outline);
+                    } else {
+                        drawPixel(col * PX, row * PX, color);
+                    }
+                }
+            }
+        }
 
         ctx.restore();
+    }
+
+    function getSpriteForCat(cat: PixelCat, t: number): string[] {
+        if (cat.state === 'running') {
+            return cat.walkFrame % 2 === 0 ? SPRITE_RUN1 : SPRITE_RUN2;
+        }
+        if (cat.state === 'walking') {
+            return cat.walkFrame % 2 === 0 ? SPRITE_WALK1 : SPRITE_WALK2;
+        }
+        if (cat.state === 'reacting') {
+            switch (cat.emotion) {
+                case 'happy': return SPRITE_HAPPY;
+                case 'scared': return SPRITE_SCARED;
+                default: return SPRITE_SIT;
+            }
+        }
+        return SPRITE_SIT;
     }
 
     // ---- Click handler ----
@@ -289,21 +321,56 @@
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        // Show dot
-        dot.x = clickX;
-        dot.y = clickY;
-        dot.visible = true;
-        dot.alpha = 1;
-        dot.timer = 0;
+        // Calculate distances from click to each cat's head center
+        const catDistances = cats.map((cat, i) => ({
+            index: i,
+            dist: Math.sqrt((cat.x - clickX) ** 2 + (cat.y - clickY) ** 2),
+        })).sort((a, b) => a.dist - b.dist);
 
-        // Set cat target
-        cat.targetX = clickX;
-        cat.targetY = clickY;
-        cat.sitting = false;
-        cat.idleTimer = 0;
+        // Nearest 2-3 cats react
+        const reactCount = 2 + Math.floor(Math.random() * 2);
 
-        // Face toward target
-        cat.facing = clickX > cat.x ? 1 : -1;
+        for (let i = 0; i < Math.min(reactCount, catDistances.length); i++) {
+            const cat = cats[catDistances[i].index];
+            const dist = catDistances[i].dist;
+
+            // Assign random reaction
+            const roll = Math.random();
+
+            if (roll < 0.35) {
+                // Calm: walk to click position calmly
+                cat.state = 'walking';
+                cat.emotion = 'calm';
+                cat.targetX = clickX + (Math.random() - 0.5) * 40;
+                cat.targetY = clickY + (Math.random() - 0.5) * 40;
+                // Clamp to canvas
+                cat.targetX = Math.max(20, Math.min(W - 20, cat.targetX));
+                cat.targetY = Math.max(20, Math.min(H - 20, cat.targetY));
+                cat.facing = cat.targetX > cat.x ? 1 : -1;
+            } else if (roll < 0.7) {
+                // Happy: walk to click, then show happy face
+                cat.state = 'walking';
+                cat.emotion = 'happy';
+                cat.targetX = clickX + (Math.random() - 0.5) * 40;
+                cat.targetY = clickY + (Math.random() - 0.5) * 40;
+                cat.targetX = Math.max(20, Math.min(W - 20, cat.targetX));
+                cat.targetY = Math.max(20, Math.min(H - 20, cat.targetY));
+                cat.facing = cat.targetX > cat.x ? 1 : -1;
+            } else {
+                // Scared: show scared face then run away
+                cat.state = 'reacting';
+                cat.emotion = 'scared';
+                cat.reactionTimer = 0.6; // show scared face briefly
+                // Run direction: away from click
+                const angle = Math.atan2(cat.y - clickY, cat.x - clickX);
+                const runDist = 80 + Math.random() * 60;
+                cat.targetX = cat.x + Math.cos(angle) * runDist;
+                cat.targetY = cat.y + Math.sin(angle) * runDist;
+                cat.targetX = Math.max(20, Math.min(W - 20, cat.targetX));
+                cat.targetY = Math.max(20, Math.min(H - 20, cat.targetY));
+                cat.facing = cat.targetX > cat.x ? 1 : -1;
+            }
+        }
     });
 
     // ---- Animation loop ----
@@ -312,98 +379,113 @@
     function update(timestamp: number) {
         const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
         lastTime = timestamp;
-
-
-
-        cat.groundY = H * 0.75;
         const t = timestamp / 1000;
 
-        // ---- Physics ----
-        const dx = cat.targetX - cat.x;
-        const dist = Math.abs(dx);
-
-        if (!cat.sitting && dist > 5) {
-            // Move toward target
-            const speed = 120;
-            cat.x += Math.sign(dx) * speed * dt;
-            cat.facing = dx > 0 ? 1 : -1;
-            cat.pawPhase += dt * 12;
-
-            // Leave paw prints occasionally
-            if (Math.random() < dt * 4) {
-                pawPrints.push({
-                    x: cat.x + (Math.random() - 0.5) * 10,
-                    y: cat.groundY,
-                    alpha: 1,
-                    facing: cat.facing,
-                });
-                if (pawPrints.length > 20) pawPrints.shift();
+        // Deferred init: wait for valid canvas dimensions
+        if (!initialized) {
+            resize();
+            initCats();
+            if (!initialized) {
+                requestAnimationFrame(update);
+                return;
             }
-        } else if (!cat.sitting) {
-            // Arrived at target, sit down
-            cat.sitting = true;
-            cat.idleTimer = 0;
-            cat.tailPhase = Math.random() * Math.PI * 2;
         }
 
-        // ---- Blink timer ----
-        cat.blinkTimer += dt;
-        if (cat.blinkTimer > 3 + Math.random() * 2) {
-            cat.blinking = true;
-            if (cat.blinkTimer > 3.2 + Math.random() * 0.3) {
+        ctx.clearRect(0, 0, W, H);
+
+        for (const cat of cats) {
+            // ---- Blink ----
+            cat.blinkTimer += dt;
+            if (!cat.blinking && cat.blinkTimer > 3 + Math.random() * 2) {
+                cat.blinking = true;
+                cat.blinkTimer = 0;
+            }
+            if (cat.blinking && cat.blinkTimer > 0.15) {
                 cat.blinking = false;
                 cat.blinkTimer = 0;
             }
-        }
 
-        // ---- Idle behavior ----
-        if (cat.sitting) {
-            cat.idleTimer += dt;
-            // Head tilt
-            cat.headTilt = Math.sin(t * 0.5) * 0.5;
-            // Ear wiggle when curious
-            cat.earWiggle = Math.sin(t * 4) * 0.5;
-        } else {
-            cat.headTilt = 0;
-            cat.earWiggle = 0;
-        }
+            const dx = cat.targetX - cat.x;
+            const dy = cat.targetY - cat.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // ---- Dot fade ----
-        if (dot.visible) {
-            dot.timer += dt;
-            if (dot.timer > 1) {
-                dot.alpha -= dt * 2;
-                if (dot.alpha <= 0) {
-                    dot.visible = false;
-                    dot.alpha = 0;
+            if (cat.state === 'reacting') {
+                cat.reactionTimer -= dt;
+                if (cat.reactionTimer <= 0) {
+                    if (cat.emotion === 'scared') {
+                        cat.state = 'running';
+                    } else {
+                        cat.state = 'idle';
+                        cat.emotion = 'calm';
+                    }
                 }
             }
+
+            if (cat.state === 'walking') {
+                if (dist > 5) {
+                    const speed = 40;
+                    cat.x += (dx / dist) * speed * dt;
+                    cat.y += (dy / dist) * speed * dt;
+                    cat.facing = dx > 0 ? 1 : -1;
+                    cat.walkTimer += dt;
+                    if (cat.walkTimer > 0.2) {
+                        cat.walkFrame++;
+                        cat.walkTimer = 0;
+                    }
+                } else {
+                    // Arrived
+                    if (cat.emotion === 'happy' || cat.emotion === 'calm') {
+                        cat.state = 'reacting';
+                        cat.reactionTimer = 2 + Math.random() * 2;
+                    } else {
+                        cat.state = 'idle';
+                    }
+                }
+            }
+
+            if (cat.state === 'running') {
+                if (dist > 5) {
+                    const speed = 100;
+                    cat.x += (dx / dist) * speed * dt;
+                    cat.y += (dy / dist) * speed * dt;
+                    cat.facing = dx > 0 ? 1 : -1;
+                    cat.walkTimer += dt;
+                    if (cat.walkTimer > 0.1) {
+                        cat.walkFrame++;
+                        cat.walkTimer = 0;
+                    }
+                } else {
+                    cat.state = 'idle';
+                    cat.emotion = 'calm';
+                }
+            }
+
+            if (cat.state === 'idle') {
+                cat.idleTimer += dt;
+            }
+
+            // Keep cats within bounds
+            cat.x = Math.max(20, Math.min(W - 20, cat.x));
+            cat.y = Math.max(20, Math.min(H - 20, cat.y));
+
+            // Resolve overlapping cats (minDist based on sprite size)
+            const minDist = 16 * PX;
+            for (const other of cats) {
+                if (other === cat) continue;
+                const ox = cat.x - other.x;
+                const oy = cat.y - other.y;
+                const od = Math.sqrt(ox * ox + oy * oy);
+                if (od < minDist && od > 0) {
+                    const push = (minDist - od) * 0.3;
+                    cat.x += (ox / od) * push;
+                    cat.y += (oy / od) * push;
+                }
+            }
+
+            // Draw
+            const sprite = getSpriteForCat(cat, t);
+            drawSprite(cat, sprite, t);
         }
-
-        // ---- Paw print fade ----
-        pawPrints.forEach(p => {
-            p.alpha -= dt * 0.15;
-        });
-
-        // ---- Draw ----
-        ctx.clearRect(0, 0, W, H);
-
-        // Ground line (subtle)
-        ctx.save();
-        ctx.strokeStyle = getLineColor();
-        ctx.globalAlpha = 0.08;
-        ctx.setLineDash([4, 8]);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(20, cat.groundY);
-        ctx.lineTo(W - 20, cat.groundY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        drawPawPrints();
-        drawDot();
-        drawCat(t);
 
         requestAnimationFrame(update);
     }

@@ -900,7 +900,8 @@ main.main {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    max-width: 220px;
+    max-width: 280px;
+    min-width: 240px;
     overflow-y: auto;
 
     /* Hide the hamburger menu */
@@ -946,7 +947,7 @@ main.main {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.85rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: var(--card-text-color-secondary);
     margin-bottom: 12px;
@@ -985,9 +986,9 @@ main.main {
 
     a {
         display: block;
-        padding: 5px 0 5px 0;
-        font-size: 0.8rem;
-        line-height: 1.4;
+        padding: 7px 0 7px 0;
+        font-size: 1.05rem;
+        line-height: 1.6;
         color: var(--card-text-color-secondary);
         text-decoration: none;
         border-left: 2px solid transparent;
@@ -1002,10 +1003,10 @@ main.main {
 
     /* Nested levels */
     ul ul {
-        padding-left: 12px;
+        padding-left: 14px;
 
         a {
-            font-size: 0.75rem;
+            font-size: 0.95rem;
             opacity: 0.85;
         }
     }
@@ -1034,6 +1035,11 @@ main.main {
 .custom-article-page {
     /* Hide inline TOC since we moved it to sidebar */
     .article-toc {
+        display: none !important;
+    }
+
+    /* Hide the empty article header strip */
+    .article-header {
         display: none !important;
     }
 
