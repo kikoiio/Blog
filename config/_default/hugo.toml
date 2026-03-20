@@ -1,6 +1,6 @@
 baseURL                = "http://aries727.site/"
 languageCode           = "zh-cn"
-title                  = "Aries727's Blog"
+title                  = "Aries's Blog"
 defaultContentLanguage = "zh-cn"
 hasCJKLanguage         = true
 theme                  = "hugo-theme-stack"
