@@ -21,3 +21,5 @@ rssFullContent = true
 [comments]
     enabled  = false
     provider = ""
+
+favicon = "img/favicon.jpg"
