@@ -23,8 +23,20 @@
         </svg>
     </a>
 
-    <!-- TOC -->
     {{ if .Scratch.Get "TOCEnabled" }}
+    <!-- Mobile TOC toggle button (visible only on mobile) -->
+    <button class="mobile-toc-toggle" aria-label="目录">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+    </button>
+
+    <!-- TOC (desktop: sidebar, mobile: dropdown) -->
     <nav class="custom-toc">
         <div class="custom-toc__title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,4 +86,31 @@
     {{ $opts := dict "minify" hugo.IsProduction }}
     {{ $zimaScript := resources.Get "ts/zima.ts" | js.Build $opts | fingerprint }}
     <script type="text/javascript" src="{{ $zimaScript.RelPermalink }}" defer></script>
+
+    {{/* Mobile TOC toggle */}}
+    <script>
+    (function() {
+        var btn = document.querySelector('.mobile-toc-toggle');
+        var toc = document.querySelector('.custom-toc');
+        if (!btn || !toc) return;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toc.classList.toggle('mobile-open');
+            btn.classList.toggle('active');
+        });
+        document.addEventListener('click', function(e) {
+            if (!toc.contains(e.target) && !btn.contains(e.target)) {
+                toc.classList.remove('mobile-open');
+                btn.classList.remove('active');
+            }
+        });
+        // Close TOC when a link is clicked
+        toc.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                toc.classList.remove('mobile-open');
+                btn.classList.remove('active');
+            }
+        });
+    })();
+    </script>
 {{ end }}

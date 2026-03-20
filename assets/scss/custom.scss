@@ -567,9 +567,23 @@ main.main {
 
 /* --- Mobile responsive --- */
 @media (max-width: 768px) {
+    .theme-switcher {
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .theme-switcher-btn {
+        width: 40px;
+        height: 40px;
+
+        svg { width: 16px; height: 16px; }
+    }
+
     .theme-panel {
-        width: 260px;
+        width: calc(100vw - 48px);
         right: -8px;
+        max-width: 280px;
+        padding: 16px;
     }
 }
 
@@ -681,7 +695,7 @@ main.main {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     z-index: 1;
 }
@@ -764,6 +778,14 @@ main.main {
 .graph-node--post:hover {
     background: var(--card-background-selected);
     transform: translateY(-2px);
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .graph-node:active {
+        background: var(--card-background-selected);
+        transform: scale(0.95);
+    }
 }
 
 /* --- Node label --- */
@@ -870,15 +892,43 @@ main.main {
 /* --- Mobile --- */
 @media (max-width: 768px) {
     .graph-node--center .graph-node__label {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
     }
 
     .graph-node__label {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+    }
+
+    .graph-node--post .graph-node__label {
+        font-size: 0.65rem;
+    }
+
+    .graph-node {
+        padding: 4px 8px;
     }
 
     .graph-blob {
-        opacity: 0.25;
+        opacity: 0.15;
+    }
+
+    .graph-float-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* --- Small phones --- */
+@media (max-width: 375px) {
+    .graph-node--center .graph-node__label {
+        font-size: 0.85rem;
+    }
+
+    .graph-node__label {
+        font-size: 0.6rem;
+    }
+
+    .graph-node {
+        padding: 3px 6px;
     }
 }
 
@@ -1052,6 +1102,11 @@ main.main {
     }
 }
 
+/* ---- Mobile TOC toggle button (hidden on desktop) ---- */
+.mobile-toc-toggle {
+    display: none;
+}
+
 /* ---- Mobile: Article Page ---- */
 @media (max-width: 768px) {
     .custom-left-sidebar {
@@ -1064,20 +1119,73 @@ main.main {
         padding: 10px 16px;
         max-width: 100%;
         width: 100%;
+        min-width: 0;
         background: var(--body-background) !important;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
     }
 
+    /* Mobile TOC toggle button */
+    .mobile-toc-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: var(--card-background);
+        backdrop-filter: blur(12px);
+        color: var(--card-text-color-main);
+        cursor: pointer;
+        margin-left: 8px;
+        flex-shrink: 0;
+        transition: background 0.2s ease;
+
+        &.active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+    }
+
+    /* TOC dropdown on mobile */
     .custom-toc {
         display: none;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        z-index: 99;
+        max-height: 60vh;
+        overflow-y: auto;
+        background: var(--body-background);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+
+        &.mobile-open {
+            display: block;
+            animation: tocSlideDown 0.25s ease forwards;
+        }
+    }
+
+    @keyframes tocSlideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .custom-right-sidebar {
         display: none !important;
     }
 
+    /* Give content space below fixed top bar */
+    .custom-article-page .container {
+        padding-top: 60px;
+    }
+
+    /* Hide theme's inline TOC since we have the dropdown */
     .custom-article-page .article-toc {
-        display: block !important;
+        display: none !important;
     }
 }

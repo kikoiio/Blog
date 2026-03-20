@@ -114,6 +114,10 @@ function initGraph() {
     let width = container.clientWidth || window.innerWidth;
     let height = container.clientHeight || window.innerHeight;
 
+    // Mobile scaling factor
+    const isMobile = () => window.innerWidth < 768;
+    const mobileScale = () => isMobile() ? 0.65 : 1;
+
     svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
 
     // State
@@ -142,8 +146,12 @@ function initGraph() {
     const zoom = d3.zoom()
         .scaleExtent([0.3, 3])
         .filter((event: any) => {
-            // Allow only scroll-wheel zoom, block drag-to-pan
-            return event.type === 'wheel';
+            // Allow scroll-wheel zoom + pinch-zoom on touch devices
+            if (event.type === 'wheel') return true;
+            if (event.type === 'touchstart' || event.type === 'touchmove' || event.type === 'touchend') {
+                return event.touches && event.touches.length >= 2;
+            }
+            return false;
         })
         .on('zoom', (event: any) => {
             zoomGroup.attr('transform', event.transform);
@@ -154,8 +162,8 @@ function initGraph() {
     // Disable double-click zoom (conflicts with node clicks)
     svg.on('dblclick.zoom', null);
 
-    // Set initial zoom to 1.2x centered
-    const initialScale = 1.2;
+    // Set initial zoom — smaller on mobile to fit more nodes
+    const initialScale = isMobile() ? 0.9 : 1.2;
     const initialTransform = d3.zoomIdentity
         .translate(width * (1 - initialScale) / 2, height * (1 - initialScale) / 2)
         .scale(initialScale);
@@ -184,15 +192,17 @@ function initGraph() {
 
     // ---- Node dimensions ----
     function getNodeWidth(d: GraphNode): number {
-        if (d.type === 'center') return 160;
-        if (d.type === 'category' || d.type === 'tag') return 180;
-        return 170;
+        const s = mobileScale();
+        if (d.type === 'center') return 160 * s;
+        if (d.type === 'category' || d.type === 'tag') return 180 * s;
+        return 170 * s;
     }
 
     function getNodeHeight(d: GraphNode): number {
-        if (d.type === 'center') return 90;
-        if (d.type === 'category' || d.type === 'tag') return 56;
-        return 48;
+        const s = mobileScale();
+        if (d.type === 'center') return 90 * s;
+        if (d.type === 'category' || d.type === 'tag') return 56 * s;
+        return 48 * s;
     }
 
     // ---- Check if a tree node has expandable content ----
@@ -478,19 +488,23 @@ function initGraph() {
         const cx = width / 2;
         const cy = height / 2;
 
+        const ms = mobileScale();
         simulation = d3.forceSimulation(nodes)
             .force('charge', d3.forceManyBody().strength((d: GraphNode) => {
-                if (isFocused(d)) return -600;
-                if (isFocusChild(d)) return -400;
-                if (d.type === 'center' && !focusedNodeId) return -600;
-                if (!focusedNodeId) return -400;
-                return -150;
+                const base = (() => {
+                    if (isFocused(d)) return -600;
+                    if (isFocusChild(d)) return -400;
+                    if (d.type === 'center' && !focusedNodeId) return -600;
+                    if (!focusedNodeId) return -400;
+                    return -150;
+                })();
+                return base * ms;
             }))
             .force('link', d3.forceLink(links).id((d: any) => d.id).distance((l: any) => {
                 const src = typeof l.source === 'string' ? nodes.find(n => n.id === l.source) : l.source;
-                if (src && src.id === focusedNodeId) return 160;
-                if (!focusedNodeId && src && src.type === 'center') return 200;
-                return 130;
+                if (src && src.id === focusedNodeId) return 160 * ms;
+                if (!focusedNodeId && src && src.type === 'center') return 200 * ms;
+                return 130 * ms;
             }).strength(0.8))
             .force('collision', d3.forceCollide().radius((d: GraphNode) => {
                 const s = getNodeScale(d);

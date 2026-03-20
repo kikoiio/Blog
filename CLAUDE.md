@@ -15,12 +15,13 @@ Hugo 个人博客，部署在 GitHub Pages (aries727.site)。基于 hugo-theme-s
 config/_default/     # Hugo 配置 (hugo.toml, params.toml, markup.toml, menu.toml)
 layouts/             # 自定义页面模板 (覆盖主题)
   home.html          # D3 力导向图首页
-  single.html        # 文章页 (自定义 TOC 侧栏 + 像素猫)
+  single.html        # 文章页 (自定义 TOC 侧栏 + Zima Blue 泳池)
   list.html          # 重定向到首页
   _partials/         # 自定义 head/footer 等
 assets/
   ts/graph.ts        # 首页交互式思维导图 (587 行)
-  ts/cat.ts          # 像素猫群落动画 (494 行)
+  ts/zima.ts         # Zima Blue 泳池动画 - 右侧栏 (429 行)
+  ts/cat.ts          # 像素猫群落动画 (494 行, 已弃用，未被模板引用)
   ts/custom.ts       # 主题切换 + 滚动动画 (212 行)
   scss/custom.scss   # 所有自定义样式 (~1080 行)
 content/post/        # 文章内容，按目录层级组织
@@ -30,7 +31,7 @@ static/CNAME         # 自定义域名
 
 ## Key Custom Features
 1. **D3 力导向图首页** - 文件路径 → 树结构 → 力导向图，支持展开/折叠/聚焦
-2. **像素猫群落** - Canvas 动画，8 种花色，点击交互 (开心/害怕/平静)
+2. **Zima Blue 泳池** - Canvas 动画，俯视泳池 + 机器人清洁器巡逻，点击召唤交互
 3. **6 色主题系统** - mini-teal/rose/sage/lavender/sand/dark，glassmorphism 风格
 4. **自定义 TOC 侧栏** - 左侧栏显示文章目录，移动端自适应
 
