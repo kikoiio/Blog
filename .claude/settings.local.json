@@ -52,7 +52,8 @@
       "Bash(xargs wc:*)",
       "Bash(cat /d/Desktop/my_projects/Blog/.github/workflows/*.yml)",
       "Bash(cat /d/Desktop/my_projects/Blog/archetypes/*.md)",
-      "Bash(wc -l /d/Desktop/my_projects/Blog/assets/ts/*.ts)"
+      "Bash(wc -l /d/Desktop/my_projects/Blog/assets/ts/*.ts)",
+      "Bash(wc -l \"D:/Desktop/my_projects/Blog/assets/ts\"/*.ts \"D:/Desktop/my_projects/Blog/assets/scss/custom.scss\")"
     ]
   }
 }

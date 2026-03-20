@@ -1120,9 +1120,8 @@ main.main {
         max-width: 100%;
         width: 100%;
         min-width: 0;
+        overflow: visible !important;
         background: var(--body-background) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
     }
 
     /* Mobile TOC toggle button */
@@ -1153,8 +1152,8 @@ main.main {
         position: fixed;
         top: 56px;
         left: 0;
-        right: 0;
-        z-index: 99;
+        width: 100vw;
+        z-index: 200;
         max-height: 60vh;
         overflow-y: auto;
         background: var(--body-background);
@@ -1175,8 +1174,18 @@ main.main {
         to { opacity: 1; transform: translateY(0); }
     }
 
-    .custom-right-sidebar {
-        display: none !important;
+    /* Right sidebar: show as horizontal pool at bottom on mobile */
+    .custom-article-page .right-sidebar.custom-right-sidebar {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 200px !important;
+        max-height: none !important;
+        top: auto !important;
+        align-self: auto !important;
+        order: 0 !important;
+        flex-shrink: 1 !important;
+        margin-top: 20px;
     }
 
     /* Give content space below fixed top bar */
