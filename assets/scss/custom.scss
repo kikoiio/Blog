@@ -900,7 +900,7 @@ main.main {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    max-width: 280px;
+    max-width: 280px !important;
     min-width: 240px;
     overflow-y: auto;
 
@@ -947,7 +947,7 @@ main.main {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 1.15rem;
+    font-size: 15px;
     font-weight: 600;
     color: var(--card-text-color-secondary);
     margin-bottom: 12px;
@@ -987,7 +987,7 @@ main.main {
     a {
         display: block;
         padding: 7px 0 7px 0;
-        font-size: 1.05rem;
+        font-size: 14px;
         line-height: 1.6;
         color: var(--card-text-color-secondary);
         text-decoration: none;
@@ -1006,7 +1006,7 @@ main.main {
         padding-left: 14px;
 
         a {
-            font-size: 0.95rem;
+            font-size: 13px;
             opacity: 0.85;
         }
     }
