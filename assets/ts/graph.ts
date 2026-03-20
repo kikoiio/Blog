@@ -301,22 +301,38 @@ function initGraph() {
 
         const treeNode = node.treeRef;
 
-        // Add child folders
+        // Add child folders (leaf bundles with a single page become post nodes directly)
         treeNode.children.forEach((child, name) => {
-            const childId = `node-${nodeIdCounter++}`;
-            const childPath = node.treePath ? `${node.treePath}/${name}` : name;
-            nodes.push({
-                id: childId,
-                label: name,
-                type: 'category',
-                expanded: false,
-                treeRef: child,
-                treePath: childPath,
-                parentId: nodeId,
-                x: width / 2 + (Math.random() - 0.5) * 100,
-                y: height / 2 + (Math.random() - 0.5) * 100,
-            });
-            links.push({ source: nodeId, target: childId });
+            const isLeafBundle = child.children.size === 0 && child.pages.length === 1;
+            if (isLeafBundle) {
+                const page = child.pages[0];
+                const postId = `post-${nodeIdCounter++}`;
+                nodes.push({
+                    id: postId,
+                    label: page.title,
+                    type: 'post',
+                    url: page.url,
+                    parentId: nodeId,
+                    x: width / 2 + (Math.random() - 0.5) * 100,
+                    y: height / 2 + (Math.random() - 0.5) * 100,
+                });
+                links.push({ source: nodeId, target: postId });
+            } else {
+                const childId = `node-${nodeIdCounter++}`;
+                const childPath = node.treePath ? `${node.treePath}/${name}` : name;
+                nodes.push({
+                    id: childId,
+                    label: name,
+                    type: 'category',
+                    expanded: false,
+                    treeRef: child,
+                    treePath: childPath,
+                    parentId: nodeId,
+                    x: width / 2 + (Math.random() - 0.5) * 100,
+                    y: height / 2 + (Math.random() - 0.5) * 100,
+                });
+                links.push({ source: nodeId, target: childId });
+            }
         });
 
         // Add direct pages (files in this folder)
