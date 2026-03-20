@@ -1019,16 +1019,19 @@ main.main {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
-    align-items: stretch;
+    align-items: center;
     width: var(--right-sidebar-max-width, 250px);
     flex-shrink: 0;
+    position: sticky;
+    top: calc(50vh - 35vh);
+    height: 70vh;
+    max-height: 600px;
+    align-self: flex-start;
 }
 
-#cat-canvas {
+#zima-canvas {
     width: 100%;
-    min-height: 500px;
-    cursor: crosshair;
-    flex: 1;
+    height: 100%;
 }
 
 /* ---- Article adjustments ---- */

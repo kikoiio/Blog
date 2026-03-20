@@ -46,9 +46,9 @@
 {{ end }}
 
 {{ define "right-sidebar" }}
-<!-- Cat playground -->
+<!-- Zima Blue pool -->
 <aside class="sidebar right-sidebar sticky custom-right-sidebar">
-    <canvas id="cat-canvas"></canvas>
+    <canvas id="zima-canvas"></canvas>
 </aside>
 {{ end }}
 
@@ -70,8 +70,8 @@
     {{ partialCached "article/components/photoswipe" . }}
     {{ partial "article/components/mermaid" . }}
 
-    {{/* Cat animation script */}}
+    {{/* Zima Blue pool animation */}}
     {{ $opts := dict "minify" hugo.IsProduction }}
-    {{ $catScript := resources.Get "ts/cat.ts" | js.Build $opts | fingerprint }}
-    <script type="text/javascript" src="{{ $catScript.RelPermalink }}" defer></script>
+    {{ $zimaScript := resources.Get "ts/zima.ts" | js.Build $opts | fingerprint }}
+    <script type="text/javascript" src="{{ $zimaScript.RelPermalink }}" defer></script>
 {{ end }}

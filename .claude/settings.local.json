@@ -48,7 +48,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(grep -r \"right-sidebar-max-width\\\\|cat-canvas\\\\|canvas\" /d/Desktop/my_projects/Blog --include=*.scss --include=*.html --include=*.js)"
+      "Bash(grep -r \"right-sidebar-max-width\\\\|cat-canvas\\\\|canvas\" /d/Desktop/my_projects/Blog --include=*.scss --include=*.html --include=*.js)",
+      "Bash(xargs wc:*)",
+      "Bash(cat /d/Desktop/my_projects/Blog/.github/workflows/*.yml)",
+      "Bash(cat /d/Desktop/my_projects/Blog/archetypes/*.md)",
+      "Bash(wc -l /d/Desktop/my_projects/Blog/assets/ts/*.ts)"
     ]
   }
 }
