@@ -138,9 +138,13 @@ function initGraph() {
     const linkGroup = zoomGroup.append('g').attr('class', 'graph-links');
     const nodeGroup = zoomGroup.append('g').attr('class', 'graph-nodes');
 
-    // ---- Zoom & Pan ----
+    // ---- Zoom (no pan — dragging nodes repositions the graph instead) ----
     const zoom = d3.zoom()
         .scaleExtent([0.3, 3])
+        .filter((event: any) => {
+            // Allow only scroll-wheel zoom, block drag-to-pan
+            return event.type === 'wheel';
+        })
         .on('zoom', (event: any) => {
             zoomGroup.attr('transform', event.transform);
         });
