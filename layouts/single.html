@@ -104,11 +104,22 @@
                 btn.classList.remove('active');
             }
         });
-        // Close TOC when a link is clicked
+        // Close TOC when a link is clicked, then scroll to heading
         toc.addEventListener('click', function(e) {
-            if (e.target.tagName === 'A') {
+            var link = e.target.closest('a');
+            if (link) {
+                e.preventDefault();
+                var hash = link.getAttribute('href');
                 toc.classList.remove('mobile-open');
                 btn.classList.remove('active');
+                requestAnimationFrame(function() {
+                    var target = document.querySelector(hash);
+                    if (target) {
+                        target.scrollIntoView();
+                        window.scrollBy(0, -70);
+                    }
+                    history.replaceState(null, '', hash);
+                });
             }
         });
     })();

@@ -1122,6 +1122,13 @@ main.main {
         min-width: 0;
         overflow: visible !important;
         background: transparent !important;
+
+        .back-arrow {
+            width: 36px;
+            height: 36px;
+
+            svg { width: 22px; height: 22px; }
+        }
     }
 
     /* Mobile TOC toggle button */
@@ -1192,6 +1199,16 @@ main.main {
     .custom-article-page .container {
         padding-top: 60px;
         gap: 10px;
+    }
+
+    /* Prevent headings from scrolling behind fixed buttons */
+    .custom-article-page .article-content h1,
+    .custom-article-page .article-content h2,
+    .custom-article-page .article-content h3,
+    .custom-article-page .article-content h4,
+    .custom-article-page .article-content h5,
+    .custom-article-page .article-content h6 {
+        scroll-margin-top: 70px;
     }
 
     .custom-article-page .site-footer {
