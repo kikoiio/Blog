@@ -1,7 +1,8 @@
 /**
- * Zima Blue — Pool cleaner animation inspired by the Netflix short.
- * A small robot cleaner glides along a vertical swimming pool.
- * Concentric ripples emanate from the robot, fragments drift upward.
+ * Zima Blue — Top-down pool cleaner animation inspired by the Netflix short.
+ * Bird's eye view of a swimming pool with a small robot cleaner.
+ * Caustic light patterns ripple across the pool floor.
+ * Click in the pool to summon the robot.
  * Drawn in white to adapt to any theme background.
  */
 
@@ -26,7 +27,7 @@
         ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
 
         const padX = W * 0.06;
-        const padY = H * 0.08;
+        const padY = H * 0.04;
         poolX = padX;
         poolY = padY;
         poolW = W - padX * 2;
@@ -38,12 +39,30 @@
     window.addEventListener('resize', resize);
 
     // ---- Robot ----
+    const ROWS = 6;
     const robot = {
-        t: 0, speed: 0.00022,
         x: 0, y: 0, angle: 0,
-        w: 24, h: 16,
+        size: 18,
         cx: 0, cy: 0,
+        row: 0,
+        sweepDir: 1 as 1 | -1,     // 1 = sweep right, -1 = sweep left
+        rowDir: 1 as 1 | -1,       // 1 = going down rows, -1 = going up
+        phase: 'sweep' as 'sweep' | 'turn' | 'navigate' | 'align',
+        targetX: 0, targetY: 0,
+        alignRow: 0,
     };
+
+    function getRowY(row: number): number {
+        const m = robot.size + 6;
+        const tY = poolY + m;
+        const bY = poolY + poolH - m;
+        return tY + row * (bY - tY) / ROWS;
+    }
+
+    function getMargins() {
+        const m = robot.size + 6;
+        return { lX: poolX + m, rX: poolX + poolW - m };
+    }
 
     // ---- Ripples ----
     interface Ripple { x: number; y: number; r: number; maxR: number; }
@@ -51,89 +70,133 @@
     let rippleTimer = 0;
 
     function spawnRipple(x: number, y: number) {
-        ripples.push({ x, y, r: 5, maxR: 35 + Math.random() * 20 });
-    }
-
-    // ---- Bubbles ----
-    interface Bubble {
-        x: number; y: number; r: number;
-        vy: number; vx: number; life: number; maxLife: number;
-    }
-    const bubbles: Bubble[] = [];
-    let bubbleTimer = 0;
-
-    function spawnBubble(x: number, y: number) {
-        bubbles.push({
-            x, y, r: 1 + Math.random() * 2.5,
-            vy: -(0.15 + Math.random() * 0.3),
-            vx: (Math.random() - 0.5) * 0.1,
-            life: 0, maxLife: 160 + Math.random() * 200,
-        });
+        ripples.push({ x, y, r: 4, maxR: 30 + Math.random() * 25 });
     }
 
     // ---- Caustics ----
-    interface Caustic { x: number; y: number; r: number; speed: number; phase: number; }
-    const caustics: Caustic[] = [];
+    interface CausticCell { x: number; y: number; r: number; phase: number; speed: number; }
+    const causticCells: CausticCell[] = [];
 
     function initCaustics() {
-        caustics.length = 0;
-        for (let i = 0; i < 12; i++) {
-            caustics.push({
+        causticCells.length = 0;
+        const count = Math.floor(poolW * poolH / 4000);
+        for (let i = 0; i < count; i++) {
+            causticCells.push({
                 x: poolX + Math.random() * poolW,
                 y: poolY + Math.random() * poolH,
-                r: 10 + Math.random() * 22,
-                speed: 0.002 + Math.random() * 0.005,
+                r: 8 + Math.random() * 18,
                 phase: Math.random() * Math.PI * 2,
+                speed: 0.001 + Math.random() * 0.003,
             });
         }
     }
 
-    // ---- Fragments ----
-    interface Fragment {
-        x: number; y: number; size: number;
-        vy: number; vx: number; alpha: number;
-        rotation: number; rotSpeed: number; type: number;
-    }
-    const fragments: Fragment[] = [];
+    // ---- Click handler ----
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left);
+        const my = (e.clientY - rect.top);
 
-    function initFragments() {
-        fragments.length = 0;
-        for (let i = 0; i < 10; i++) {
-            fragments.push({
-                x: poolX + poolW * 0.1 + Math.random() * poolW * 0.8,
-                y: poolY + poolH * 0.15 + Math.random() * poolH * 0.6,
-                size: 3 + Math.random() * 6,
-                vy: -0.03 - Math.random() * 0.08,
-                vx: (Math.random() - 0.5) * 0.05,
-                alpha: 0.3 + Math.random() * 0.3,
-                rotation: Math.random() * Math.PI * 2,
-                rotSpeed: (Math.random() - 0.5) * 0.007,
-                type: Math.floor(Math.random() * 4),
-            });
+        if (mx >= poolX && mx <= poolX + poolW &&
+            my >= poolY && my <= poolY + poolH) {
+            robot.phase = 'navigate';
+            robot.targetX = mx;
+            robot.targetY = my;
+            spawnRipple(mx, my);
         }
+    });
+
+    // ---- Move toward a point, return true if arrived ----
+    function moveToward(tx: number, ty: number, speed: number): boolean {
+        const dx = tx - robot.x;
+        const dy = ty - robot.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 2) {
+            robot.x = tx;
+            robot.y = ty;
+            return true;
+        }
+        const step = Math.min(speed, dist);
+        robot.x += (dx / dist) * step;
+        robot.y += (dy / dist) * step;
+        robot.angle = Math.atan2(dy, dx);
+        return false;
     }
 
-    // ---- Robot path (4 sides) ----
-    function getRobotPos(t: number): { x: number; y: number; angle: number } {
-        t = ((t % 1) + 1) % 1;
-        const m = 12;
-        const bY = poolY + poolH - robot.h - m;
-        const tY = poolY + m + 22;
-        const lX = poolX + m;
-        const rX = poolX + poolW - m - robot.w;
+    // ---- Update robot position ----
+    function updateRobot(dt: number) {
+        const { lX, rX } = getMargins();
+        const speed = 0.6 * (dt / 16);
 
-        if (t < 0.30) {
-            const p = t / 0.30;
-            return { x: lX + p * (rX - lX), y: bY, angle: 0 };
-        } else if (t < 0.50) {
-            const p = (t - 0.30) / 0.20;
-            return { x: poolX + poolW - m - robot.h, y: bY - p * (bY - tY), angle: -Math.PI / 2 };
-        } else if (t < 0.70) {
-            const p = (t - 0.50) / 0.20;
-            return { x: rX - p * (rX - lX), y: tY, angle: Math.PI };
-        } else {
-            const p = (t - 0.70) / 0.30;
-            return { x: poolX + m, y: tY + p * (bY - tY), angle: Math.PI / 2 };
+        if (robot.phase === 'navigate') {
+            if (moveToward(robot.targetX, robot.targetY, speed * 1.5)) {
+                // Arrived — find nearest row and align to it
+                const m = robot.size + 6;
+                const tY = poolY + m;
+                const bY = poolY + poolH - m;
+                const rowH = (bY - tY) / ROWS;
+                robot.alignRow = Math.round((robot.y - tY) / rowH);
+                robot.alignRow = Math.max(0, Math.min(ROWS, robot.alignRow));
+                robot.phase = 'align';
+            }
+            return;
+        }
+
+        if (robot.phase === 'align') {
+            // Smoothly move to the nearest row Y, keeping x
+            const targetY = getRowY(robot.alignRow);
+            if (moveToward(robot.x, targetY, speed)) {
+                // Aligned — start sweeping
+                robot.row = robot.alignRow;
+                robot.y = targetY;
+                // Decide sweep direction: go toward whichever edge is closer
+                const distToRight = rX - robot.x;
+                const distToLeft = robot.x - lX;
+                robot.sweepDir = distToRight >= distToLeft ? 1 : -1;
+                robot.phase = 'sweep';
+            }
+            return;
+        }
+
+        if (robot.phase === 'sweep') {
+            // Move horizontally along current row
+            const targetX = robot.sweepDir > 0 ? rX : lX;
+            const rowY = getRowY(robot.row);
+
+            if (moveToward(targetX, rowY, speed)) {
+                // Reached edge — start turning to next row
+                robot.phase = 'turn';
+                // Flip sweep direction for the next row
+                robot.sweepDir = robot.sweepDir > 0 ? -1 : 1;
+
+                // Determine next row, reversing at boundaries
+                const nextRow = robot.row + robot.rowDir;
+                if (nextRow > ROWS) {
+                    robot.rowDir = -1;
+                } else if (nextRow < 0) {
+                    robot.rowDir = 1;
+                }
+            }
+            return;
+        }
+
+        if (robot.phase === 'turn') {
+            // Move vertically to next row
+            const nextRow = robot.row + robot.rowDir;
+            const targetY = getRowY(nextRow);
+
+            if (moveToward(robot.x, targetY, speed)) {
+                // Arrived at next row
+                robot.row = nextRow;
+                robot.phase = 'sweep';
+
+                // Check boundaries for future direction
+                if (robot.row >= ROWS) {
+                    robot.rowDir = -1;
+                } else if (robot.row <= 0) {
+                    robot.rowDir = 1;
+                }
+            }
         }
     }
 
@@ -141,21 +204,20 @@
 
     function drawPool(time: number) {
         if (poolW < 10 || poolH < 10) return;
-        const r = 6;
+        const r = 4;
 
         ctx.save();
         ctx.beginPath();
         ctx.roundRect(poolX, poolY, poolW, poolH, r);
         ctx.clip();
 
-        // Water fill
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
         ctx.fillRect(poolX, poolY, poolW, poolH);
 
-        // Tile grid — clearly visible
-        const tileSize = Math.max(18, Math.min(28, poolW / 8));
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 0.6;
+        // Tile grid
+        const tileSize = Math.max(16, Math.min(25, poolW / 9));
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 0.5;
         for (let x = poolX; x <= poolX + poolW; x += tileSize) {
             ctx.beginPath();
             ctx.moveTo(x, poolY);
@@ -169,149 +231,125 @@
             ctx.stroke();
         }
 
-        // Caustics — soft light blobs
-        for (const c of caustics) {
+        // Caustic light patterns
+        for (const c of causticCells) {
             const wobble = Math.sin(time * c.speed + c.phase) * 0.5 + 0.5;
-            const a = (0.05 + 0.07 * wobble);
-            const cx = c.x + Math.sin(time * 0.0008 + c.phase) * 5;
-            const cy = c.y + Math.cos(time * 0.001 + c.phase) * 4;
+            const a = 0.03 + 0.06 * wobble;
+            const cx = c.x + Math.sin(time * 0.0006 + c.phase) * 6;
+            const cy = c.y + Math.cos(time * 0.0008 + c.phase * 1.3) * 5;
+            const rx = c.r * (0.6 + wobble * 0.6);
+            const ry = c.r * 0.7 * (0.6 + wobble * 0.6);
+
             ctx.beginPath();
-            ctx.ellipse(cx, cy,
-                c.r * (0.7 + wobble * 0.5),
-                c.r * 0.5 * (0.7 + wobble * 0.5),
-                Math.sin(time * 0.0004 + c.phase) * 0.4,
+            ctx.ellipse(cx, cy, rx, ry,
+                Math.sin(time * 0.0003 + c.phase) * 0.6,
                 0, Math.PI * 2);
             ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
             ctx.fill();
         }
 
-        // Water surface — main wave
-        const surfaceY = poolY + 16;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        for (let x = poolX; x <= poolX + poolW; x += 1.5) {
-            const wave = Math.sin(x * 0.04 + time * 0.0015) * 3
-                       + Math.sin(x * 0.08 + time * 0.0025) * 1.5;
-            if (x === poolX) ctx.moveTo(x, surfaceY + wave);
-            else ctx.lineTo(x, surfaceY + wave);
+        // Caustic network lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1.2;
+        for (let i = 0; i < causticCells.length - 1; i++) {
+            const c1 = causticCells[i];
+            const c2 = causticCells[i + 1];
+            const dx = c1.x - c2.x, dy = c1.y - c2.y;
+            if (dx * dx + dy * dy < 4000) {
+                const wobble = Math.sin(time * 0.001 + c1.phase) * 0.5 + 0.5;
+                ctx.globalAlpha = 0.04 + 0.04 * wobble;
+                ctx.beginPath();
+                const mx = (c1.x + c2.x) / 2 + Math.sin(time * 0.0008 + c1.phase) * 8;
+                const my = (c1.y + c2.y) / 2 + Math.cos(time * 0.0006 + c2.phase) * 6;
+                ctx.moveTo(c1.x + Math.sin(time * 0.0006 + c1.phase) * 6,
+                           c1.y + Math.cos(time * 0.0008 + c1.phase * 1.3) * 5);
+                ctx.quadraticCurveTo(mx, my,
+                           c2.x + Math.sin(time * 0.0006 + c2.phase) * 6,
+                           c2.y + Math.cos(time * 0.0008 + c2.phase * 1.3) * 5);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
         }
-        ctx.stroke();
-
-        // Secondary surface wave
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let x = poolX; x <= poolX + poolW; x += 1.5) {
-            const wave = Math.sin(x * 0.035 + time * 0.0012 + 1) * 2
-                       + Math.sin(x * 0.1 + time * 0.002) * 0.8;
-            if (x === poolX) ctx.moveTo(x, surfaceY + 6 + wave);
-            else ctx.lineTo(x, surfaceY + 6 + wave);
-        }
-        ctx.stroke();
 
         ctx.restore();
 
-        // Pool border — thick and clear
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
+        // Pool border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.roundRect(poolX, poolY, poolW, poolH, r);
         ctx.stroke();
 
-        // Pool rim — top edge
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 5;
+        // Outer rim glow
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.moveTo(poolX - 3, poolY);
-        ctx.lineTo(poolX + poolW + 3, poolY);
+        ctx.roundRect(poolX - 2, poolY - 2, poolW + 4, poolH + 4, r + 1);
         ctx.stroke();
     }
 
     function drawRobot(x: number, y: number, angle: number) {
+        const s = robot.size;
         ctx.save();
-        const cx = x + robot.w / 2;
-        const cy = y + robot.h / 2;
-        ctx.translate(cx, cy);
+        ctx.translate(x, y);
         ctx.rotate(angle);
 
-        const hw = robot.w / 2;
-        const hh = robot.h / 2;
-
-        // Shadow glow
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.beginPath();
-        ctx.ellipse(0, hh + 3, hw + 5, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(2, 2, s * 0.6, s * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Body
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(-hw, -hh, robot.w, robot.h, 3);
+        ctx.roundRect(-s * 0.45, -s * 0.4, s * 0.9, s * 0.8, 3);
         ctx.fill();
         ctx.stroke();
 
-        // Inner detail
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 0.7;
+        // Inner chassis
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.roundRect(-hw + 3, -hh + 3, robot.w - 6, robot.h - 6, 2);
+        ctx.roundRect(-s * 0.32, -s * 0.27, s * 0.64, s * 0.54, 2);
         ctx.stroke();
 
-        // Cleaning disc
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(0, hh + 1, hw * 0.6, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // Main eye
+        // Eye
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.beginPath();
-        ctx.arc(hw * 0.3, -hh * 0.15, 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Secondary sensor
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.beginPath();
-        ctx.arc(-hw * 0.35, -hh * 0.3, 1.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Antenna
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(-hw * 0.1, -hh);
-        ctx.lineTo(-hw * 0.1, -hh - 8);
-        ctx.lineTo(-hw * 0.1 + 4, -hh - 10);
-        ctx.stroke();
-        // Antenna tip
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.beginPath();
-        ctx.arc(-hw * 0.1 + 4, -hh - 10, 1.3, 0, Math.PI * 2);
+        ctx.arc(s * 0.08, 0, 2.5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
 
-        // Treads
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillRect(-hw, hh - 4, 6, 4);
-        ctx.fillRect(hw - 6, hh - 4, 6, 4);
+        // Eye ring
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.arc(s * 0.08, 0, 4.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Sensor dot
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(-s * 0.18, -s * 0.12, 1.2, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.restore();
 
-        robot.cx = cx;
-        robot.cy = cy;
+        robot.cx = x;
+        robot.cy = y;
     }
 
     function drawRipples() {
         for (let i = ripples.length - 1; i >= 0; i--) {
             const rp = ripples[i];
-            rp.r += 0.3;
+            rp.r += 0.25;
             const progress = rp.r / rp.maxR;
-            const alpha = 0.55 * (1 - progress);
+            const alpha = 0.4 * (1 - progress);
 
             if (rp.r >= rp.maxR) {
                 ripples.splice(i, 1);
@@ -323,89 +361,26 @@
             ctx.beginPath();
             ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
             ctx.stroke();
+
+            if (rp.r > 8) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(rp.x, rp.y, rp.r - 6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
         }
     }
 
-    function drawBubbles(time: number) {
-        for (let i = bubbles.length - 1; i >= 0; i--) {
-            const b = bubbles[i];
-            b.x += b.vx + Math.sin(time * 0.004 + b.y * 0.08) * 0.04;
-            b.y += b.vy;
-            b.life++;
-
-            const fade = b.life / b.maxLife > 0.7
-                ? 1 - (b.life / b.maxLife - 0.7) / 0.3 : 1;
-            const a = (0.5 + Math.random() * 0.1) * fade;
-
-            if (b.life > b.maxLife || b.y < poolY + 20) {
-                bubbles.splice(i, 1);
-                continue;
-            }
-
-            ctx.strokeStyle = `rgba(255, 255, 255, ${a})`;
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Specular dot
-            ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.5})`;
-            ctx.beginPath();
-            ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    function drawFragments(time: number) {
-        for (const f of fragments) {
-            f.x += f.vx + Math.sin(time * 0.0007 + f.y * 0.03) * 0.015;
-            f.y += f.vy;
-            f.rotation += f.rotSpeed;
-
-            if (f.y < poolY + 26) {
-                f.y = poolY + poolH * 0.4 + Math.random() * poolH * 0.45;
-                f.x = poolX + poolW * 0.1 + Math.random() * poolW * 0.8;
-            }
-
-            ctx.save();
-            ctx.translate(f.x, f.y);
-            ctx.rotate(f.rotation);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${f.alpha})`;
-            ctx.lineWidth = 1;
-
-            const s = f.size;
-            switch (f.type) {
-                case 0:
-                    ctx.beginPath();
-                    ctx.moveTo(-s * 0.5, -s * 0.3);
-                    ctx.lineTo(s * 0.4, -s * 0.5);
-                    ctx.lineTo(s * 0.5, s * 0.2);
-                    ctx.lineTo(-s * 0.2, s * 0.5);
-                    ctx.closePath();
-                    ctx.stroke();
-                    break;
-                case 1:
-                    ctx.beginPath();
-                    ctx.moveTo(0, -s * 0.5);
-                    ctx.lineTo(s * 0.5, s * 0.35);
-                    ctx.lineTo(-s * 0.5, s * 0.35);
-                    ctx.closePath();
-                    ctx.stroke();
-                    break;
-                case 2:
-                    ctx.beginPath();
-                    ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2);
-                    ctx.stroke();
-                    break;
-                case 3:
-                    ctx.beginPath();
-                    ctx.moveTo(-s * 0.5, -s * 0.2);
-                    ctx.bezierCurveTo(-s * 0.2, -s * 0.4, s * 0.2, s * 0.3, s * 0.5, s * 0.1);
-                    ctx.stroke();
-                    break;
-            }
-            ctx.restore();
-        }
+    // ---- Init robot position ----
+    function initRobot() {
+        robot.row = 0;
+        robot.rowDir = 1;
+        robot.sweepDir = 1;
+        robot.phase = 'sweep';
+        const { lX } = getMargins();
+        robot.x = lX;
+        robot.y = getRowY(0);
+        robot.angle = 0;
     }
 
     // ---- Main loop ----
@@ -422,41 +397,28 @@
         if (needsReinit) {
             needsReinit = false;
             initCaustics();
-            initFragments();
+            initRobot();
+            ripples.length = 0;
         }
 
         drawPool(time);
 
-        robot.t += robot.speed * (dt / 16);
-        const pos = getRobotPos(robot.t);
-        robot.x = pos.x;
-        robot.y = pos.y;
-        robot.angle = pos.angle;
+        updateRobot(dt);
 
+        // Clip to pool
         ctx.save();
         ctx.beginPath();
-        ctx.roundRect(poolX, poolY, poolW, poolH, 6);
+        ctx.roundRect(poolX, poolY, poolW, poolH, 4);
         ctx.clip();
 
         drawRobot(robot.x, robot.y, robot.angle);
 
         rippleTimer += dt;
-        if (rippleTimer > 600) {
+        if (rippleTimer > 900) {
             rippleTimer = 0;
             spawnRipple(robot.cx, robot.cy);
         }
         drawRipples();
-
-        bubbleTimer += dt;
-        if (bubbleTimer > 250) {
-            bubbleTimer = 0;
-            spawnBubble(
-                robot.cx + (Math.random() - 0.5) * robot.w * 0.4,
-                robot.cy - robot.h * 0.3
-            );
-        }
-        drawBubbles(time);
-        drawFragments(time);
 
         ctx.restore();
 
