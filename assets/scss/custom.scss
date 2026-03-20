@@ -1117,11 +1117,11 @@ main.main {
         flex-direction: row;
         align-items: center;
         padding: 10px 16px;
-        max-width: 100%;
-        width: 100%;
+        max-width: none !important;
+        width: auto !important;
         min-width: 0;
         overflow: visible !important;
-        background: var(--body-background) !important;
+        background: transparent !important;
     }
 
     /* Mobile TOC toggle button */
@@ -1185,12 +1185,17 @@ main.main {
         align-self: auto !important;
         order: 0 !important;
         flex-shrink: 1 !important;
-        margin-top: 20px;
+        margin-top: 0;
     }
 
-    /* Give content space below fixed top bar */
+    /* Give content space below fixed top bar, reduce gap for pool */
     .custom-article-page .container {
         padding-top: 60px;
+        gap: 10px;
+    }
+
+    .custom-article-page .site-footer {
+        padding: 10px 0 10px;
     }
 
     /* Hide theme's inline TOC since we have the dropdown */
