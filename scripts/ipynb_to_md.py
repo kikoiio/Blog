@@ -81,16 +81,34 @@ def convert(nb_path: Path, title: str | None, date: str | None) -> None:
                 body_lines.extend(format_output_text(o, img_counter, out_dir, stem))
             body_lines.append("")
 
-    body = "\n".join(body_lines).rstrip() + "\n"
+    # Remove trailing empty code blocks
+    cleaned: list[str] = []
+    for line in body_lines:
+        cleaned.append(line)
+    # Strip empty fenced blocks (```python\n```)
+    final: list[str] = []
+    i = 0
+    while i < len(cleaned):
+        if (cleaned[i].startswith("```python") and
+                i + 1 < len(cleaned) and cleaned[i + 1] == "```"):
+            i += 2  # skip empty block
+            if i < len(cleaned) and cleaned[i] == "":
+                i += 1  # skip trailing blank
+            continue
+        final.append(cleaned[i])
+        i += 1
+
+    body = "\n".join(final).rstrip() + "\n"
 
     fm_title = title or stem
     fm_date = date or "2026-03-21"
     header = f"---\ntitle: {json.dumps(fm_title, ensure_ascii=False)}\ndate: {fm_date}\ndraft: false\n---\n\n"
 
-    out_md = out_dir / f"{stem}.md"
+    out_md = out_dir / "index.md"
     out_md.write_text(header + body, encoding="utf-8")
     n_img = img_counter[0] + attach_count[0]
     print(f"Wrote {out_md} ({n_img} images: {attach_count[0]} attach, {img_counter[0]} output)")
+    print(f"Note: output is index.md (Hugo leaf bundle). Place .ipynb and images in a named folder under content/post/.")
 
 
 def main() -> None:

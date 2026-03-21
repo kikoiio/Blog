@@ -137,7 +137,6 @@ class ThemeManager {
         const selectors = [
             '.article-list article',
             '.widget',
-            '.main-article',
             '.pagination',
         ];
 
