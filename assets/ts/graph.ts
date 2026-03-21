@@ -301,38 +301,22 @@ function initGraph() {
 
         const treeNode = node.treeRef;
 
-        // Add child folders (leaf bundles with a single page become post nodes directly)
+        // Add child folders as category nodes
         treeNode.children.forEach((child, name) => {
-            const isLeafBundle = child.children.size === 0 && child.pages.length === 1;
-            if (isLeafBundle) {
-                const page = child.pages[0];
-                const postId = `post-${nodeIdCounter++}`;
-                nodes.push({
-                    id: postId,
-                    label: page.title,
-                    type: 'post',
-                    url: page.url,
-                    parentId: nodeId,
-                    x: width / 2 + (Math.random() - 0.5) * 100,
-                    y: height / 2 + (Math.random() - 0.5) * 100,
-                });
-                links.push({ source: nodeId, target: postId });
-            } else {
-                const childId = `node-${nodeIdCounter++}`;
-                const childPath = node.treePath ? `${node.treePath}/${name}` : name;
-                nodes.push({
-                    id: childId,
-                    label: name,
-                    type: 'category',
-                    expanded: false,
-                    treeRef: child,
-                    treePath: childPath,
-                    parentId: nodeId,
-                    x: width / 2 + (Math.random() - 0.5) * 100,
-                    y: height / 2 + (Math.random() - 0.5) * 100,
-                });
-                links.push({ source: nodeId, target: childId });
-            }
+            const childId = `node-${nodeIdCounter++}`;
+            const childPath = node.treePath ? `${node.treePath}/${name}` : name;
+            nodes.push({
+                id: childId,
+                label: name,
+                type: 'category',
+                expanded: false,
+                treeRef: child,
+                treePath: childPath,
+                parentId: nodeId,
+                x: width / 2 + (Math.random() - 0.5) * 100,
+                y: height / 2 + (Math.random() - 0.5) * 100,
+            });
+            links.push({ source: nodeId, target: childId });
         });
 
         // Add direct pages (files in this folder)
@@ -354,30 +338,83 @@ function initGraph() {
     }
 
     // ---- Toggle section ----
+    let isCollapsing = false;
+
     function toggleSection(nodeId: string) {
         const node = nodes.find(n => n.id === nodeId);
         if (!node || !node.treeRef) return;
 
         if (node.expanded) {
-            // Collapse
+            if (isCollapsing) return;
+            isCollapsing = true;
+
             const removeIds = collectDescendantIds(nodeId);
-            nodes = nodes.filter(n => !removeIds.includes(n.id));
-            links = links.filter(l => {
-                const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
-                const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
-                return !removeIds.includes(sid) && !removeIds.includes(tid);
-            });
-            node.expanded = false;
-            focusedNodeId = node.parentId || null;
-            if (focusedNodeId === 'center') focusedNodeId = null;
+            const parentX = node.x || width / 2;
+            const parentY = node.y || height / 2;
+            const duration = 450;
+
+            // Stop simulation so tick doesn't fight the animation
+            if (simulation) simulation.stop();
+
+            // Animate descendant nodes toward parent position + shrink
+            nodeGroup.selectAll('.graph-node-group')
+                .filter((d: any) => removeIds.includes(d.id))
+                .each(function(this: any) {
+                    const el = d3.select(this);
+                    const innerDiv = el.select('.graph-node');
+                    if (!innerDiv.empty()) {
+                        const htmlEl = innerDiv.node() as HTMLElement;
+                        htmlEl.style.transition = `transform ${duration}ms cubic-bezier(0.55, 0, 1, 0.45), opacity ${duration * 0.8}ms ease`;
+                        htmlEl.style.transform = 'scale(0)';
+                        htmlEl.style.opacity = '0';
+                    }
+                    el.transition()
+                        .duration(duration)
+                        .ease(d3.easeCubicIn)
+                        .attr('transform', `translate(${parentX},${parentY})`);
+                });
+
+            // Animate links: endpoints converge on parent position + fade
+            linkGroup.selectAll('.graph-link')
+                .each(function(this: any, d: any) {
+                    const sid = typeof d.source === 'string' ? d.source : d.source.id;
+                    const tid = typeof d.target === 'string' ? d.target : d.target.id;
+                    const srcIsDesc = removeIds.includes(sid);
+                    const tgtIsDesc = removeIds.includes(tid);
+                    if (!srcIsDesc && !tgtIsDesc) return;
+
+                    const el = d3.select(this);
+                    const t = el.transition().duration(duration).ease(d3.easeCubicIn);
+                    if (srcIsDesc) t.attr('x1', parentX).attr('y1', parentY);
+                    if (tgtIsDesc) t.attr('x2', parentX).attr('y2', parentY);
+                    t.attr('opacity', 0);
+                });
+
+            // After animation, clean up data and rebuild
+            setTimeout(() => {
+                nodes = nodes.filter(n => !removeIds.includes(n.id));
+                links = links.filter(l => {
+                    const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
+                    const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
+                    return !removeIds.includes(sid) && !removeIds.includes(tid);
+                });
+                node.expanded = false;
+                focusedNodeId = node.parentId || null;
+                if (focusedNodeId === 'center') focusedNodeId = null;
+
+                updateGraph(false);
+                updateIndicator(nodeId, false);
+                applyFocusStyles();
+                isCollapsing = false;
+            }, duration);
+
         } else {
             expandSilent(nodeId);
             focusedNodeId = nodeId;
+            updateGraph(false);
+            updateIndicator(nodeId, node.expanded!);
+            applyFocusStyles();
         }
-
-        updateGraph(false);
-        updateIndicator(nodeId, node.expanded!);
-        applyFocusStyles();
     }
 
     // ---- Render / Update ----
@@ -408,15 +445,7 @@ function initGraph() {
         const nodeSel = nodeGroup.selectAll('.graph-node-group')
             .data(nodes, (d: any) => d.id);
 
-        nodeSel.exit().each(function(this: any) {
-            const el = d3.select(this);
-            const innerDiv = el.select('.graph-node');
-            if (!innerDiv.empty()) {
-                (innerDiv.node() as HTMLElement).style.transform = 'scale(0)';
-                (innerDiv.node() as HTMLElement).style.opacity = '0';
-            }
-            setTimeout(() => el.remove(), 350);
-        });
+        nodeSel.exit().remove();
 
         const nodeEnter = nodeSel.enter().append('g')
             .attr('class', (d: GraphNode) => `graph-node-group graph-node-group--${d.type}`)

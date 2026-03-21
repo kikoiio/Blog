@@ -8,7 +8,9 @@
       "Bash(mkdir -p \"俄罗斯方块\" \"跳一跳\" \"跑酷\")",
       "Bash(mv \"俄罗斯方块.md\" \"俄罗斯方块/index.md\")",
       "Bash(mv \"跳一跳.md\" \"跳一跳/index.md\")",
-      "Bash(mv \"跑酷.md\" \"跑酷/index.md\")"
+      "Bash(mv \"跑酷.md\" \"跑酷/index.md\")",
+      "Read(//d/desktop/my_projects/Blog/**)",
+      "Bash(hugo server:*)"
     ]
   }
 }
