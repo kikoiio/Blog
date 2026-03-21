@@ -10,7 +10,18 @@
       "Bash(mv \"跳一跳.md\" \"跳一跳/index.md\")",
       "Bash(mv \"跑酷.md\" \"跑酷/index.md\")",
       "Read(//d/desktop/my_projects/Blog/**)",
-      "Bash(hugo server:*)"
+      "Bash(hugo server:*)",
+      "Bash(gh run:*)",
+      "Bash(gh.exe run:*)",
+      "Bash(cmd.exe /c \"where gh\")",
+      "Bash(powershell.exe -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(hugo --gc --minify --baseURL \"https://aries727.site/\")",
+      "Bash(hugo --gc --minify --baseURL \"https://aries727.site/\" --ignoreErrors \"\")",
+      "Bash(hugo --verbose)",
+      "Bash(hugo build:*)",
+      "Bash(grep -n '^$')",
+      "Bash(find /d/desktop/my_projects/Blog -maxdepth 1 -type f \\\\\\(-name Makefile -o -name *.sh -o -name docker-compose* -o -name .github \\\\\\))",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
