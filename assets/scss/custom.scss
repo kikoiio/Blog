@@ -1239,3 +1239,48 @@ main.main {
         display: none !important;
     }
 }
+
+/* ---- Mermaid readability ---- */
+.article-content {
+    .mermaid-wrapper {
+        margin: 1.2rem 0 1.4rem;
+
+        .mermaid {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.5rem 0.25rem 0.85rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .mermaid svg {
+            max-width: none !important;
+            height: auto !important;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .mermaid.is-wide svg {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .article-content .mermaid-wrapper {
+        .mermaid {
+            padding: 0.35rem 0 1rem;
+        }
+
+        .mermaid-toolbar {
+            top: 0.35rem;
+            right: 0.35rem;
+
+            button {
+                padding: 0.35rem 0.65rem;
+                font-size: 0.78rem;
+            }
+        }
+    }
+}
