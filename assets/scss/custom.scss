@@ -1030,6 +1030,19 @@ main.main {
         margin: 0;
     }
 
+    ol {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        counter-reset: none;
+    }
+
+    ol li a:first-of-type::before {
+        content: none !important;
+        counter-increment: none;
+        margin-right: 0;
+    }
+
     li {
         margin: 0;
     }
