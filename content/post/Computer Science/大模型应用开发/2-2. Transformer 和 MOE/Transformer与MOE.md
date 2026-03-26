@@ -127,7 +127,7 @@ class FFN(nn.Module):
 >
 > 而密集词嵌入通过训练可以学到：`国王 = [0.8, 0.3, 0.9, ...]`，`女王 = [0.8, 0.3, 0.1, ...]`，它们在"皇室"维度上相近，在"性别"维度上不同。
 
-### 怎么做？
+怎么做？
 
 ```python
 class Embedding(nn.Module):
@@ -145,17 +145,11 @@ class Embedding(nn.Module):
 
 ---
 
-## 2.2 位置编码（Positional Encoding）
-
-### 是什么？
+## 2. 位置编码（Positional Encoding）
 
 位置编码是一组与序列位置相关的向量，直接**加到**词嵌入上，让模型能够区分不同位置的 token。原始 Transformer 使用正弦/余弦函数生成位置编码。
 
-### 为什么？
-
 Transformer 的注意力机制对输入做的是**集合运算**，本身不感知顺序。"我打你"和"你打我"中，同一个"我"字的嵌入向量完全相同，但语义完全不同。位置编码赋予了每个位置唯一的"身份证"，使模型能区分语序。
-
-### 怎么做？
 
 正弦/余弦位置编码的公式：
 
@@ -193,11 +187,9 @@ class PositionalEncoding(nn.Module):
 
 ---
 
-# 第三部分：注意力机制 —— Transformer 的核心
+# 三、注意力机制 —— Transformer 的核心
 
-## 3.1 缩放点积注意力（Scaled Dot-Product Attention）
-
-### 是什么？
+## 1. 缩放点积注意力（Scaled Dot-Product Attention）
 
 注意力机制让每个 token 能够"关注"序列中所有其他 token，并根据相关程度加权聚合信息。缩放点积注意力是 Transformer 中使用的具体注意力计算方式。
 
@@ -212,8 +204,6 @@ $$
 - **K（Key，键）**：每个 token "提供什么索引信息"
 - **V（Value，值）**：每个 token "实际携带的内容"
 
-### 为什么？
-
 > [!example] 注意力机制解决的真实问题：指代消解
 > 句子："院子里有一棵苹果树，**它**结了很多果实。"
 >
@@ -225,8 +215,6 @@ $$
 > 这样"它"就从一个模糊的代词变成了语义丰富的"苹果树的指代"。
 
 **为什么要缩放（除以 $\sqrt{d_k}$）？** 当 $d_k$ 较大时，$QK^T$ 的数值也会很大，导致 softmax 输出趋近于 one-hot，梯度几乎为零。除以 $\sqrt{d_k}$ 将数值拉回合理范围。
-
-### 怎么做？
 
 注意力矩阵的计算过程：
 
@@ -248,20 +236,14 @@ output (T x d_k)
 
 ---
 
-## 3.2 多头注意力（Multi-Head Attention）
-
-### 是什么？
+## 2. 多头注意力（Multi-Head Attention）
 
 多头注意力将 Q、K、V 分别投影到多个子空间（"头"），每个头独立计算注意力，最后将所有头的输出拼接并通过线性层融合。
-
-### 为什么？
 
 单一的注意力只能捕捉一种模式的语义关系。多个头可以**同时关注不同类型的信息**：
 - 某个头可能专注于语法关系（主语-谓语）
 - 某个头可能专注于指代关系（代词-实体）
 - 某个头可能专注于修饰关系（形容词-名词）
-
-### 怎么做？
 
 ```python
 class MultiHeadAttention(nn.Module):
@@ -311,17 +293,11 @@ class MultiHeadAttention(nn.Module):
 
 ---
 
-## 3.3 Causal Mask（因果掩码）
-
-### 是什么？
+## 3. Causal Mask（因果掩码）
 
 在 Decoder（生成模型）中，通过下三角矩阵掩码，阻止每个位置的 token 关注它之后的 token。
 
-### 为什么？
-
 语言模型在生成时是**自回归**的：生成第 $t$ 个 token 时，只能看到前 $t-1$ 个 token。训练时如果让模型看到未来的 token，就会造成**信息泄露**，模型可以直接抄答案，无法学到真正的预测能力。
-
-### 怎么做？
 
 ```python
 # 生成下三角掩码
@@ -336,11 +312,9 @@ score = softmax(score)
 
 ---
 
-# 第四部分：Transformer 的辅助组件
+# 四、Transformer 的辅助组件
 
-## 4.1 Layer Normalization
-
-### 是什么？
+## 1. Layer Normalization
 
 Layer Normalization 对**同一个 token 的所有特征维度**计算均值和方差，进行标准化，然后通过可学习的缩放参数 $\gamma$ 和偏移参数 $\beta$ 恢复表达能力。
 
@@ -348,11 +322,7 @@ $$
 \text{LayerNorm}(x) = \gamma \cdot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
 $$
 
-### 为什么？
-
 深层网络中，每一层输出的数值分布会不断漂移（Internal Covariate Shift）。如果某层的输出数值过大或过小，后续层的梯度会爆炸或消失。LayerNorm 将每层的输出拉回标准分布附近，让训练更加稳定。
-
-### 怎么做？
 
 ```python
 class LayerNorm(nn.Module):
@@ -377,19 +347,13 @@ class LayerNorm(nn.Module):
 
 ---
 
-## 4.2 残差连接（Residual Connection）
-
-### 是什么？
+## 2. 残差连接（Residual Connection）
 
 残差连接将某一层的输入**直接加到**该层的输出上：$y = x + F(x)$，其中 $F(x)$ 是该层的变换。
-
-### 为什么？
 
 来自 ResNet 论文（He et al., 2015，目前 AI 领域引用量最高的论文之一）的发现：随着网络层数加深，训练误差反而上升。这并非过拟合，而是**优化困难** —— 梯度在反向传播时逐层衰减至近乎为零。
 
 残差连接让梯度可以"跳过"中间层直接流向浅层，保证了深层网络的可训练性。如果某一层学到的变换 $F(x)$ 没有用，网络可以让 $F(x) \approx 0$，等效于跳过这一层。
-
-### 怎么做？
 
 在 Transformer 的每个子层（注意力层和 FFN 层）都使用残差连接：
 
@@ -405,9 +369,7 @@ x = self.norm2(x + self.dropout(ffn_output))
 
 ---
 
-## 4.3 前馈神经网络（FFN）
-
-### 是什么？
+## 3. 前馈神经网络（FFN）
 
 FFN 是 Transformer 中每个编码器/解码器层里的**逐位置**全连接网络。它对每个 token 的向量独立做两次线性变换，中间夹一个激活函数。
 
@@ -415,13 +377,9 @@ $$
 \text{FFN}(x) = W_2 \cdot \text{ReLU}(W_1 \cdot x + b_1) + b_2
 $$
 
-### 为什么？
-
 注意力层的作用是**混合不同 token 之间的信息**，但它本质上仍是线性的（加权求和）。FFN 提供了**逐 token 的非线性变换**能力，让模型能够对每个 token 的表示做更深层次的特征提取。
 
 通常 FFN 的中间维度 $d_{ff}$ 是 $d_{model}$ 的 4 倍（如 $d_{model}=512, d_{ff}=2048$），这个"先升维再降维"的结构相当于一个信息瓶颈，迫使网络学到紧凑的特征表示。
-
-### 怎么做？
 
 ```python
 class FFN(nn.Module):
@@ -437,9 +395,9 @@ class FFN(nn.Module):
 
 ---
 
-# 第五部分：完整的 Transformer 架构
+# 五、完整的 Transformer 架构
 
-## 5.1 RNN/LSTM 的局限与 Transformer 的优势
+## 1. RNN/LSTM 的局限与 Transformer 的优势
 
 在 Transformer 出现之前，序列建模主要靠 RNN 和 LSTM。它们的三大缺陷催生了 Transformer：
 
@@ -454,7 +412,7 @@ class FFN(nn.Module):
 
 ---
 
-## 5.2 Transformer Encoder 层的完整流程
+## 2. Transformer Encoder 层的完整流程
 
 一个 Encoder 层的数据流：
 
@@ -488,7 +446,7 @@ class EncoderLayer(nn.Module):
 
 ---
 
-## 5.3 完整 Transformer 模型
+## 3. 完整 Transformer 模型
 
 将所有组件串联起来：
 
@@ -526,9 +484,9 @@ class Transformer(nn.Module):
 
 ---
 
-## 5.4 三种架构变体
+## 4. 三种架构变体
 
-### 5.4.1 Decoder-Only（GPT, Qwen, LLaMA）
+### 4.1 Decoder-Only（GPT, Qwen, LLaMA）
 
 **特点**：
 - 使用**因果掩码**（下三角 mask），每个 token 只能看到它前面的 token
@@ -539,7 +497,7 @@ class Transformer(nn.Module):
 
 ---
 
-### 5.4.2 Encoder-Only（BERT）
+### 4.2 Encoder-Only（BERT）
 
 **特点**：
 - 使用**双向注意力**，每个 token 可以看到句子中所有其他 token，无需 mask
@@ -557,7 +515,7 @@ class Transformer(nn.Module):
 
 ---
 
-### 5.4.3 Encoder-Decoder（T5）
+### 4.3 Encoder-Decoder（T5）
 
 **特点**：
 - **编码器**：双向自注意力，理解源序列
@@ -571,7 +529,7 @@ class Transformer(nn.Module):
 
 ---
 
-## 5.5 Transformer 架构好在哪里
+## 5. Transformer 架构好在哪里
 
 1. **并行效率高**：注意力矩阵的计算可以完全并行，充分利用 GPU
 2. **深入理解词间关系**：注意力机制让任意两个 token 直接交互
@@ -579,21 +537,16 @@ class Transformer(nn.Module):
 
 ---
 
-# 第六部分：BPE 分词器
+# 六、BPE 分词器
 
-## 6.1 BPE（Byte Pair Encoding）分词
-
-### 是什么？
+## 1. BPE（Byte Pair Encoding）分词
 
 BPE 是一种基于统计的**子词分词算法**。它从字符级别开始，反复合并语料中出现频率最高的相邻 token 对，逐步构建词表。
 
-### 为什么？
-
+BPE的优点：
 - **词级分词**：词表巨大（几十万），且无法处理未登录词（OOV）
 - **字符级分词**：序列过长，语义信息稀薄
 - **BPE**：折中方案，高频词保持完整，低频词拆成有意义的子词片段。例如 "unbelievable" 可能拆成 "un" + "believ" + "able"，每个子词都携带语义
-
-### 怎么做？
 
 BPE 训练流程：
 
@@ -649,19 +602,13 @@ class SimpleBPE:
 
 ---
 
-# 第七部分：MOE 混合专家模型
+# 七、MOE 混合专家模型
 
-## 7.1 基础 MOE（Mixture of Experts）
-
-### 是什么？
+## 1. 基础 MOE（Mixture of Experts）
 
 MOE 将 Transformer 中的 FFN 层替换为多个**专家网络**（Expert），再加上一个**门控网络**（Gate）来决定每个输入应该由哪些专家处理以及各专家的权重。
 
-### 为什么？
-
 传统的 Dense 模型中，每个 token 都要经过所有参数。模型越大，计算量越大。MOE 的思路是：**增加模型总参数量（存储更多知识），但每次推理只激活一部分参数（控制计算量）**。这样可以在有限算力下获得更大模型的效果。
-
-### 怎么做？
 
 ```python
 class BasicExpert(nn.Module):
@@ -700,13 +647,9 @@ class BasicMOE(nn.Module):
 
 ---
 
-## 7.2 稀疏 MOE（Sparse MOE）
-
-### 是什么？
+## 2. 稀疏 MOE（Sparse MOE）
 
 稀疏 MOE 只让每个 token 经过 **Top-K 个专家**（通常 K=1 或 2），而不是所有专家。门控网络先计算所有专家的概率，然后只选择概率最高的 K 个。
-
-### 为什么？
 
 假设有 64 个专家，每次只激活 2 个：
 - **总参数量**：64 倍的 FFN 参数（存储海量知识）
@@ -714,8 +657,6 @@ class BasicMOE(nn.Module):
 - **效果**：接近 64 倍参数的 Dense 模型，但计算开销仅为其数十分之一
 
 这就是 Mixtral、DeepSeek 等模型能在有限 GPU 上实现超大参数量的关键技术。
-
-### 怎么做？
 
 稀疏 MOE 的核心是 **Router（路由器）**：
 
@@ -782,19 +723,13 @@ class SparseMOE(nn.Module):
 
 ---
 
-## 7.3 共享专家 MOE（DeepSeek 版本）
-
-### 是什么？
+## 3. 共享专家 MOE（DeepSeek 版本）
 
 在稀疏 MOE 的基础上，额外增加若干**共享专家**（Shared Experts）。共享专家**对所有 token 都生效**，不经过路由选择，其输出直接与稀疏 MOE 的输出相加。
-
-### 为什么？
 
 稀疏 MOE 中，不同 token 经过不同专家，可能导致某些**通用知识**（如语法规则、常识）没有被充分共享。共享专家确保所有 token 都能获得一份"通用基础知识"，路由专家则负责"专业领域知识"。
 
 这是 **DeepSeek** 系列模型的核心创新之一。
-
-### 怎么做？
 
 ```python
 class ShareExpertMOE(nn.Module):
@@ -829,12 +764,7 @@ class ShareExpertMOE(nn.Module):
 
 ---
 
-# 第八部分：小测验
-
-> [!note] 测验说明
-> 以下包含 12 道题目（选择题 + 简答题），检验你对本教程内容的理解。答案请参见 [[教程_Transformer与MOE_答案]]。
-
----
+# 八、小测
 
 **第 1 题（选择题）** 在一个没有激活函数的三层神经网络中，$y = W_3(W_2(W_1 \cdot x))$，以下哪个说法正确？
 
@@ -919,9 +849,7 @@ D. 使用更大的隐藏维度
 
 ---
 
-# 第九部分：思维导图结构
-
-以下是本教程的知识结构，适合在 Obsidian 中使用 Markmap 或类似插件生成思维导图：
+# 九、思维导图
 
 ```
 - Transformer 与 MOE
