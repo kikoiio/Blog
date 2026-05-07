@@ -1,8 +1,24 @@
-# 2.3.3 恰好型滑动窗口
+---
+title: "2.3.3 恰好型滑动窗口"
+date: 2026-05-07
+draft: false
+tags:
+  - LeetCode
+  - 0x3F
+  - 算法
+  - 滑动窗口
+---
 
-![image.png](2%203%203%20%E6%81%B0%E5%A5%BD%E5%9E%8B%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3/image.png)
+恰好型约束常用“至多 k”转化：恰好 k = 至多 k - 至多 k - 1。
 
-1. https://leetcode.cn/problems/binary-subarrays-with-sum/description/
+<figure class="algo-figure algo-figure--wide">
+  <div class="algo-figure__viewport">
+    <img src="/img/leetcode/0x3f/subarray-count-exact.png" alt="恰好型滑动窗口转化图" loading="lazy" decoding="async">
+  </div>
+  <figcaption>恰好型滑动窗口：把难直接维护的“恰好”拆成两个“至多”问题相减。</figcaption>
+</figure>
+
+## 1. [Binary Subarrays With Sum](https://leetcode.cn/problems/binary-subarrays-with-sum/description/)
 
 ```cpp
 class Solution {
@@ -30,7 +46,7 @@ public:
 };
 ```
 
-1. https://leetcode.cn/problems/count-number-of-nice-subarrays/description/
+## 2. [Count Number Of Nice Subarrays](https://leetcode.cn/problems/count-number-of-nice-subarrays/description/)
 
 ```cpp
 class Solution {
@@ -61,7 +77,7 @@ public:
 };
 ```
 
-1. https://leetcode.cn/problems/count-of-substrings-containing-every-vowel-and-k-consonants-ii/description/
+## 3. [Count Of Substrings Containing Every Vowel And K Consonants II](https://leetcode.cn/problems/count-of-substrings-containing-every-vowel-and-k-consonants-ii/description/)
 
 ```cpp
 class Solution {
@@ -101,7 +117,7 @@ public:
 };
 ```
 
-1. https://leetcode.cn/problems/subarrays-with-k-different-integers/description/
+## 4. [Subarrays With K Different Integers](https://leetcode.cn/problems/subarrays-with-k-different-integers/description/)
 
 ```cpp
 class Solution {

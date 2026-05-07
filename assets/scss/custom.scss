@@ -395,6 +395,76 @@ main.main {
     }
 }
 
+/* ---------- Algorithm figures ---------- */
+.article-content .algo-figure {
+    margin: 1.35rem 0 1.6rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
+
+    .algo-figure__viewport {
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-radius: 10px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    img {
+        display: block;
+        height: auto;
+        max-width: none;
+        margin: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.94);
+    }
+
+    figcaption {
+        margin: 0.65rem 0.2rem 0;
+        color: var(--card-text-color-secondary);
+        font-size: 0.88rem;
+        line-height: 1.65;
+        text-align: center;
+    }
+}
+
+.article-content .algo-figure--wide img {
+    width: 100%;
+    min-width: 760px;
+}
+
+.article-content .algo-figure--map img {
+    width: 100%;
+    min-width: 960px;
+}
+
+@media (min-width: 1180px) {
+    .article-content .algo-figure--wide img,
+    .article-content .algo-figure--map img {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .article-content .algo-figure {
+        margin: 1rem 0 1.25rem;
+        padding: 0.55rem;
+        border-radius: 12px;
+
+        .algo-figure__viewport,
+        img {
+            border-radius: 8px;
+        }
+
+        figcaption {
+            font-size: 0.82rem;
+            text-align: left;
+        }
+    }
+}
+
 /* ---------- Dark mode code highlighting ---------- */
 [data-theme="mini-teal"],
 [data-theme="mini-rose"],
