@@ -13,7 +13,7 @@ tags:
 
 <figure class="algo-figure algo-figure--wide">
   <div class="algo-figure__viewport">
-    <img src="/img/leetcode/0x3f/subarray-count-exact.png" alt="恰好型滑动窗口转化图" loading="lazy" decoding="async">
+    <img src="/post/computer-science/LeetCode/0x3F/滑动窗口/二、不定长滑动窗口/2%203%20求子数组个数/2%203%203%20恰好型滑动窗口/image.png" alt="恰好型滑动窗口转化图" loading="lazy" decoding="async">
   </div>
   <figcaption>恰好型滑动窗口：把难直接维护的“恰好”拆成两个“至多”问题相减。</figcaption>
 </figure>
