@@ -435,14 +435,28 @@ main.main {
     min-width: 760px;
 }
 
-.article-content .algo-figure--map img {
-    width: 100%;
-    min-width: 960px;
+.article-content .algo-figure--map {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+
+    .algo-figure__viewport {
+        overflow: visible;
+    }
+
+    img {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
 }
 
 @media (min-width: 1180px) {
-    .article-content .algo-figure--wide img,
-    .article-content .algo-figure--map img {
+    .article-content .algo-figure--wide img {
         min-width: 0;
     }
 }
