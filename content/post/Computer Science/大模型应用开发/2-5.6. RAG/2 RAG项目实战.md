@@ -1,12 +1,6 @@
-# RAG 全栈项目实战教程
+# 一、项目整体架构
 
-> 基于 **swxy（国电电力智能文档问答系统）** 项目源码精讲
-
----
-
-## 第一章 项目整体架构
-
-### 1.1 系统架构全景
+## 1. 系统架构全景
 
 > [!note] 是什么？
 > swxy 是一个典型的 RAG（Retrieval-Augmented Generation）全栈项目，采用**前后端分离架构**，后端提供 RESTful API，前端通过 HTTP/SSE 与后端通信。系统核心功能是：用户上传文档 -> 文档解析并存入向量数据库 -> 用户提问时检索相关内容 -> 结合 LLM 生成回答。
@@ -28,7 +22,7 @@
 | LLM | DeepSeek-R1 / Qwen2.5 | 对话生成、推荐问题生成 |
 | Embedding | DashScope API | 文本向量化 |
 
-### 1.2 数据流全链路
+## 2. 数据流全链路
 
 > [!example] 怎么做？——以一次完整问答为例
 
@@ -60,9 +54,9 @@
 
 ---
 
-## 第二章 Docker Compose 基础设施搭建
+# 二、Docker Compose 基础设施搭建
 
-### 2.1 容器编排概览
+## 1. 容器编排概览
 
 > [!note] 是什么？
 > Docker Compose 是一种用 YAML 文件定义多容器应用的工具。本项目通过 `docker-compose.yml` 一键启动所有基础设施服务。
@@ -119,7 +113,7 @@ services:
 - **网络**：所有服务共享 `gsk_network` 桥接网络，容器间通过服务名（如 `gsk_pg`、`es01`、`redis`）互相访问
 - **单节点 ES**：`discovery.type=single-node` 适合开发环境，生产环境应配置集群
 
-### 2.2 数据库初始化
+## 2. 数据库初始化
 
 > [!note] 是什么？
 > `init.sql` 定义了系统的关系数据模型，包含用户表、会话表、消息表和知识库表。
@@ -169,9 +163,9 @@ CREATE TABLE IF NOT EXISTS knowledgebases (
 
 ---
 
-## 第三章 FastAPI 后端架构
+## 三、FastAPI 后端架构
 
-### 3.1 应用入口与路由注册
+## 1. 应用入口与路由注册
 
 > [!note] 是什么？
 > FastAPI 是一个高性能的 Python Web 框架，基于 Starlette 和 Pydantic，原生支持异步和 OpenAPI 文档。
@@ -222,7 +216,7 @@ schemas/         ← 请求/响应 Schema
 utils/           ← 工具函数（数据库连接、日志等）
 ```
 
-### 3.2 路由层详解——`chat_rt.py`
+## 2. 路由层详解——`chat_rt.py`
 
 > [!tip] 为什么要分层？
 > 路由层只负责 HTTP 协议相关的逻辑（参数提取、鉴权、响应格式），业务逻辑全部下沉到 service 层。这样可以让业务逻辑独立于 HTTP 框架进行测试和复用。
@@ -237,7 +231,7 @@ utils/           ← 工具函数（数据库连接、日志等）
 | `/upload_files` | POST | 上传文档到知识库 |
 | `/get_parsed_content` | GET | 获取已解析内容 |
 
-**`/chat_on_docs` 路由源码精析：**
+**`/chat_on_docs` 路由源码：**
 
 ```python
 @router.post("/chat_on_docs")
@@ -268,7 +262,7 @@ async def chat_on_docs(
 > - JWT 鉴权通过 `Security(access_security)` 注入，每个请求都会校验 token
 > - 检索失败时不阻断流程，而是传空列表给 LLM，这样即使没有知识库也能正常对话
 
-### 3.3 用户认证——JWT
+## 3. 用户认证——JWT
 
 > [!note] 是什么？
 > JWT（JSON Web Token）是一种无状态的身份认证机制。用户登录后获得 token，后续请求携带该 token 即可证明身份。
