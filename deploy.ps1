@@ -5,7 +5,7 @@ Set-Location -LiteralPath $PSScriptRoot
 $message = if ($args.Count -gt 0) { $args[0] } else { '' }
 
 Write-Host "==> Building production site"
-hugo --gc --minify
+hugo --gc --minify --cleanDestinationDir
 
 Write-Host ""
 Write-Host "==> Git status"

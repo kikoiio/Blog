@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 message="${1:-}"
 
 echo "==> Building production site"
-hugo --gc --minify
+hugo --gc --minify --cleanDestinationDir
 
 echo
 echo "==> Git status"

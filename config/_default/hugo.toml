@@ -13,6 +13,10 @@ disableKinds = ["taxonomy", "term"]
     page = ["html"]
     section = ["html"]
 
+[services]
+    [services.rss]
+        limit = 30
+
 [pagination]
     pagerSize = 9999
     disableAliases = true

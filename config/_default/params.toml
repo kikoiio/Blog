@@ -1,5 +1,5 @@
 mainSections   = ["post"]
-rssFullContent = true
+rssFullContent = false
 
 [footer]
     since = 2025

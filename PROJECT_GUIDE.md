@@ -209,7 +209,7 @@
 要改什么：
 
 - 恢复 `sitemap`、`robotsTXT`、`404`。
-- 恢复 RSS；当前站点已有持续内容产出，保留订阅能力更符合博客定位。
+- 恢复 RSS；当前站点已有持续内容产出，保留订阅能力更符合博客定位，但使用摘要和条数限制控制 feed 体积。
 - taxonomy 页面可以继续禁用，但若标签节点不展示，首页 JSON 中的 tag 数据也应评估是否保留。
 
 为什么：
@@ -221,7 +221,7 @@
 
 - 生产构建生成 sitemap、robots 和 404。
 - 站点坏链接有合理 404 页面。
-- RSS 已恢复，或有明确不恢复理由。
+- RSS 已恢复，并通过摘要输出和 `services.rss.limit` 避免生成过大的全文 feed。
 - 首页输出的数据只包含实际使用字段，或明确保留原因。
 
 ### P2：依赖治理
@@ -281,7 +281,15 @@
 
 - `PROJECT_GUIDE.md` 能独立说明项目现状、主要问题、优化顺序和验收标准。
 - 文档没有继续传播 `custom.ts` 未加载等错误事实。
-- 后续执行者无需重新判断优先级即可从 P0 开始。
+- 后续执行者无需重新判断优先级即可从 P0/P1 的剩余项继续。
+
+当前完成状态：
+
+- P0 构建可信：真实工作区生产构建已通过，`public/` 和 `resources/_gen/` 已保持为忽略产物，`:filename` 已迁移为 `:contentbasename`。
+- P0 文档修正：`AGENTS.md`、`CLAUDE.md` 已瘦身，`IMPLEMENTATION.md` 已归档，`PROJECT_GUIDE.md` 成为主入口。
+- P1 首页图导航：已完成第一轮轻拆分，类型、路径树、状态和节点 HTML 渲染已移入 `assets/ts/graph/`；D3 simulation 和事件交互仍留在 `graph.ts`，可后续继续拆。
+- P2 站点基础能力：`sitemap`、`robots.txt`、`404`、RSS 已恢复；RSS 使用摘要和数量限制。
+- P3 部署脚本：`deploy.sh` 和 `deploy.ps1` 已改为先构建、只提交已暂存改动，并使用 `--cleanDestinationDir` 避免本地旧产物残留。
 
 工程层面：
 
