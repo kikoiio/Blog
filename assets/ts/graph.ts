@@ -4,101 +4,19 @@
  * Features: hierarchical folder expansion, focus/zoom, state persistence
  */
 
+import { renderGraphNode } from './graph/renderNode';
+import { clearState, loadState, saveState } from './graph/state';
+import { buildTree } from './graph/tree';
+import type { GraphData, GraphLink, GraphNode } from './graph/types';
+
 declare const d3: any;
 
-interface PageData {
-    path: string;   // e.g. "Computer Science/大模型应用开发/2"
-    title: string;
-    url: string;
-    tags?: string[];
-}
+type GraphEndpoint = string | GraphNode;
+type DragEvent = { active: boolean; x: number; y: number };
+type ZoomEvent = { type: string; touches?: TouchList; transform: unknown };
 
-interface TagData {
-    name: string;
-    count: number;
-    posts: { title: string; url: string }[];
-}
-
-interface GraphData {
-    center: { name: string; github: string; bilibili: string };
-    pages: PageData[];
-    tags: TagData[];
-}
-
-// ---- Tree node built from flat paths ----
-interface TreeNode {
-    name: string;
-    children: Map<string, TreeNode>;
-    pages: PageData[];
-}
-
-function buildTree(pages: PageData[]): TreeNode {
-    const root: TreeNode = { name: '', children: new Map(), pages: [] };
-
-    for (const page of pages) {
-        const parts = page.path.split('/');
-        let current = root;
-
-        for (const part of parts) {
-            if (!current.children.has(part)) {
-                current.children.set(part, { name: part, children: new Map(), pages: [] });
-            }
-            current = current.children.get(part)!;
-        }
-        current.pages.push(page);
-    }
-
-    return root;
-}
-
-// ---- Graph types ----
-interface GraphNode {
-    id: string;
-    label: string;
-    type: 'center' | 'category' | 'post' | 'tag';
-    url?: string;
-    github?: string;
-    bilibili?: string;
-    parentId?: string;
-    expanded?: boolean;
-    treeRef?: TreeNode;
-    treePath?: string;
-    x?: number;
-    y?: number;
-    fx?: number | null;
-    fy?: number | null;
-}
-
-interface GraphLink {
-    source: string | GraphNode;
-    target: string | GraphNode;
-}
-
-// ---- State persistence ----
-const STATE_KEY = 'graph-expanded-paths';
-const FOCUS_KEY = 'graph-focus-path';
-
-function saveState(expandedPaths: string[], focusPath: string) {
-    try {
-        sessionStorage.setItem(STATE_KEY, JSON.stringify(expandedPaths));
-        sessionStorage.setItem(FOCUS_KEY, focusPath);
-    } catch {}
-}
-
-function loadState(): { expandedPaths: string[]; focusPath: string } | null {
-    try {
-        const paths = sessionStorage.getItem(STATE_KEY);
-        const focus = sessionStorage.getItem(FOCUS_KEY) || '';
-        if (paths) return { expandedPaths: JSON.parse(paths), focusPath: focus };
-    } catch {}
-    return null;
-}
-
-function clearState() {
-    try {
-        sessionStorage.removeItem(STATE_KEY);
-        sessionStorage.removeItem(FOCUS_KEY);
-    } catch {}
+function endpointId(endpoint: GraphEndpoint): string {
+    return typeof endpoint === 'string' ? endpoint : endpoint.id;
 }
 
 // ---- Main ----
@@ -145,7 +63,7 @@ function initGraph() {
     // ---- Zoom (no pan — dragging nodes repositions the graph instead) ----
     const zoom = d3.zoom()
         .scaleExtent([0.3, 3])
-        .filter((event: any) => {
+        .filter((event: ZoomEvent) => {
             // Allow scroll-wheel zoom + pinch-zoom on touch devices
             if (event.type === 'wheel') return true;
             if (event.type === 'touchstart' || event.type === 'touchmove' || event.type === 'touchend') {
@@ -153,7 +71,7 @@ function initGraph() {
             }
             return false;
         })
-        .on('zoom', (event: any) => {
+        .on('zoom', (event: ZoomEvent) => {
             zoomGroup.attr('transform', event.transform);
         });
 
@@ -205,14 +123,9 @@ function initGraph() {
         return 48 * s;
     }
 
-    // ---- Check if a tree node has expandable content ----
-    function hasContent(treeNode: TreeNode): boolean {
-        return treeNode.children.size > 0 || treeNode.pages.length > 0;
-    }
-
     // ---- Apply focus styling ----
     function applyFocusStyles() {
-        nodeGroup.selectAll('.graph-node-group').each(function(this: any, d: GraphNode) {
+        nodeGroup.selectAll('.graph-node-group').each(function(this: SVGGElement, d: GraphNode) {
             const innerDiv = d3.select(this).select('.graph-node');
             if (innerDiv.empty()) return;
 
@@ -274,7 +187,7 @@ function initGraph() {
 
     // ---- Update indicator ----
     function updateIndicator(nodeId: string, expanded: boolean) {
-        nodeGroup.selectAll('.graph-node-group').each(function(this: any, d: any) {
+        nodeGroup.selectAll('.graph-node-group').each(function(this: SVGGElement, d: GraphNode) {
             if (d.id === nodeId) {
                 const indicator = d3.select(this).select('.graph-node__indicator');
                 if (!indicator.empty()) {
@@ -358,8 +271,8 @@ function initGraph() {
 
             // Animate descendant nodes toward parent position + shrink
             nodeGroup.selectAll('.graph-node-group')
-                .filter((d: any) => removeIds.includes(d.id))
-                .each(function(this: any) {
+                .filter((d: GraphNode) => removeIds.includes(d.id))
+                .each(function(this: SVGGElement) {
                     const el = d3.select(this);
                     const innerDiv = el.select('.graph-node');
                     if (!innerDiv.empty()) {
@@ -376,9 +289,9 @@ function initGraph() {
 
             // Animate links: endpoints converge on parent position + fade
             linkGroup.selectAll('.graph-link')
-                .each(function(this: any, d: any) {
-                    const sid = typeof d.source === 'string' ? d.source : d.source.id;
-                    const tid = typeof d.target === 'string' ? d.target : d.target.id;
+                .each(function(this: SVGLineElement, d: GraphLink) {
+                    const sid = endpointId(d.source);
+                    const tid = endpointId(d.target);
                     const srcIsDesc = removeIds.includes(sid);
                     const tgtIsDesc = removeIds.includes(tid);
                     if (!srcIsDesc && !tgtIsDesc) return;
@@ -394,8 +307,8 @@ function initGraph() {
             setTimeout(() => {
                 nodes = nodes.filter(n => !removeIds.includes(n.id));
                 links = links.filter(l => {
-                    const sid = typeof l.source === 'string' ? l.source : (l.source as GraphNode).id;
-                    const tid = typeof l.target === 'string' ? l.target : (l.target as GraphNode).id;
+                    const sid = endpointId(l.source);
+                    const tid = endpointId(l.target);
                     return !removeIds.includes(sid) && !removeIds.includes(tid);
                 });
                 node.expanded = false;
@@ -421,9 +334,9 @@ function initGraph() {
     function updateGraph(animate = true) {
         // Links
         const linkSel = linkGroup.selectAll('.graph-link')
-            .data(links, (d: any) => {
-                const sid = typeof d.source === 'string' ? d.source : d.source.id;
-                const tid = typeof d.target === 'string' ? d.target : d.target.id;
+            .data(links, (d: GraphLink) => {
+                const sid = endpointId(d.source);
+                const tid = endpointId(d.target);
                 return `${sid}-${tid}`;
             });
 
@@ -443,7 +356,7 @@ function initGraph() {
 
         // Nodes
         const nodeSel = nodeGroup.selectAll('.graph-node-group')
-            .data(nodes, (d: any) => d.id);
+            .data(nodes, (d: GraphNode) => d.id);
 
         nodeSel.exit().remove();
 
@@ -458,24 +371,10 @@ function initGraph() {
             .attr('y', (d: GraphNode) => -getNodeHeight(d) / 2)
             .append('xhtml:div')
             .attr('class', (d: GraphNode) => `graph-node graph-node--${d.type}`)
-            .html((d: GraphNode) => {
-                if (d.type === 'center') {
-                    let socialHtml = '<div class="graph-node__social">';
-                    if (d.github) socialHtml += `<a href="${d.github}" target="_blank" rel="noopener" class="graph-social-link" title="GitHub"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>`;
-                    if (d.bilibili) socialHtml += `<a href="${d.bilibili}" target="_blank" rel="noopener" class="graph-social-link" title="Bilibili"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/></svg></a>`;
-                    socialHtml += '</div>';
-                    return `<div class="graph-node__label">${d.label}</div>${socialHtml}`;
-                }
-                if (d.type === 'category') {
-                    const expandable = d.treeRef ? hasContent(d.treeRef) : false;
-                    const indicator = expandable ? (d.expanded ? '−' : '+') : '';
-                    return `<div class="graph-node__label">${d.label}${indicator ? `<span class="graph-node__indicator">${indicator}</span>` : ''}</div>`;
-                }
-                return `<div class="graph-node__label">${d.label}</div>`;
-            });
+            .html((d: GraphNode) => renderGraphNode(d));
 
         // Entry animation
-        nodeEnter.each(function(this: any, d: GraphNode, i: number) {
+        nodeEnter.each(function(this: SVGGElement, d: GraphNode, i: number) {
             const el = d3.select(this);
             const delay = animate ? (d.type === 'center' ? 0 : 200 + i * 150) : 0;
             const innerDiv = el.select('foreignObject div.graph-node');
@@ -495,7 +394,7 @@ function initGraph() {
         activeNodes = nodeEnter.merge(nodeSel);
 
         // Click handlers
-        nodeEnter.each(function(this: any, d: GraphNode) {
+        nodeEnter.each(function(this: SVGGElement, d: GraphNode) {
             const div = d3.select(this).select('foreignObject div.graph-node').node() as HTMLElement;
             if (!div) return;
             div.addEventListener('click', (event: MouseEvent) => {
@@ -513,14 +412,14 @@ function initGraph() {
 
         // Drag
         const drag = d3.drag()
-            .on('start', (event: any, d: any) => {
+            .on('start', (event: DragEvent, d: GraphNode) => {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
                 d.fx = d.x; d.fy = d.y;
             })
-            .on('drag', (event: any, d: any) => {
+            .on('drag', (event: DragEvent, d: GraphNode) => {
                 d.fx = event.x; d.fy = event.y;
             })
-            .on('end', (event: any, d: any) => {
+            .on('end', (event: DragEvent, d: GraphNode) => {
                 if (!event.active) simulation.alphaTarget(0);
                 d.fx = null; d.fy = null;
             });
@@ -545,7 +444,7 @@ function initGraph() {
                 })();
                 return base * ms;
             }))
-            .force('link', d3.forceLink(links).id((d: any) => d.id).distance((l: any) => {
+            .force('link', d3.forceLink(links).id((d: GraphNode) => d.id).distance((l: GraphLink) => {
                 const src = typeof l.source === 'string' ? nodes.find(n => n.id === l.source) : l.source;
                 if (src && src.id === focusedNodeId) return 160 * ms;
                 if (!focusedNodeId && src && src.type === 'center') return 200 * ms;
@@ -575,13 +474,13 @@ function initGraph() {
     function tickUpdate() {
         if (activeLinks) {
             activeLinks
-                .attr('x1', (d: any) => d.source.x)
-                .attr('y1', (d: any) => d.source.y)
-                .attr('x2', (d: any) => d.target.x)
-                .attr('y2', (d: any) => d.target.y);
+                .attr('x1', (d: GraphLink) => (d.source as GraphNode).x)
+                .attr('y1', (d: GraphLink) => (d.source as GraphNode).y)
+                .attr('x2', (d: GraphLink) => (d.target as GraphNode).x)
+                .attr('y2', (d: GraphLink) => (d.target as GraphNode).y);
         }
         if (activeNodes) {
-            activeNodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+            activeNodes.attr('transform', (d: GraphNode) => `translate(${d.x},${d.y})`);
         }
     }
 
