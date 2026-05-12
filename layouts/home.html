@@ -43,18 +43,10 @@
         {{- $dir = strings.TrimSuffix "/" $dir -}}
         {{- $title := .Title -}}
         {{- if not $title }}{{ $title = .File.ContentBaseName }}{{ end -}}
-        {{- $pages = $pages | append (dict "path" $dir "title" $title "url" .RelPermalink "tags" (default (slice) .Params.tags)) -}}
+        {{- $pages = $pages | append (dict "path" $dir "title" $title "url" .RelPermalink) -}}
     {{- end -}}
 {{- end -}}
-{{- $tags := slice -}}
-{{- range $name, $taxonomy := .Site.Taxonomies.tags -}}
-    {{- $tagPosts := slice -}}
-    {{- range $taxonomy.Pages -}}
-        {{- $tagPosts = $tagPosts | append (dict "title" .Title "url" .RelPermalink) -}}
-    {{- end -}}
-    {{- $tags = $tags | append (dict "name" $name "count" (len $taxonomy.Pages) "posts" $tagPosts) -}}
-{{- end -}}
-{{- $graphData := dict "center" (dict "name" "Aries" "github" "https://github.com/kikoiio" "bilibili" "") "pages" $pages "tags" $tags -}}
+{{- $graphData := dict "center" (dict "name" "Aries" "github" "https://github.com/kikoiio" "bilibili" "") "pages" $pages -}}
 <div id="graph-data" style="display:none;">
     {{- $graphData | jsonify | safeHTML -}}
 </div>

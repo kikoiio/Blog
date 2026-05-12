@@ -31,9 +31,11 @@
 - `layouts/_partials/section-tree.html` 是早期递归 section 树方案遗留，当前首页改为前端从文件路径构建树。
 - `IMPLEMENTATION.md` 存在明显编码损坏，不能继续作为可信主文档。
 
-## 2. 当前主要问题
+## 2. 当前主要问题与状态
 
-### 2.1 构建稳定性不足
+本节保留问题背景和风险解释，便于后续理解为什么要优化。部分 P0/P2/P3 项已完成，最新状态见第 5 节“当前完成状态”；仍建议继续关注的主要是 SCSS 覆盖债、首页图导航后续拆分和外部依赖策略。
+
+### 2.1 构建稳定性不足（已基本处理）
 
 本机执行 `hugo --gc --minify` 曾失败，错误发生在写入 `public/ts/custom...js` 时提示 `Access is denied`。同时 `public/ts/` 中存在大量历史 hash 构建产物。虽然 `public/` 已被 `.gitignore` 忽略，但构建产物长期残留在工作区，已经影响本地构建可信度。
 
@@ -43,7 +45,7 @@
 - 产物文件被占用或权限异常时会阻塞开发。
 - 难以判断 GitHub Actions 成功是否代表本地环境也健康。
 
-### 2.2 文档事实失真
+### 2.2 文档事实失真（已基本处理）
 
 现有文档之间存在冲突或过期信息。例如 `AGENTS.md` 和 `CLAUDE.md` 记录 `custom.ts` 未被模板加载，但实际 Stack 主题会在 footer 中自动加载它。`IMPLEMENTATION.md` 还存在大量乱码，维护者容易被错误信息误导。
 
@@ -53,7 +55,7 @@
 - 新维护者难以判断哪个文档可信。
 - 遗留代码和活跃代码边界不清。
 
-### 2.3 首页图导航耦合过重
+### 2.3 首页图导航耦合过重（已部分处理）
 
 `assets/ts/graph.ts` 同时承担数据解析、目录树构建、D3 渲染、动画、状态恢复、事件绑定和跳转逻辑，并大量使用 `any` 与 HTML 字符串拼接。
 
@@ -73,7 +75,7 @@
 - 移动端 fixed、backdrop-filter、sidebar 覆盖逻辑难以推理。
 - 样式变更影响范围不透明。
 
-### 2.5 CDN 与外部资源依赖分散
+### 2.5 CDN 与外部资源依赖分散（待策略决策）
 
 首页 D3、Mermaid、Panzoom、Google Fonts 等依赖通过 CDN 或远程字体加载。个人站可以接受，但依赖策略没有集中说明。
 
@@ -91,7 +93,7 @@
 - Google Fonts：`layouts/_partials/head/custom.html` 直接加载 `Inter`、`Noto Sans SC`、`JetBrains Mono`。
 - KaTeX / PhotoSwipe：由主题 `data/external.toml` 管理，按页面能力按需加载。
 
-### 2.6 SEO 与站点基础能力被过度关闭
+### 2.6 SEO 与站点基础能力被过度关闭（已基本处理）
 
 `hugo.toml` 禁用了 `taxonomy`、`term`、`RSS`、`sitemap`、`robotsTXT`、`404` 等页面类型。若博客只作为私人入口，这可以接受；若希望文章被搜索和订阅，这是明显损失。
 
@@ -101,7 +103,7 @@
 - 没有 RSS，不利于长期订阅。
 - 没有 404 页面，访问坏链接时体验较差。
 
-### 2.7 本地部署脚本过于粗暴
+### 2.7 本地部署脚本过于粗暴（已处理）
 
 `deploy.sh` 使用 `git add .`、`git commit`、`git push` 的直通流程；在当前 Windows 维护环境里，也缺少一个可直接执行的 PowerShell 入口。
 
@@ -288,7 +290,7 @@
 - P0 构建可信：真实工作区生产构建已通过，`public/` 和 `resources/_gen/` 已保持为忽略产物，`:filename` 已迁移为 `:contentbasename`。
 - P0 文档修正：`AGENTS.md`、`CLAUDE.md` 已瘦身，`IMPLEMENTATION.md` 已归档，`PROJECT_GUIDE.md` 成为主入口。
 - P1 首页图导航：已完成第一轮轻拆分，类型、路径树、状态和节点 HTML 渲染已移入 `assets/ts/graph/`；D3 simulation 和事件交互仍留在 `graph.ts`，可后续继续拆。
-- P2 站点基础能力：`sitemap`、`robots.txt`、`404`、RSS 已恢复；RSS 使用摘要和数量限制。
+- P2 站点基础能力：`sitemap`、`robots.txt`、`404`、RSS 已恢复；RSS 使用摘要和数量限制；首页图数据已移除未使用的 tag payload。
 - P3 部署脚本：`deploy.sh` 和 `deploy.ps1` 已改为先构建、只提交已暂存改动，并使用 `--cleanDestinationDir` 避免本地旧产物残留。
 
 工程层面：

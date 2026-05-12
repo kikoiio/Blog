@@ -2,19 +2,11 @@ export interface PageData {
     path: string;
     title: string;
     url: string;
-    tags?: string[];
-}
-
-export interface TagData {
-    name: string;
-    count: number;
-    posts: { title: string; url: string }[];
 }
 
 export interface GraphData {
     center: { name: string; github: string; bilibili: string };
     pages: PageData[];
-    tags: TagData[];
 }
 
 export interface TreeNode {

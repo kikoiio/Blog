@@ -1,6 +1,12 @@
 /* ============================================================
    Multi-Theme Blog System
-   Styles: Minimalist (6 colors)
+
+   Sections:
+   1. Theme tokens and shared base styles
+   2. Theme switcher UI
+   3. Homepage graph navigation
+   4. Custom article layout and Zima canvas
+   5. Mermaid readability
    ============================================================ */
 
 /* ---------- Typography Override ---------- */
@@ -321,9 +327,9 @@ main.main {
 
 /* ---------- Tags ---------- */
 .article-tags a {
-    border-radius: 20px !important;
-    padding: 4px 14px !important;
-    font-size: 0.85rem !important;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s ease;
 }
@@ -683,6 +689,7 @@ main.main {
 
 .homepage-graph .left-sidebar,
 .homepage-graph .right-sidebar {
+    /* Stack renders sidebars by default; the graph homepage owns the full viewport. */
     display: none !important;
 }
 
@@ -1022,11 +1029,13 @@ main.main {
 
 /* Hide the theme switcher on article pages */
 .custom-article-page .theme-switcher {
+    /* Article pages use the custom TOC/pool controls and keep theme selection off-canvas. */
     display: none !important;
 }
 
 /* ---- Left Sidebar: Back Arrow + TOC ---- */
 .custom-left-sidebar {
+    /* Override Stack's responsive sidebar chrome for the article-specific TOC rail. */
     display: flex !important;
     flex-direction: column;
     padding: 30px 20px;
@@ -1161,6 +1170,7 @@ main.main {
 
 /* ---- Right Sidebar: Cat Canvas ---- */
 .custom-article-page .right-sidebar.custom-right-sidebar {
+    /* Stack hides/right-sizes this sidebar at breakpoints; Zima needs a fixed visual rail. */
     display: flex !important;
     background: transparent !important;
     border: none !important;
@@ -1286,6 +1296,7 @@ main.main {
 
     /* Right sidebar: show as horizontal pool at bottom on mobile */
     .custom-article-page .right-sidebar.custom-right-sidebar {
+        /* Convert the desktop rail into an in-flow horizontal pool below the article. */
         position: relative !important;
         width: 100% !important;
         max-width: 100% !important;
