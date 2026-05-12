@@ -10,6 +10,7 @@ interface ThemeState {
 }
 
 const STORAGE_KEY = 'BlogThemeState';
+const COLOR_SCHEME_EVENT = 'onColorSchemeChange';
 
 // ---- Theme Manager ----
 class ThemeManager {
@@ -37,24 +38,30 @@ class ThemeManager {
 
     private saveState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-        if (this.state.color === 'dark') {
-            localStorage.setItem('StackColorScheme', 'dark');
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            localStorage.setItem('StackColorScheme', 'light');
-            document.documentElement.dataset.scheme = 'light';
-        }
+        const scheme = this.getScheme();
+        localStorage.setItem('StackColorScheme', scheme);
+        document.documentElement.dataset.scheme = scheme;
     }
 
     private getThemeAttr(): string {
         return `mini-${this.state.color}`;
     }
 
+    private getScheme(): 'light' | 'dark' {
+        return this.state.color === 'dark' ? 'dark' : 'light';
+    }
+
+    private notifyColorSchemeChange() {
+        window.dispatchEvent(new CustomEvent(COLOR_SCHEME_EVENT, {
+            detail: this.getScheme(),
+        }));
+    }
+
     applyTheme() {
         const theme = this.getThemeAttr();
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.dataset.scheme = 'dark';
         this.saveState();
+        this.notifyColorSchemeChange();
         this.updateUI();
     }
 

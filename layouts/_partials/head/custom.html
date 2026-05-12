@@ -16,8 +16,9 @@
     if (!saved) saved = { color: 'teal' };
 
     var theme = 'mini-' + (saved.color || 'teal');
+    var scheme = saved.color === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.dataset.scheme = 'dark';
+    document.documentElement.dataset.scheme = scheme;
 })();
 </script>
 

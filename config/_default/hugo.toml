@@ -1,16 +1,22 @@
-baseURL                = "http://aries727.site/"
+baseURL                = "https://aries727.site/"
 languageCode           = "zh-cn"
 title                  = "Aries's Blog"
 defaultContentLanguage = "zh-cn"
 hasCJKLanguage         = true
 theme                  = "hugo-theme-stack"
+enableRobotsTXT        = true
 
-disableKinds = ["taxonomy", "term", "RSS", "sitemap", "robotsTXT", "404"]
+disableKinds = ["taxonomy", "term"]
+
+[outputs]
+    home = ["html", "rss"]
+    page = ["html"]
+    section = ["html"]
 
 [pagination]
     pagerSize = 9999
     disableAliases = true
 
 [permalinks]
-    post = "/:sections/:filename/"
+    post = "/:sections/:contentbasename/"
     page = "/:slug/"
