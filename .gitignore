@@ -15,3 +15,6 @@ Thumbs.db
 
 # Obsidian (配置文件不需要上传)
 .obsidian/
+
+# Claude Code
+.claude/
