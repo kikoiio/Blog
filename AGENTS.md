@@ -1,6 +1,6 @@
 # Blog Project - Codex Context
 
-本文件只保留 Codex 需要的高密度入口信息。完整维护说明、问题清单、优化路线图和验收标准见 `PROJECT_GUIDE.md`。
+本文件只保留 Codex 需要的高密度入口信息。项目介绍、运行方式和维护说明见 `README.md`。
 
 ## Overview
 
@@ -17,17 +17,16 @@ Hugo 个人博客，部署在 GitHub Pages，域名为 `aries727.site`。项目�
 
 ## Key Files
 
-- `PROJECT_GUIDE.md`：主维护文档，包含优化路线图和旧文档整合策略。
+- `README.md`：项目介绍、运行、内容组织、发布和维护说明。
 - `config/_default/`：Hugo 配置。
 - `layouts/home.html`：首页图导航模板，加载 `assets/ts/graph.ts`。
 - `layouts/single.html`：文章页模板，包含自定义 TOC 和 Zima Blue canvas，加载 `assets/ts/zima.ts`。
 - `layouts/_partials/head/custom.html`：字体加载和首屏主题初始化脚本。
 - `layouts/_default/_markup/render-image.html`：Obsidian 图片路径兼容。
 - `assets/ts/graph.ts`：首页 D3 力导向图逻辑。
+- `assets/ts/graph/indexPanel.ts`：深层目录的名称排序笔记索引轨道。
 - `assets/ts/zima.ts`：文章页 Zima Blue 泳池动画。
 - `assets/ts/custom.ts`：主题切换和滚动动画；会被 Stack 主题 footer script 自动加载。
-- `assets/ts/cat.ts`：遗留动画实现，当前模板未引用。
-- `layouts/_partials/section-tree.html`：遗留 section 树 partial，当前首页不依赖。
 
 ## Build & Deploy
 
@@ -38,7 +37,7 @@ bash deploy.sh "msg"
 ./deploy.ps1 "msg"
 ```
 
-注意：`deploy.sh` / `deploy.ps1` 现在只会在生产构建成功后提交“已暂存”的改动，不再默认 `git add .`。生产部署以 GitHub Actions 为准。
+`deploy.sh` / `deploy.ps1` 是用户 Ctrl+P 一键发布工作流的入口，只提交已暂存改动。正式部署由推送到 `master` 后触发的 GitHub Actions 完成。
 
 ## Important Notes
 

@@ -9,6 +9,19 @@ export interface GraphData {
     pages: PageData[];
 }
 
+export interface IndexEntry {
+    title: string;
+    url: string;
+    directoryPath: string;
+    showPath: boolean;
+}
+
+export interface IndexViewModel {
+    title: string;
+    treePath: string;
+    entries: IndexEntry[];
+}
+
 export interface TreeNode {
     name: string;
     children: Map<string, TreeNode>;
@@ -40,4 +53,5 @@ export interface GraphLink {
 export interface SavedGraphState {
     expandedPaths: string[];
     focusPath: string;
+    indexPath: string;
 }

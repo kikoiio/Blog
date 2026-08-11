@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1280" viewBox="0 0 1600 1280" role="img" aria-labelledby="title desc">
+  <title id="title">SSE 与大模型流式传输过程</title>
+  <desc id="desc">展示用户、客户端应用、模型 SDK、网络栈、模型 API 和模型之间，从建立 HTTPS 连接到接收 SSE 增量，再到可选工具调用和新请求的完整过程。</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 34px Inter, "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 17px Inter, "Microsoft YaHei", sans-serif; fill: #475569; }
+      .actor { font: 700 18px Inter, "Microsoft YaHei", sans-serif; fill: #172033; text-anchor: middle; }
+      .actor-sub { font: 500 14px Inter, "Microsoft YaHei", sans-serif; fill: #334155; text-anchor: middle; }
+      .phase { font: 700 17px Inter, "Microsoft YaHei", sans-serif; fill: #172033; }
+      .label { font: 600 15px Inter, "Microsoft YaHei", sans-serif; fill: #172033; text-anchor: middle; }
+      .small { font: 500 14px Inter, "Microsoft YaHei", sans-serif; fill: #334155; text-anchor: middle; }
+      .lifeline { stroke: #64748b; stroke-width: 2; stroke-dasharray: 7 7; }
+      .message { stroke: #334155; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .return { stroke: #334155; stroke-width: 3; stroke-dasharray: 8 6; fill: none; marker-end: url(#arrow); }
+      .label-bg { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; rx: 8; }
+      .note { font: 600 14px Inter, "Microsoft YaHei", sans-serif; fill: #7c2d12; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1280" fill="#ffffff"/>
+
+  <text x="800" y="48" class="title" text-anchor="middle">SSE 与大模型流式传输过程</text>
+  <text x="800" y="78" class="subtitle" text-anchor="middle">一次 HTTP 响应持续承载多个增量；下一轮消息或工具结果使用新的 HTTP 请求</text>
+
+  <!-- Actor headers -->
+  <g>
+    <rect x="45" y="105" width="190" height="72" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+    <text x="140" y="134" class="actor">用户</text>
+    <text x="140" y="158" class="actor-sub">输入与阅读结果</text>
+
+    <rect x="295" y="105" width="190" height="72" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.5"/>
+    <text x="390" y="134" class="actor">客户端应用</text>
+    <text x="390" y="158" class="actor-sub">Agent、对话与 UI</text>
+
+    <rect x="545" y="105" width="190" height="72" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2.5"/>
+    <text x="640" y="134" class="actor">模型 SDK</text>
+    <text x="640" y="158" class="actor-sub">请求与 SSE 解析</text>
+
+    <rect x="795" y="105" width="190" height="72" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="2.5"/>
+    <text x="890" y="134" class="actor">网络栈</text>
+    <text x="890" y="158" class="actor-sub">DNS、TCP、TLS、HTTP</text>
+
+    <rect x="1045" y="105" width="190" height="72" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
+    <text x="1140" y="134" class="actor">模型 API</text>
+    <text x="1140" y="158" class="actor-sub">网关与事件编码</text>
+
+    <rect x="1295" y="105" width="190" height="72" rx="14" fill="#f3e8ff" stroke="#9333ea" stroke-width="2.5"/>
+    <text x="1390" y="134" class="actor">大模型</text>
+    <text x="1390" y="158" class="actor-sub">推理与生成</text>
+  </g>
+
+  <!-- Phase backgrounds -->
+  <rect x="25" y="202" width="1550" height="322" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="50" y="232" class="phase">阶段 1：准备请求并建立或复用 HTTPS 连接</text>
+
+  <rect x="25" y="542" width="1550" height="380" rx="18" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+  <text x="50" y="572" class="phase">阶段 2：同一个 HTTP 响应体持续传输 SSE 增量</text>
+
+  <rect x="25" y="940" width="1550" height="300" rx="18" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+  <text x="50" y="970" class="phase">阶段 3：结束，或执行工具后发起新的 HTTP 请求</text>
+
+  <!-- Lifelines -->
+  <line x1="140" y1="177" x2="140" y2="1210" class="lifeline"/>
+  <line x1="390" y1="177" x2="390" y2="1210" class="lifeline"/>
+  <line x1="640" y1="177" x2="640" y2="1210" class="lifeline"/>
+  <line x1="890" y1="177" x2="890" y2="1210" class="lifeline"/>
+  <line x1="1140" y1="177" x2="1140" y2="1210" class="lifeline"/>
+  <line x1="1390" y1="177" x2="1390" y2="1210" class="lifeline"/>
+
+  <!-- Phase 1 messages -->
+  <line x1="140" y1="270" x2="390" y2="270" class="message"/>
+  <rect x="186" y="241" width="160" height="25" class="label-bg"/>
+  <text x="266" y="259" class="label">① 输入问题</text>
+
+  <line x1="390" y1="330" x2="640" y2="330" class="message"/>
+  <rect x="421" y="290" width="188" height="34" class="label-bg"/>
+  <text x="515" y="306" class="small">② system + messages</text>
+  <text x="515" y="321" class="small">+ tools + stream:true</text>
+
+  <line x1="640" y1="392" x2="890" y2="392" class="message"/>
+  <rect x="680" y="351" width="170" height="35" class="label-bg"/>
+  <text x="765" y="367" class="small">③ 序列化请求</text>
+  <text x="765" y="382" class="small">并添加认证信息</text>
+
+  <line x1="890" y1="450" x2="1140" y2="450" class="message"/>
+  <rect x="920" y="408" width="190" height="36" class="label-bg"/>
+  <text x="1015" y="424" class="small">④ 必要时完成 TCP/TLS</text>
+  <text x="1015" y="440" class="small">然后发送 POST 请求</text>
+
+  <text x="890" y="494" class="note">连接仍可用时，新的 HTTP 请求可以跳过 TCP/TLS 重建</text>
+
+  <!-- Phase 2 messages -->
+  <line x1="1140" y1="615" x2="1390" y2="615" class="message"/>
+  <rect x="1190" y="582" width="150" height="27" class="label-bg"/>
+  <text x="1265" y="601" class="label">⑤ 开始推理</text>
+
+  <line x1="1390" y1="672" x2="1140" y2="672" class="return"/>
+  <rect x="1180" y="635" width="170" height="30" class="label-bg"/>
+  <text x="1265" y="655" class="label">⑥ 产生输出增量</text>
+
+  <line x1="1140" y1="730" x2="890" y2="730" class="return"/>
+  <rect x="922" y="688" width="186" height="35" class="label-bg"/>
+  <text x="1015" y="704" class="small">⑦ HTTP 200 + event-stream</text>
+  <text x="1015" y="719" class="small">持续写入 event / data</text>
+
+  <line x1="890" y1="786" x2="640" y2="786" class="return"/>
+  <rect x="690" y="749" width="150" height="30" class="label-bg"/>
+  <text x="765" y="769" class="label">⑧ 接收字节流</text>
+
+  <line x1="640" y1="842" x2="390" y2="842" class="return"/>
+  <rect x="426" y="800" width="178" height="35" class="label-bg"/>
+  <text x="515" y="816" class="small">⑨ 解析 SSE 边界</text>
+  <text x="515" y="831" class="small">并生成事件对象</text>
+
+  <line x1="390" y1="890" x2="140" y2="890" class="return"/>
+  <rect x="175" y="853" width="180" height="30" class="label-bg"/>
+  <text x="265" y="873" class="label">⑩ 增量更新界面</text>
+
+  <path d="M 1465 645 C 1535 645, 1535 850, 1465 850" class="return"/>
+  <text x="1500" y="755" class="small" transform="rotate(90 1500 755)">重复发送多个增量，不重新握手</text>
+
+  <!-- Phase 3 messages -->
+  <line x1="1140" y1="1010" x2="640" y2="1010" class="return"/>
+  <rect x="795" y="976" width="190" height="28" class="label-bg"/>
+  <text x="890" y="995" class="label">⑪ 结束事件与 token 用量</text>
+
+  <line x1="640" y1="1065" x2="390" y2="1065" class="return"/>
+  <rect x="432" y="1029" width="166" height="30" class="label-bg"/>
+  <text x="515" y="1049" class="label">⑫ 统一应用事件</text>
+
+  <path d="M 390 1095 C 300 1095, 300 1158, 390 1158" class="message"/>
+  <rect x="202" y="1108" width="165" height="35" class="label-bg"/>
+  <text x="284" y="1124" class="small">⑬ 可选：执行本地工具</text>
+  <text x="284" y="1139" class="small">并保存 tool_result</text>
+
+  <line x1="390" y1="1190" x2="640" y2="1190" class="message"/>
+  <rect x="420" y="1148" width="190" height="36" class="label-bg"/>
+  <text x="515" y="1164" class="small">⑭ 下一轮或工具结果</text>
+  <text x="515" y="1179" class="small">触发新的 HTTP 请求</text>
+
+  <rect x="1055" y="1095" width="420" height="104" rx="14" fill="#ffffff" stroke="#ea580c" stroke-width="2"/>
+  <text x="1265" y="1124" class="label">关键区别</text>
+  <text x="1265" y="1150" class="small">新的 HTTP 请求 ≠ 必然重新 TCP/TLS 握手</text>
+  <text x="1265" y="1175" class="small">底层连接可复用，但每轮都有新的请求与响应流</text>
+</svg>

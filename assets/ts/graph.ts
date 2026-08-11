@@ -5,8 +5,9 @@
  */
 
 import { renderGraphNode } from './graph/renderNode';
+import { createIndexPanel } from './graph/indexPanel';
 import { clearState, loadState, saveState } from './graph/state';
-import { buildTree } from './graph/tree';
+import { buildIndexEntries, buildTree, shouldOpenIndex } from './graph/tree';
 import type { GraphData, GraphLink, GraphNode } from './graph/types';
 
 declare const d3: any;
@@ -27,6 +28,9 @@ function initGraph() {
     const data: GraphData = JSON.parse(dataEl.textContent || '{}');
     const tree = buildTree(data.pages);
     const container = document.getElementById('graph-container')!;
+    const indexContainer = document.getElementById('graph-index-panel');
+    if (!indexContainer) return;
+
     const svg = d3.select('#graph-svg');
 
     let width = container.clientWidth || window.innerWidth;
@@ -46,6 +50,15 @@ function initGraph() {
     let activeLinks: any;
     let nodeIdCounter = 0;
     let focusedNodeId: string | null = null;
+    let activeIndexPath = '';
+
+    const indexPanel = createIndexPanel(indexContainer, {
+        onNavigate: (entry) => {
+            persistState();
+            window.location.href = entry.url;
+        },
+        onClose: () => closeIndex(),
+    });
 
     // SVG groups
     const defs = svg.append('defs');
@@ -151,11 +164,58 @@ function initGraph() {
         const focus = focusedNodeId
             ? (nodes.find(n => n.id === focusedNodeId)?.treePath || '')
             : '';
-        saveState(paths, focus);
+        saveState(paths, focus, activeIndexPath);
+    }
+
+    function openIndex(node: GraphNode) {
+        if (!node.treeRef || !node.treePath) return;
+
+        if (activeIndexPath && activeIndexPath !== node.treePath) {
+            const previousNode = nodes.find(n => n.treePath === activeIndexPath && n.type === 'category');
+            if (previousNode) updateIndicator(previousNode.id, false);
+        }
+
+        activeIndexPath = node.treePath;
+        focusedNodeId = node.id;
+        indexPanel.open({
+            title: node.label,
+            treePath: node.treePath,
+            entries: buildIndexEntries(node.treeRef),
+        });
+
+        document.body.classList.add('graph-index-active');
+        updateIndicator(node.id, true);
+        applyFocusStyles();
+        persistState();
+
+        window.requestAnimationFrame(() => {
+            resizeGraph(false);
+            if (simulation) simulation.stop();
+        });
+    }
+
+    function closeIndex() {
+        const indexNode = nodes.find(n => n.treePath === activeIndexPath && n.type === 'category');
+
+        activeIndexPath = '';
+        indexPanel.close();
+        document.body.classList.remove('graph-index-active');
+
+        if (indexNode) updateIndicator(indexNode.id, false);
+
+        focusedNodeId = indexNode?.parentId || null;
+        if (focusedNodeId === 'center') focusedNodeId = null;
+
+        applyFocusStyles();
+        persistState();
+        window.requestAnimationFrame(() => resizeGraph(true));
     }
 
     // ---- Build main view ----
     function buildMainData() {
+        activeIndexPath = '';
+        indexPanel.close();
+        document.body.classList.remove('graph-index-active');
         nodes = [];
         links = [];
         nodeIdCounter = 0;
@@ -260,6 +320,8 @@ function initGraph() {
         if (node.expanded) {
             if (isCollapsing) return;
             isCollapsing = true;
+
+            if (activeIndexPath) closeIndex();
 
             const removeIds = collectDescendantIds(nodeId);
             const parentX = node.x || width / 2;
@@ -405,7 +467,11 @@ function initGraph() {
                     persistState();
                     window.location.href = d.url;
                 } else if (d.type === 'category') {
-                    toggleSection(d.id);
+                    if (shouldOpenIndex(d)) {
+                        openIndex(d);
+                    } else {
+                        toggleSection(d.id);
+                    }
                 }
             });
         });
@@ -493,21 +559,25 @@ function initGraph() {
     });
 
     // ---- Resize ----
-    window.addEventListener('resize', () => {
+    function resizeGraph(restart: boolean) {
         width = container.clientWidth || window.innerWidth;
         height = container.clientHeight || window.innerHeight;
         svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
         if (simulation) {
             simulation.force('x', d3.forceX(width / 2).strength(0.05));
             simulation.force('y', d3.forceY(height / 2).strength(0.05));
-            simulation.alpha(0.3).restart();
+            if (restart) simulation.alpha(0.3).restart();
         }
+    }
+
+    window.addEventListener('resize', () => {
+        resizeGraph(true);
     });
 
     // ---- Restore or init ----
     function restoreState() {
         const saved = loadState();
-        if (!saved || saved.expandedPaths.length === 0) {
+        if (!saved || (saved.expandedPaths.length === 0 && !saved.indexPath)) {
             buildMainData();
             updateGraph(true);
             return;
@@ -531,7 +601,18 @@ function initGraph() {
 
         updateGraph(false);
         nodes.filter(n => n.expanded).forEach(n => updateIndicator(n.id, true));
-        applyFocusStyles();
+
+        const indexNode = saved.indexPath
+            ? nodes.find(n => n.treePath === saved.indexPath && n.type === 'category')
+            : undefined;
+
+        if (indexNode && shouldOpenIndex(indexNode)) {
+            openIndex(indexNode);
+        } else {
+            activeIndexPath = '';
+            applyFocusStyles();
+            persistState();
+        }
     }
 
     restoreState();
