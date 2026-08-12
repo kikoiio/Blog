@@ -33,11 +33,9 @@ Hugo 个人博客，部署在 GitHub Pages，域名为 `aries727.site`。项目�
 ```bash
 hugo server -D
 hugo --gc --minify --cleanDestinationDir
-bash deploy.sh "msg"
-./deploy.ps1 "msg"
 ```
 
-`deploy.sh` / `deploy.ps1` 是用户 Ctrl+P 一键发布工作流的入口，只提交已暂存改动。正式部署由推送到 `master` 后触发的 GitHub Actions 完成。
+正式部署由推送到 `master` 后触发的 GitHub Actions 完成。
 
 ## Important Notes
 

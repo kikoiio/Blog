@@ -1025,7 +1025,7 @@ main.main {
 .graph-index__path {
     color: var(--card-text-color-secondary);
     font-family: var(--code-font-family);
-    font-size: 0.72rem;
+    font-size: 1.2rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
@@ -1033,7 +1033,7 @@ main.main {
 .graph-index__title {
     margin-top: 6px;
     color: var(--card-text-color-main);
-    font-size: 1.45rem;
+    font-size: 2.2rem;
     line-height: 1.25;
     letter-spacing: -0.02em;
 }
@@ -1041,7 +1041,7 @@ main.main {
 .graph-index__count {
     margin-top: 7px;
     color: var(--card-text-color-secondary);
-    font-size: 0.78rem;
+    font-size: 1.3rem;
 }
 
 .graph-index__close {
@@ -1135,7 +1135,7 @@ main.main {
 }
 
 .graph-index__entry-title {
-    font-size: 0.92rem;
+    font-size: 1.5rem;
     font-weight: 600;
     line-height: 1.4;
     overflow-wrap: anywhere;
@@ -1145,14 +1145,14 @@ main.main {
     margin-top: 3px;
     color: var(--card-text-color-secondary);
     font-family: var(--code-font-family);
-    font-size: 0.68rem;
+    font-size: 1.1rem;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
 
 .graph-index__arrow {
     color: var(--card-text-color-secondary);
-    font-size: 0.85rem;
+    font-size: 1.3rem;
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -1169,6 +1169,7 @@ main.main {
 .graph-index__empty {
     margin: 32px 0;
     color: var(--card-text-color-secondary);
+    font-size: 1.4rem;
     text-align: center;
 }
 
@@ -1316,6 +1317,7 @@ main.main {
     box-shadow: none !important;
     max-width: 350px !important;
     min-width: 310px;
+    max-height: 100vh;
     overflow-y: auto;
 
     /* Hide the hamburger menu */
@@ -1454,7 +1456,7 @@ main.main {
     top: calc(50vh - 35vh);
     height: 70vh;
     max-height: 600px;
-    align-self: flex-start;
+    align-self: center;
 }
 
 #zima-canvas {
@@ -1480,9 +1482,95 @@ main.main {
     }
 }
 
+/* ---- Desktop: article column owns the scrollbar ---- */
+@media (min-width: 769px) {
+    .custom-article-page {
+        /* Body stays fixed; only the article column scrolls. */
+        overflow: hidden;
+    }
+
+    .custom-article-page .container.main-container {
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .custom-article-page main.main {
+        height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 6px;
+
+        /* main.main is a column flex container with a fixed height; without
+           this the article card shrinks to fit instead of overflowing. */
+        > * {
+            flex-shrink: 0;
+        }
+    }
+}
+
 /* ---- Mobile TOC toggle button (hidden on desktop) ---- */
 .mobile-toc-toggle {
     display: none;
+}
+
+/* ---- Image lightbox ---- */
+.article-content img.lightbox-zoomable {
+    cursor: zoom-in;
+}
+
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh 4vw;
+    box-sizing: border-box;
+    background: rgba(8, 18, 26, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    cursor: zoom-out;
+    transition: opacity 0.25s ease;
+
+    &.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.lightbox-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.lightbox-image {
+    max-width: calc(92vw - 32px);
+    max-height: 84vh;
+    object-fit: contain;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    transform: scale(0.96);
+    transition: transform 0.25s ease;
+
+    .lightbox-overlay.is-open & {
+        transform: scale(1);
+    }
+}
+
+.lightbox-caption {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.4rem;
+    line-height: 1.5;
+    text-align: center;
 }
 
 /* ---- Mobile: Article Page ---- */

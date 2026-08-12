@@ -79,7 +79,6 @@
 
     {{ partialCached "footer/footer" . }}
 
-    {{ partialCached "article/components/photoswipe" . }}
     {{ partial "article/components/mermaid" . }}
 
     {{/* Zima Blue pool animation */}}
@@ -117,9 +116,17 @@
                     if (target) {
                         var navH = document.querySelector('.custom-left-sidebar');
                         var isFixed = navH && window.getComputedStyle(navH).position === 'fixed';
-                        var offset = isFixed ? navH.offsetHeight + 10 : 0;
-                        var y = target.getBoundingClientRect().top + window.scrollY - offset;
-                        window.scrollTo({top: y, behavior: 'instant'});
+                        var main = document.querySelector('.custom-article-page main.main');
+                        var mainScrolls = main && /^(auto|scroll)$/.test(window.getComputedStyle(main).overflowY);
+                        if (!isFixed && mainScrolls) {
+                            // Desktop: the article column scrolls, not the window.
+                            var mainY = target.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 8;
+                            main.scrollTo({top: mainY, behavior: 'instant'});
+                        } else {
+                            var offset = isFixed ? navH.offsetHeight + 10 : 0;
+                            var y = target.getBoundingClientRect().top + window.scrollY - offset;
+                            window.scrollTo({top: y, behavior: 'instant'});
+                        }
                     }
                     history.replaceState(null, '', hash);
                 });

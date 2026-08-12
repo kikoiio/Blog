@@ -76,7 +76,6 @@ layouts/single.html         文章页模板
 layouts/_partials/          自定义模板组件
 static/                     静态资源
 themes/hugo-theme-stack/    Stack 主题子模块
-docs/                       本次交互改造的规格与验收记录
 ```
 
 自定义代码放在项目根目录的 `layouts/` 和 `assets/` 中，不直接修改主题子模块。
@@ -90,17 +89,7 @@ docs/                       本次交互改造的规格与验收记录
 3. 运行生产构建。
 4. 将 `public/` 发布到 GitHub Pages。
 
-也可以在 GitHub Actions 页面手动触发该工作流。项目保留以下本地一键发布入口，供 Ctrl+P 工作流调用：
-
-```powershell
-.\deploy.ps1 "commit message"
-```
-
-```bash
-./deploy.sh "commit message"
-```
-
-脚本会先执行生产构建，再提交已经暂存的改动并推送；它不会自动执行 `git add .`。
+也可以在 GitHub Actions 页面手动触发该工作流。
 
 ## 关键维护说明
 
@@ -108,4 +97,3 @@ docs/                       本次交互改造的规格与验收记录
 - 首页索引的 DOM 渲染位于 `assets/ts/graph/indexPanel.ts`；排序、后代笔记收集和触发规则位于 `assets/ts/graph/tree.ts`。
 - 文章永久链接使用 `:contentbasename`，修改内容目录或文件名可能改变现有地址。
 - D3、Mermaid、Panzoom 和 Google Fonts 依赖远程资源，离线或网络受限时相应功能可能不可用。
-- 完整的索引改造规格、实施任务、清理审计和验收证据保存在 `docs/`。

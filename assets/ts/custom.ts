@@ -209,10 +209,140 @@ class ThemeManager {
 // ---- Init ----
 function init() {
     new ThemeManager();
+    initArticleContentScroller();
+    initImageLightbox();
 }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
+}
+
+/**
+ * Article page: on desktop the article column (main.main) scrolls
+ * independently of the window (see custom.scss). The theme's anchor
+ * scrolling and ToC scrollspy assume window scrolling, so re-implement
+ * both against the article column here.
+ */
+function initArticleContentScroller() {
+    const main = document.querySelector<HTMLElement>('.custom-article-page main.main');
+    if (!main) return;
+
+    const mainScrolls = (): boolean => /^(auto|scroll)$/.test(getComputedStyle(main).overflowY);
+
+    // In-content anchor links (footnotes, cross references). ToC links are
+    // handled by the dedicated handler in layouts/single.html.
+    document.addEventListener('click', (event) => {
+        const anchor = (event.target as HTMLElement).closest('a[href^="#"]');
+        if (!anchor || anchor.closest('.custom-toc') || !mainScrolls()) return;
+
+        const id = decodeURIComponent(anchor.getAttribute('href')!.slice(1));
+        const target = document.getElementById(id);
+        if (!target) return;
+
+        event.preventDefault();
+        const top = target.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 8;
+        main.scrollTo({ top, behavior: 'smooth' });
+        history.pushState(null, '', `#${id}`);
+    });
+
+    // Scrollspy that follows the article column instead of the window.
+    const headers = Array.from(document.querySelectorAll<HTMLElement>(
+        '.article-content h1[id], .article-content h2[id], .article-content h3[id], .article-content h4[id], .article-content h5[id], .article-content h6[id]'
+    ));
+    const tocItems = Array.from(document.querySelectorAll<HTMLElement>('#TableOfContents li'));
+    if (!headers.length || !tocItems.length) return;
+
+    const idToItem = new Map<string, HTMLElement>();
+    tocItems.forEach((item) => {
+        const href = item.querySelector('a')?.getAttribute('href') || '';
+        if (href.startsWith('#')) idToItem.set(href.slice(1), item);
+    });
+
+    const tocNav = document.querySelector<HTMLElement>('.custom-toc .toc-nav');
+    let tocHovered = false;
+    tocNav?.addEventListener('mouseenter', () => tocHovered = true);
+    tocNav?.addEventListener('mouseleave', () => tocHovered = false);
+
+    let activeItem: HTMLElement | undefined;
+    const updateSpy = () => {
+        if (!mainScrolls()) return;
+        const mainTop = main.getBoundingClientRect().top;
+        let current: HTMLElement | undefined;
+        for (const header of headers) {
+            if (header.getBoundingClientRect().top - mainTop <= 24) current = header;
+        }
+        const next = current ? idToItem.get(current.id) : undefined;
+        if (next === activeItem) return;
+        activeItem?.classList.remove('active-class');
+        if (next) {
+            next.classList.add('active-class');
+            if (!tocHovered) next.scrollIntoView({ block: 'nearest' });
+        }
+        activeItem = next;
+    };
+
+    let spyScheduled = false;
+    main.addEventListener('scroll', () => {
+        if (spyScheduled) return;
+        spyScheduled = true;
+        requestAnimationFrame(() => {
+            spyScheduled = false;
+            updateSpy();
+        });
+    });
+    // The theme's own scrollspy recomputes on resize with a stale
+    // window-based scroll position; run afterwards to correct it.
+    window.addEventListener('resize', () => setTimeout(updateSpy, 120));
+    updateSpy();
+}
+
+/**
+ * Fullscreen lightbox for article images. Works for every image type
+ * (SVG, raster, external) without depending on the PhotoSwipe CDN.
+ * Images wrapped in a link keep the link's native behavior.
+ */
+function initImageLightbox() {
+    const content = document.querySelector<HTMLElement>('.article-content');
+    if (!content) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', '图片预览');
+    overlay.innerHTML = `
+        <figure class="lightbox-figure">
+            <img class="lightbox-image" alt="">
+            <figcaption class="lightbox-caption"></figcaption>
+        </figure>`;
+    document.body.appendChild(overlay);
+
+    const image = overlay.querySelector<HTMLImageElement>('.lightbox-image')!;
+    const caption = overlay.querySelector<HTMLElement>('.lightbox-caption')!;
+
+    const close = () => overlay.classList.remove('is-open');
+
+    content.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+        if (!img.closest('a')) img.classList.add('lightbox-zoomable');
+    });
+
+    content.addEventListener('click', (event) => {
+        const img = (event.target as HTMLElement).closest('img');
+        if (!img || !content.contains(img) || img.closest('a')) return;
+
+        image.src = img.currentSrc || img.src;
+        image.alt = img.alt || '';
+        const text = img.getAttribute('title') || img.alt || '';
+        caption.textContent = text;
+        caption.hidden = !text;
+        overlay.classList.add('is-open');
+    });
+
+    overlay.addEventListener('click', close);
+    // Keep the article column from scrolling behind the overlay.
+    overlay.addEventListener('wheel', (event) => event.preventDefault(), { passive: false });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') close();
+    });
 }

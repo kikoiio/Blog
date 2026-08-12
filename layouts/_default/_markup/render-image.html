@@ -1,10 +1,49 @@
-{{/* 兼容 Obsidian 的图片引用方式 */}}
-{{ $url := .Destination }}
-{{ $alt := .Text }}
-{{ $title := .Title }}
+{{- /* 兼容 Obsidian 相对路径，并保留 Stack 的响应式图片与画廊能力。 */ -}}
+{{- $destination := .Destination -}}
+{{- $alt := .PlainText | safeHTML -}}
+{{- $title := .Title | markdownify -}}
+{{- $resource := .Page.Resources.Get ($destination | safeURL) -}}
+{{- if not $resource -}}
+    {{- $resource = .Page.Resources.GetMatch $destination -}}
+{{- end -}}
 
-{{ with .Page.Resources.GetMatch $url }}
-  <img src="{{ .RelPermalink }}" alt="{{ $alt }}" {{ with $title }} title="{{ . }}" {{ end }} loading="lazy" />
-{{ else }}
-  <img src="{{ $url }}" alt="{{ $alt }}" {{ with $title }} title="{{ . }}" {{ end }} loading="lazy" />
-{{ end }}
+{{- with $resource -}}
+    {{- $processed := . -}}
+    {{- if and $.Page.Site.Params.imageProcessing.autoOrient (reflect.IsImageResourceProcessable $processed) -}}
+        {{- $processed = $processed | images.Filter images.AutoOrient -}}
+    {{- end -}}
+
+    {{- $width := 0 -}}
+    {{- $height := 0 -}}
+    {{- if reflect.IsImageResourceWithMeta $processed -}}
+        {{- $width = $processed.Width -}}
+        {{- $height = $processed.Height -}}
+    {{- end -}}
+    {{- $galleryImage := and $width $height -}}
+    {{- $attributes := dict -}}
+    {{- if $galleryImage -}}
+        {{- $attributes = dict
+            "data-flex-grow" (div (mul $width 100) $height)
+            "data-flex-basis" (printf "%dpx" (div (mul $width 240) $height))
+        -}}
+    {{- end -}}
+
+    {{- partial "helper/responsive-image" (dict
+        "Resource" $processed
+        "Widths" (cond $.Page.Site.Params.imageProcessing.content.enabled $.Page.Site.Params.imageProcessing.content.widths nil)
+        "Attributes" (merge $attributes (dict
+            "src" $processed.RelPermalink
+            "width" $width
+            "height" $height
+            "alt" $alt
+            "title" $title
+            "data-title-escaped" ($title | htmlEscape)
+            "class" (cond $galleryImage "gallery-image" "")
+            "loading" "lazy"
+            "decoding" "async"
+            "sizes" "(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px"
+        ))
+    ) -}}
+{{- else -}}
+    <img src="{{ $destination | safeURL }}" alt="{{ $alt }}"{{ with $title }} title="{{ . }}"{{ end }} loading="lazy" decoding="async">
+{{- end -}}

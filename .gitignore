@@ -1,20 +1,17 @@
-# Hugo build output
-public/
-resources/_gen/
+# Hugo generated files (recreated by local builds)
+/public/
+/resources/_gen/
+/.hugo_build.lock
 
-# OS files
+# Local writing and agent state
+/.obsidian/
+/.claude/
+/.codex/
+
+# Editors
+/.vscode/
+/.idea/
+
+# Operating system files
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Hugo lock
-.hugo_build.lock
-
-# Obsidian (配置文件不需要上传)
-.obsidian/
-
-# Claude Code
-.claude/
