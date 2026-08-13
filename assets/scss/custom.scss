@@ -1499,6 +1499,13 @@ main.main {
         overflow-y: auto;
         overscroll-behavior: contain;
         padding-right: 6px;
+        /* Native scrollbars stay hidden; the always-visible custom
+           track/thumb (.article-scrollbar below) replaces them. */
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
 
         /* main.main is a column flex container with a fixed height; without
            this the article card shrinks to fit instead of overflowing. */
@@ -1511,6 +1518,121 @@ main.main {
 /* ---- Mobile TOC toggle button (hidden on desktop) ---- */
 .mobile-toc-toggle {
     display: none;
+}
+
+/* ---- Desktop TOC collapse toggle ----
+   The toggle sits inside .custom-toc__title, replacing the list icon.
+   On mobile the original icon stays and the toggle is hidden. */
+.toc-collapse-toggle {
+    display: none;
+}
+
+@media (min-width: 769px) {
+    .custom-toc__title {
+        .custom-toc__icon {
+            display: none;
+        }
+    }
+
+    .toc-collapse-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        margin-left: -6px;
+        border: none;
+        background: none;
+        color: var(--accent-color);
+        opacity: 0.6;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: opacity 0.2s ease, transform 0.3s ease;
+
+        &:hover {
+            opacity: 1;
+            transform: translateX(-2px);
+        }
+
+        svg {
+            display: block;
+            transition: transform 0.3s ease;
+        }
+    }
+
+    /* Collapsed rail: only the back arrow and the title-row toggle remain,
+       so main.main (flex-grow: 1) absorbs the freed width and the article
+       column widens; fluid images inside scale up with it. */
+    .custom-left-sidebar {
+        transition: min-width 0.3s ease, max-width 0.3s ease, padding 0.3s ease;
+
+        &.toc-collapsed {
+            min-width: 0 !important;
+            max-width: 88px !important;
+            padding-left: 16px;
+            padding-right: 16px;
+            align-items: center;
+            overflow: hidden;
+
+            .custom-toc__title {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+
+                span {
+                    display: none;
+                }
+            }
+
+            .custom-toc .toc-nav {
+                display: none;
+            }
+
+            .toc-collapse-toggle {
+                svg {
+                    transform: rotate(180deg);
+                }
+
+                &:hover {
+                    transform: translateX(2px);
+                }
+            }
+        }
+    }
+}
+
+/* ---- Custom scrollbar for the desktop article column ----
+   Windows/Chrome auto-hides native overlay scrollbars when idle, so the
+   article column gets an explicit track + thumb driven by custom.ts. */
+.article-scrollbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 6px;
+    z-index: 60;
+    display: none;
+    border-radius: 3px;
+
+    &.is-visible {
+        display: block;
+    }
+}
+
+.article-scrollbar-thumb {
+    width: 100%;
+    border-radius: 3px;
+    background: var(--accent-color);
+    opacity: 0.55;
+    cursor: grab;
+    transition: opacity 0.2s ease;
+
+    &:hover,
+    &.is-dragging {
+        opacity: 0.9;
+    }
+
+    &.is-dragging {
+        cursor: grabbing;
+    }
 }
 
 /* ---- Image lightbox ---- */

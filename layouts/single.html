@@ -39,7 +39,13 @@
     <!-- TOC (desktop: sidebar, mobile: dropdown) -->
     <nav class="custom-toc">
         <div class="custom-toc__title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Desktop: collapse toggle replaces the title icon -->
+            <button class="toc-collapse-toggle" aria-label="收起目录" title="收起目录" aria-expanded="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+            <svg class="custom-toc__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="8" y1="6" x2="21" y2="6"/>
                 <line x1="8" y1="12" x2="21" y2="12"/>
                 <line x1="8" y1="18" x2="21" y2="18"/>
@@ -89,6 +95,26 @@
     {{/* Mobile TOC toggle */}}
     <script>
     (function() {
+        // Desktop: collapse/expand the TOC sidebar. State persists across pages.
+        var collapseBtn = document.querySelector('.toc-collapse-toggle');
+        var sidebar = document.querySelector('.custom-left-sidebar');
+        if (collapseBtn && sidebar) {
+            var COLLAPSE_KEY = 'article-toc-collapsed';
+            var applyState = function(collapsed) {
+                sidebar.classList.toggle('toc-collapsed', collapsed);
+                collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+                var label = collapsed ? '展开目录' : '收起目录';
+                collapseBtn.setAttribute('aria-label', label);
+                collapseBtn.setAttribute('title', label);
+            };
+            try { applyState(localStorage.getItem(COLLAPSE_KEY) === '1'); } catch (e) {}
+            collapseBtn.addEventListener('click', function() {
+                var collapsed = !sidebar.classList.contains('toc-collapsed');
+                applyState(collapsed);
+                try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+            });
+        }
+
         var btn = document.querySelector('.mobile-toc-toggle');
         var toc = document.querySelector('.custom-toc');
         if (!btn || !toc) return;

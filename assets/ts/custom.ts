@@ -210,6 +210,7 @@ class ThemeManager {
 function init() {
     new ThemeManager();
     initArticleContentScroller();
+    initArticleScrollbar();
     initImageLightbox();
 }
 
@@ -299,6 +300,95 @@ function initArticleContentScroller() {
 }
 
 /**
+ * Desktop article page: Windows/Chrome auto-hides overlay scrollbars when
+ * idle, so the article column gets a custom always-visible scrollbar that
+ * mirrors main.main's scroll position. The thumb is draggable.
+ */
+function initArticleScrollbar() {
+    const main = document.querySelector<HTMLElement>('.custom-article-page main.main');
+    if (!main) return;
+    const card = main.querySelector<HTMLElement>('article.main-article');
+
+    const track = document.createElement('div');
+    track.className = 'article-scrollbar';
+    track.setAttribute('aria-hidden', 'true');
+    const thumb = document.createElement('div');
+    thumb.className = 'article-scrollbar-thumb';
+    track.appendChild(thumb);
+    document.body.appendChild(track);
+
+    const desktop = window.matchMedia('(min-width: 769px)');
+
+    const update = () => {
+        const active = desktop.matches && main.scrollHeight > main.clientHeight + 1;
+        track.classList.toggle('is-visible', active);
+        if (!active) return;
+
+        // Clamp the track to the article card's visible span, so it sits
+        // between the card's rounded corners instead of running edge to edge.
+        const anchor = card || main;
+        const cardRect = anchor.getBoundingClientRect();
+        const radius = parseFloat(window.getComputedStyle(anchor).borderTopLeftRadius) || 16;
+        // Inset the track ends by the card's corner radius whenever that
+        // edge is on screen, so the thumb never overlaps the rounded corners.
+        const top = cardRect.top >= 0 ? cardRect.top + radius : 0;
+        const bottom = cardRect.bottom <= window.innerHeight
+            ? cardRect.bottom - radius
+            : window.innerHeight;
+        const trackHeight = Math.max(0, bottom - top);
+        track.style.top = `${top}px`;
+        track.style.height = `${trackHeight}px`;
+        /* Keep the track clear of the card's 16px rounded corners. */
+        track.style.left = `${cardRect.right - 24}px`;
+
+        const thumbHeight = Math.max(36, (main.clientHeight / main.scrollHeight) * trackHeight);
+        const travel = trackHeight - thumbHeight;
+        const progress = main.scrollTop / (main.scrollHeight - main.clientHeight);
+        thumb.style.height = `${thumbHeight}px`;
+        thumb.style.transform = `translateY(${travel * progress}px)`;
+    };
+
+    main.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    // Content height can change after images/fonts load.
+    new ResizeObserver(update).observe(main);
+    update();
+
+    // Drag the thumb to scroll.
+    thumb.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        thumb.setPointerCapture(event.pointerId);
+        thumb.classList.add('is-dragging');
+        const startY = event.clientY;
+        const startScroll = main.scrollTop;
+        const thumbHeight = thumb.getBoundingClientRect().height;
+        const trackHeight = track.getBoundingClientRect().height;
+        const ratio = (main.scrollHeight - main.clientHeight) / Math.max(1, trackHeight - thumbHeight);
+
+        const onMove = (e: PointerEvent) => {
+            main.scrollTop = startScroll + (e.clientY - startY) * ratio;
+        };
+        const onUp = () => {
+            thumb.classList.remove('is-dragging');
+            thumb.removeEventListener('pointermove', onMove);
+            thumb.removeEventListener('pointerup', onUp);
+            thumb.removeEventListener('pointercancel', onUp);
+        };
+        thumb.addEventListener('pointermove', onMove);
+        thumb.addEventListener('pointerup', onUp);
+        thumb.addEventListener('pointercancel', onUp);
+    });
+
+    // Click on the track pages up/down like a native scrollbar.
+    track.addEventListener('pointerdown', (event) => {
+        if (event.target !== track) return;
+        const thumbTop = thumb.getBoundingClientRect().top;
+        const direction = event.clientY < thumbTop ? -1 : 1;
+        main.scrollBy({ top: direction * main.clientHeight * 0.85, behavior: 'smooth' });
+    });
+}
+
+/**
  * Fullscreen lightbox for article images. Works for every image type
  * (SVG, raster, external) without depending on the PhotoSwipe CDN.
  * Images wrapped in a link keep the link's native behavior.
@@ -321,7 +411,31 @@ function initImageLightbox() {
     const image = overlay.querySelector<HTMLImageElement>('.lightbox-image')!;
     const caption = overlay.querySelector<HTMLElement>('.lightbox-caption')!;
 
-    const close = () => overlay.classList.remove('is-open');
+    // Zoom/pan state. scale stays within [1, 6]; pan offsets only apply
+    // while zoomed and reset on close.
+    let scale = 1;
+    let tx = 0;
+    let ty = 0;
+
+    const applyTransform = () => {
+        image.style.transition = 'transform 0.12s ease-out';
+        image.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        image.style.cursor = scale > 1 ? 'grab' : '';
+    };
+
+    const resetZoom = () => {
+        scale = 1;
+        tx = 0;
+        ty = 0;
+        image.style.transform = '';
+        image.style.transition = '';
+        image.style.cursor = '';
+    };
+
+    const close = () => {
+        overlay.classList.remove('is-open');
+        resetZoom();
+    };
 
     content.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
         if (!img.closest('a')) img.classList.add('lightbox-zoomable');
@@ -339,9 +453,72 @@ function initImageLightbox() {
         overlay.classList.add('is-open');
     });
 
-    overlay.addEventListener('click', close);
-    // Keep the article column from scrolling behind the overlay.
-    overlay.addEventListener('wheel', (event) => event.preventDefault(), { passive: false });
+    // Click on the dark backdrop closes; clicks on the image itself do not.
+    let dragMoved = false;
+    overlay.addEventListener('click', (event) => {
+        if (dragMoved) {
+            dragMoved = false;
+            return;
+        }
+        if (event.target === overlay) close();
+    });
+
+    // Wheel zoom, keeping the point under the cursor stationary.
+    overlay.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const prev = scale;
+        const next = Math.min(6, Math.max(1, prev * (event.deltaY < 0 ? 1.18 : 1 / 1.18)));
+        if (next === prev) return;
+
+        const rect = image.getBoundingClientRect();
+        // Cursor position relative to the transform origin (image layout center).
+        const ux = event.clientX - (rect.left + rect.width / 2) + tx;
+        const uy = event.clientY - (rect.top + rect.height / 2) + ty;
+        const r = next / prev;
+        scale = next;
+        tx = ux * (1 - r) + r * tx;
+        ty = uy * (1 - r) + r * ty;
+        if (scale === 1) {
+            tx = 0;
+            ty = 0;
+        }
+        applyTransform();
+    }, { passive: false });
+
+    // Drag to pan while zoomed in.
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    image.addEventListener('pointerdown', (event) => {
+        if (scale <= 1) return;
+        dragging = true;
+        dragMoved = false;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        image.setPointerCapture(event.pointerId);
+        image.style.cursor = 'grabbing';
+        event.preventDefault();
+    });
+    image.addEventListener('pointermove', (event) => {
+        if (!dragging) return;
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        if (Math.abs(dx) + Math.abs(dy) > 2) dragMoved = true;
+        tx += dx;
+        ty += dy;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        image.style.transition = 'none';
+        image.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    });
+    const endDrag = () => {
+        if (!dragging) return;
+        dragging = false;
+        image.style.cursor = 'grab';
+    };
+    image.addEventListener('pointerup', endDrag);
+    image.addEventListener('pointercancel', endDrag);
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') close();
     });
