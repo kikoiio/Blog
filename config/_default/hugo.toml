@@ -24,3 +24,7 @@ disableKinds = ["taxonomy", "term"]
 [permalinks]
     post = "/:sections/:contentbasename/"
     page = "/:slug/"
+
+[imaging]
+    resampleFilter = "Lanczos"
+    quality        = 85

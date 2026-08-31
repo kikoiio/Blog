@@ -1,0 +1,62 @@
+{{ define "body-class" }}
+    article-page custom-article-page photography-page
+{{ end }}
+
+{{ define "left-sidebar" }}
+<aside class="sidebar left-sidebar sticky custom-left-sidebar">
+    <!-- Back arrow -->
+    <a href="{{ .Site.Home.RelPermalink }}" class="back-arrow" title="返回首页">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 17l-5-5 5-5"/>
+            <path d="M18 17l-5-5 5-5" opacity="0.4"/>
+        </svg>
+    </a>
+</aside>
+{{ end }}
+
+{{ define "right-sidebar" }}
+<!-- Zima Blue pool -->
+<aside class="sidebar right-sidebar sticky custom-right-sidebar">
+    <canvas id="zima-canvas"></canvas>
+</aside>
+{{ end }}
+
+{{ define "main" }}
+    {{ $images := .Resources.ByType "image" }}
+    <section class="photo-stage" aria-label="照片浏览">
+        {{ range $i, $r := $images }}
+            {{ $oriented := $r | images.Filter images.AutoOrient }}
+            {{ $fit := $oriented.Fit "1920x1920" }}
+            {{ $zoom := $oriented.Fit "3840x3840" }}
+            <figure class="photo-slide{{ if eq $i 0 }} is-active{{ end }}">
+                <img src="{{ $fit.RelPermalink }}"
+                     data-zoom-src="{{ $zoom.RelPermalink }}"
+                     width="{{ $fit.Width }}" height="{{ $fit.Height }}"
+                     alt="" draggable="false" decoding="async"
+                     {{ if eq $i 0 }}fetchpriority="high"{{ else }}loading="lazy"{{ end }}>
+            </figure>
+        {{ end }}
+        {{ if gt (len $images) 1 }}
+        <button class="photo-nav photo-nav--prev" type="button" aria-label="上一张">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <button class="photo-nav photo-nav--next" type="button" aria-label="下一张">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+            </svg>
+        </button>
+        <div class="photo-counter" aria-hidden="true"><span class="photo-counter-current">1</span> / {{ len $images }}</div>
+        {{ end }}
+    </section>
+
+    {{/* Zima Blue pool animation */}}
+    {{ $opts := dict "minify" hugo.IsProduction }}
+    {{ $zimaScript := resources.Get "ts/zima.ts" | js.Build $opts | fingerprint }}
+    <script type="text/javascript" src="{{ $zimaScript.RelPermalink }}" defer></script>
+
+    {{/* Photo viewer */}}
+    {{ $photoScript := resources.Get "ts/photography.ts" | js.Build $opts | fingerprint }}
+    <script type="text/javascript" src="{{ $photoScript.RelPermalink }}" defer></script>
+{{ end }}

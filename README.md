@@ -61,6 +61,10 @@ content/post/
 - 没有子目录的一级目录直接打开名称索引。
 - 同名笔记会额外显示相对目录路径用于区分。
 
+### 摄影相册
+
+`content/post/Photography/` 下每个相册是一个页面包：`index.md` 设置 `layout = "photography"`，照片放在同一目录。相册页是全屏图片浏览器：桌面端在 Zima 泳池旁单图展示，支持箭头/方向键切换、点击与滚轮缩放、拖动平移；移动端为纵向多图滚动，点按缩放。模板位于 `layouts/post/photography.html`，交互位于 `assets/ts/photography.ts`，原图不发布，页面使用 Hugo 生成的 1920（浏览）与 3840（缩放）两档图片。
+
 ## 项目结构
 
 ```text

@@ -21,6 +21,7 @@ Hugo 个人博客，部署在 GitHub Pages，域名为 `aries727.site`。项目�
 - `config/_default/`：Hugo 配置。
 - `layouts/home.html`：首页图导航模板，加载 `assets/ts/graph.ts`。
 - `layouts/single.html`：文章页模板，包含自定义 TOC 和 Zima Blue canvas，加载 `assets/ts/zima.ts`。
+- `layouts/post/photography.html`：摄影相册页模板（`layout = "photography"` 的页面包使用），全屏图片浏览，加载 `assets/ts/photography.ts`。
 - `layouts/_partials/head/custom.html`：字体加载和首屏主题初始化脚本。
 - `layouts/_default/_markup/render-image.html`：Obsidian 图片路径兼容。
 - `assets/ts/graph.ts`：首页 D3 力导向图逻辑。
