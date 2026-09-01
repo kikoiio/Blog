@@ -60,6 +60,10 @@
         {{- $dir := .File.Dir | replaceRE "\\\\" "/" -}}
         {{- $dir = strings.TrimPrefix "post/" $dir -}}
         {{- $dir = strings.TrimSuffix "/" $dir -}}
+        {{- /* 页面包（index.md + 同目录配图）只是"一篇带附件的文章"，归属上一层目录，不单独构成节点 */ -}}
+        {{- if eq .File.BaseFileName "index" -}}
+            {{- $dir = replaceRE "[^/]+$" "" $dir | strings.TrimSuffix "/" -}}
+        {{- end -}}
         {{- $title := .Title -}}
         {{- if not $title }}{{ $title = .File.ContentBaseName }}{{ end -}}
         {{- $pages = $pages | append (dict "path" $dir "title" $title "url" .RelPermalink) -}}
