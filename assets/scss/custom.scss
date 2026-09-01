@@ -917,6 +917,19 @@ main.main {
     font-size: 1em;
 }
 
+.graph-node__count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.72em;
+    line-height: 1.5;
+    color: var(--card-text-color-secondary);
+    background: var(--card-background-secondary, rgba(127, 127, 127, 0.12));
+    vertical-align: 1px;
+}
+
 /* --- Social links in center node --- */
 .graph-node__social {
     display: flex;

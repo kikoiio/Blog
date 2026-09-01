@@ -582,15 +582,23 @@ function initGraph() {
 
     // 页面在后台标签页或零尺寸容器中加载时初始布局会失效（节点挤在原点），
     // 等容器获得真实尺寸或页面重新可见时重新布局。
+    // 从零尺寸恢复时给足模拟能量（alpha 1），让节点一次归位；
+    // 普通尺寸变化保持原有的轻柔重排。
+    function relayout() {
+        const recovering = width === 0;
+        resizeGraph(false);
+        if (simulation) simulation.alpha(recovering ? 1 : 0.3).restart();
+    }
+
     const containerObserver = new ResizeObserver(() => {
         if (container.clientWidth > 0 && container.clientHeight > 0
             && (container.clientWidth !== width || container.clientHeight !== height)) {
-            resizeGraph(true);
+            relayout();
         }
     });
     containerObserver.observe(container);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') resizeGraph(true);
+        if (document.visibilityState === 'visible' && container.clientWidth > 0) relayout();
     });
 
     // ---- Restore or init ----

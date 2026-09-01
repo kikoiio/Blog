@@ -67,12 +67,9 @@ export function buildIndexEntries(treeNode: TreeNode): IndexEntry[] {
 }
 
 export function shouldOpenIndex(node: GraphNode): boolean {
-    if (node.type !== 'category' || !node.treeRef || !node.treePath) return false;
+    if (node.type !== 'category' || !node.treeRef) return false;
 
-    const depth = node.treePath.split('/').filter(Boolean).length;
-    if (depth >= 2) return true;
-
-    return depth === 1
-        && node.treeRef.children.size === 0
-        && collectDescendantPages(node.treeRef).length > 0;
+    // 节点直接包含 2 篇及以上文章时打开笔记索引；否则继续作为图节点展开，
+    // 目录层级可以一直展示下去（索引仍递归收录所有后代笔记）。
+    return node.treeRef.pages.length >= 2;
 }
