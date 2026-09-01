@@ -43,4 +43,5 @@ hugo --gc --minify --cleanDestinationDir
 - `custom.ts` 不是未使用文件；主题会通过 `themes/hugo-theme-stack/layouts/_partials/footer/components/script.html` 自动加载它。
 - 当前 Codex 沙箱内运行 `hugo --gc --minify` 可能因工作区权限边界报 `public/ts/custom...js: Access is denied`；脱离沙箱的真实工作区构建可通过。
 - `post` permalink 已从 `:filename` 迁移为 `:contentbasename`。
+- 不要在 `content/` 下添加 `_index.md`：嵌套目录一旦成为 section，`:sections` 会使其下所有文章的 URL 带上目录路径，导致已发布链接失效。内容分支的增删调整只通过移动文件夹完成，详见 `README.md` 的"内容组织"。
 - 不直接修改主题源文件；自定义布局放在 `layouts/`，自定义样式放在 `assets/scss/custom.scss`。

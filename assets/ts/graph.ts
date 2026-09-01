@@ -190,7 +190,13 @@ function initGraph() {
 
         window.requestAnimationFrame(() => {
             resizeGraph(false);
-            if (simulation) simulation.stop();
+            if (simulation) {
+                // 恢复状态时模拟刚启动，先快进到稳定布局再冻结，
+                // 否则节点会停在初始位置挤成一团。
+                simulation.tick(300);
+                tickUpdate();
+                simulation.stop();
+            }
         });
     }
 
@@ -572,6 +578,19 @@ function initGraph() {
 
     window.addEventListener('resize', () => {
         resizeGraph(true);
+    });
+
+    // 页面在后台标签页或零尺寸容器中加载时初始布局会失效（节点挤在原点），
+    // 等容器获得真实尺寸或页面重新可见时重新布局。
+    const containerObserver = new ResizeObserver(() => {
+        if (container.clientWidth > 0 && container.clientHeight > 0
+            && (container.clientWidth !== width || container.clientHeight !== height)) {
+            resizeGraph(true);
+        }
+    });
+    containerObserver.observe(container);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') resizeGraph(true);
     });
 
     // ---- Restore or init ----
