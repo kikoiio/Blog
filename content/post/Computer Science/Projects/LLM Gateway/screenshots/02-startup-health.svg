@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="585" viewBox="0 0 940 585">
+<style>text{font-family:"Cascadia Code","Consolas","Microsoft YaHei",monospace;font-size:13px}</style>
+<rect x="0.5" y="0.5" width="939" height="584" rx="10" fill="#0d1117" stroke="#30363d"/>
+<circle cx="30" cy="19" r="6" fill="#ff5f57"/><circle cx="50" cy="19" r="6" fill="#febc2e"/><circle cx="70" cy="19" r="6" fill="#28c840"/>
+<text x="92" y="23" fill="#8b949e" font-size="12">启动 mock 上游与网关 · healthz / readyz</text>
+<text x="18" y="60" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">./bin/mockupstream.exe -listen :9000</tspan></text>
+<text x="18" y="81" xml:space="preserve"><tspan fill="#c9d1d9">mock upstream listening on :9000 (scenarios: chat, chat-stream, embed)</tspan></text>
+<text x="18" y="102" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="123" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">GATEWAY_LISTEN=:8080 GATEWAY_UPSTREAM=http://127.0.0.1:9000 GATEWAY_API_KEY=demo-upstream-key ./bin/gateway.exe</tspan></text>
+<text x="18" y="144" xml:space="preserve"><tspan fill="#3fb950">2026/09/04 03:29:17 INFO gateway listening addr=:8080 upstream=http://127.0.0.1:9000</tspan></text>
+<text x="18" y="165" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="186" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">curl -i http://127.0.0.1:8080/healthz</tspan></text>
+<text x="18" y="207" xml:space="preserve"><tspan fill="#3fb950">HTTP/1.1 200 OK</tspan></text>
+<text x="18" y="228" xml:space="preserve"><tspan fill="#79c0ff">Content-Type::</tspan><tspan fill="#c9d1d9">application/json</tspan></text>
+<text x="18" y="249" xml:space="preserve"><tspan fill="#79c0ff">X-Gateway-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="270" xml:space="preserve"><tspan fill="#79c0ff">X-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="291" xml:space="preserve"><tspan fill="#79c0ff">Date::</tspan><tspan fill="#c9d1d9">Fri, 04 Sep 2026 07:30:10 GMT</tspan></text>
+<text x="18" y="312" xml:space="preserve"><tspan fill="#79c0ff">Content-Length::</tspan><tspan fill="#c9d1d9">16</tspan></text>
+<text x="18" y="333" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="354" xml:space="preserve"><tspan fill="#c9d1d9">{&quot;status&quot;:&quot;ok&quot;}</tspan></text>
+<text x="18" y="375" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="396" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">curl -i http://127.0.0.1:8080/readyz</tspan></text>
+<text x="18" y="417" xml:space="preserve"><tspan fill="#3fb950">HTTP/1.1 200 OK</tspan></text>
+<text x="18" y="438" xml:space="preserve"><tspan fill="#79c0ff">Content-Type::</tspan><tspan fill="#c9d1d9">application/json</tspan></text>
+<text x="18" y="459" xml:space="preserve"><tspan fill="#79c0ff">X-Gateway-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="480" xml:space="preserve"><tspan fill="#79c0ff">X-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="501" xml:space="preserve"><tspan fill="#79c0ff">Date::</tspan><tspan fill="#c9d1d9">Fri, 04 Sep 2026 07:30:10 GMT</tspan></text>
+<text x="18" y="522" xml:space="preserve"><tspan fill="#79c0ff">Content-Length::</tspan><tspan fill="#c9d1d9">19</tspan></text>
+<text x="18" y="543" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="564" xml:space="preserve"><tspan fill="#c9d1d9">{&quot;status&quot;:&quot;ready&quot;}</tspan></text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="543" viewBox="0 0 940 543">
+<style>text{font-family:"Cascadia Code","Consolas","Microsoft YaHei",monospace;font-size:13px}</style>
+<rect x="0.5" y="0.5" width="939" height="542" rx="10" fill="#0d1117" stroke="#30363d"/>
+<circle cx="30" cy="19" r="6" fill="#ff5f57"/><circle cx="50" cy="19" r="6" fill="#febc2e"/><circle cx="70" cy="19" r="6" fill="#28c840"/>
+<text x="92" y="23" fill="#8b949e" font-size="12">go build ./... &amp;&amp; go test ./... —— 全部包测试通过</text>
+<text x="18" y="60" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">go build ./...</tspan></text>
+<text x="18" y="81" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">go test ./...</tspan></text>
+<text x="18" y="102" xml:space="preserve"><tspan fill="#8b949e">?       myllmgateway/cmd/gateway        [no test files]</tspan></text>
+<text x="18" y="123" xml:space="preserve"><tspan fill="#8b949e">?       myllmgateway/cmd/gatewayctl     [no test files]</tspan></text>
+<text x="18" y="144" xml:space="preserve"><tspan fill="#8b949e">?       myllmgateway/cmd/mockprovider   [no test files]</tspan></text>
+<text x="18" y="165" xml:space="preserve"><tspan fill="#8b949e">?       myllmgateway/demo/mockupstream  [no test files]</tspan></text>
+<text x="18" y="186" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/bootstrap (cached)</tspan></text>
+<text x="18" y="207" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/canonical (cached)</tspan></text>
+<text x="18" y="228" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/config    (cached)</tspan></text>
+<text x="18" y="249" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/execution (cached)</tspan></text>
+<text x="18" y="270" xml:space="preserve"><tspan fill="#8b949e">?       myllmgateway/internal/gateway   [no test files]</tspan></text>
+<text x="18" y="291" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/health    (cached)</tspan></text>
+<text x="18" y="312" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/mockprovider      (cached)</tspan></text>
+<text x="18" y="333" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/provider  (cached)</tspan></text>
+<text x="18" y="354" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/provider/openai   (cached)</tspan></text>
+<text x="18" y="375" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/provider/sse      (cached)</tspan></text>
+<text x="18" y="396" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/routing   (cached)</tspan></text>
+<text x="18" y="417" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/scheduler (cached)</tspan></text>
+<text x="18" y="438" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/secrets   (cached)</tspan></text>
+<text x="18" y="459" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/testutil  (cached)</tspan></text>
+<text x="18" y="480" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/transport/httpapi (cached)</tspan></text>
+<text x="18" y="501" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/internal/transport/openaiwire      (cached)</tspan></text>
+<text x="18" y="522" xml:space="preserve"><tspan fill="#3fb950">ok</tspan><tspan fill="#8b949e">      myllmgateway/tests/contract     (cached)</tspan></text>
+</svg>

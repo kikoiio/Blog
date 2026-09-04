@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="564" viewBox="0 0 940 564">
+<style>text{font-family:"Cascadia Code","Consolas","Microsoft YaHei",monospace;font-size:13px}</style>
+<rect x="0.5" y="0.5" width="939" height="563" rx="10" fill="#0d1117" stroke="#30363d"/>
+<circle cx="30" cy="19" r="6" fill="#ff5f57"/><circle cx="50" cy="19" r="6" fill="#febc2e"/><circle cx="70" cy="19" r="6" fill="#28c840"/>
+<text x="92" y="23" fill="#8b949e" font-size="12">非流式 Chat：上游 429 被归一化为稳定网关错误，上游恢复后调用成功</text>
+<text x="18" y="60" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">curl -i -X POST http://127.0.0.1:8080/v1/chat/completions \</tspan></text>
+<text x="18" y="81" xml:space="preserve"><tspan fill="#c9d1d9">    -H &quot;Content-Type: application/json&quot; -H &quot;Authorization: Bearer demo-virtual-key&quot; \</tspan></text>
+<text x="18" y="102" xml:space="preserve"><tspan fill="#c9d1d9">    -d &#x27;{&quot;model&quot;:&quot;gpt-4o-mini&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Say hello in one word.&quot;}]}&#x27;</tspan></text>
+<text x="18" y="123" xml:space="preserve"><tspan fill="#8b949e"># 第一次调用：mock 上游按场景返回 429 + Retry-After: 1</tspan></text>
+<text x="18" y="144" xml:space="preserve"><tspan fill="#d29922">HTTP/1.1 429 Too Many Requests</tspan></text>
+<text x="18" y="165" xml:space="preserve"><tspan fill="#79c0ff">Content-Type::</tspan><tspan fill="#c9d1d9">application/json</tspan></text>
+<text x="18" y="186" xml:space="preserve"><tspan fill="#79c0ff">X-Gateway-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="207" xml:space="preserve"><tspan fill="#79c0ff">X-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="228" xml:space="preserve"><tspan fill="#79c0ff">Date::</tspan><tspan fill="#c9d1d9">Fri, 04 Sep 2026 07:30:29 GMT</tspan></text>
+<text x="18" y="249" xml:space="preserve"><tspan fill="#79c0ff">Content-Length::</tspan><tspan fill="#c9d1d9">100</tspan></text>
+<text x="18" y="270" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="291" xml:space="preserve"><tspan fill="#c9d1d9">{&quot;type&quot;:&quot;upstream_rate_limit&quot;,&quot;code&quot;:&quot;upstream_rate_limit&quot;,&quot;message&quot;:&quot;upstream rate limit reached&quot;}</tspan></text>
+<text x="18" y="312" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="333" xml:space="preserve"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3"># 同上，再调用一次（上游已恢复）</tspan></text>
+<text x="18" y="354" xml:space="preserve"><tspan fill="#3fb950">HTTP/1.1 200 OK</tspan></text>
+<text x="18" y="375" xml:space="preserve"><tspan fill="#79c0ff">Content-Type::</tspan><tspan fill="#c9d1d9">application/json</tspan></text>
+<text x="18" y="396" xml:space="preserve"><tspan fill="#79c0ff">X-Gateway-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="417" xml:space="preserve"><tspan fill="#79c0ff">X-Request-Id::</tspan><tspan fill="#c9d1d9">req-local</tspan></text>
+<text x="18" y="438" xml:space="preserve"><tspan fill="#79c0ff">Date::</tspan><tspan fill="#c9d1d9">Fri, 04 Sep 2026 07:30:29 GMT</tspan></text>
+<text x="18" y="459" xml:space="preserve"><tspan fill="#79c0ff">Content-Length::</tspan><tspan fill="#c9d1d9">255</tspan></text>
+<text x="18" y="480" xml:space="preserve"><tspan fill="#c9d1d9"></tspan></text>
+<text x="18" y="501" xml:space="preserve"><tspan fill="#c9d1d9">{&quot;id&quot;:&quot;chat_fixture&quot;,&quot;object&quot;:&quot;chat.completion&quot;,&quot;created&quot;:42,&quot;model&quot;:&quot;gpt-fixture&quot;,&quot;choices&quot;:[{&quot;index&quot;:0,&quot;message&quot;:{</tspan></text>
+<text x="18" y="522" xml:space="preserve"><tspan fill="#c9d1d9">  &quot;role&quot;:&quot;assistant&quot;,&quot;content&quot;:&quot;fixture hello&quot;},&quot;finish_reason&quot;:&quot;stop&quot;}],&quot;usage&quot;:{&quot;prompt_tokens&quot;:3,&quot;completion_toke</tspan></text>
+<text x="18" y="543" xml:space="preserve"><tspan fill="#c9d1d9">  ns&quot;:2,&quot;total_tokens&quot;:5}}</tspan></text>
+</svg>
