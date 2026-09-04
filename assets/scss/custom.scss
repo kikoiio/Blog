@@ -1323,13 +1323,13 @@ main.main {
     /* Override Stack's responsive sidebar chrome for the article-specific TOC rail. */
     display: flex !important;
     flex-direction: column;
-    padding: 30px 20px;
+    padding: 30px 16px;
     gap: 24px;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    max-width: 350px !important;
-    min-width: 310px;
+    max-width: 280px !important;
+    min-width: 240px;
     max-height: 100vh;
     overflow-y: auto;
 
@@ -1429,7 +1429,7 @@ main.main {
     a {
         display: block;
         padding: 8px 0 8px 0;
-        font-size: 16px;
+        font-size: 15px;
         line-height: 1.6;
         color: var(--card-text-color-secondary);
         text-decoration: none;
@@ -1445,10 +1445,10 @@ main.main {
 
     /* Nested levels */
     ul ul {
-        padding-left: 16px;
+        padding-left: 12px;
 
         a {
-            font-size: 15px;
+            font-size: 14px;
             opacity: 0.85;
         }
     }
@@ -1463,7 +1463,10 @@ main.main {
     box-shadow: none !important;
     padding: 0 !important;
     align-items: center;
-    width: var(--right-sidebar-max-width, 250px);
+    /* Fixed narrow rail: the theme's --right-sidebar-max-width is a percentage
+       (25% at xl ≈ 370px), which starves the article column. */
+    width: 220px;
+    max-width: 220px;
     flex-shrink: 0;
     position: sticky;
     top: calc(50vh - 35vh);
@@ -1505,6 +1508,9 @@ main.main {
     .custom-article-page .container.main-container {
         height: 100vh;
         box-sizing: border-box;
+        /* Theme default is 40px per gap; tightening the two column gaps
+           hands another 32px to the article. */
+        gap: 24px;
     }
 
     .custom-article-page main.main {
@@ -1525,6 +1531,15 @@ main.main {
         > * {
             flex-shrink: 0;
         }
+    }
+}
+
+/* ---- Wide screens: let article pages use more of the viewport ----
+   The theme caps .container.extended at 1536px (xl). With both sidebars
+   fixed-width now, raising the cap only widens the article column. */
+@media (min-width: 1280px) {
+    .custom-article-page .container.main-container {
+        max-width: 1680px;
     }
 }
 
