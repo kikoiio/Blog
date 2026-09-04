@@ -5,53 +5,20 @@ title = "MyCode"
 
 # MyCode
 
-> MyCode 是一个用 **TypeScript + Bun + Ink** 实现的终端 AI 编程助手（AI Coding Agent），整体架构对标 Claude Code：以「模型推理 → 工具调用 → 结果反馈」的 Agent 循环为核心，外围挂载权限系统、上下文治理、长期记忆、Skill / MCP / 子 Agent / 多智能体团队等扩展能力，并提供 TUI、print、远程 Web 三种使用形态。
+> MyCode 是一个用 **TypeScript + Bun + Ink** 实现的终端 AI 编程助手（AI Coding Agent），以「模型推理 → 工具调用 → 结果反馈」的 Agent 循环为核心，外围挂载权限系统、上下文治理、长期记忆、Skill / MCP / 子 Agent / 多智能体团队等扩展能力。
 >
-> 代码规模：**113 个源文件（约 1.95 万行 TypeScript/TSX）+ 25 个单元测试文件（约 2400 行）**，零构建步骤，直接由 Bun 运行 `src/main.tsx` 入口。
 
----
-
-## 目录
-
-1. [项目概述](#1-项目概述)
-2. [技术栈与依赖](#2-技术栈与依赖)
-3. [四种运行模式](#3-四种运行模式)
-4. [总体架构](#4-总体架构)
-5. [核心实现方案](#5-核心实现方案)
-   - [5.1 Agent 执行循环：可恢复的流式状态机](#51-agent-执行循环可恢复的流式状态机)
-   - [5.2 模型接入层：统一 LLMClient 接口与三种协议适配](#52-模型接入层统一-llmclient-接口与三种协议适配)
-   - [5.3 工具系统：分类、注册表与渐进式披露](#53-工具系统分类注册表与渐进式披露)
-   - [5.4 权限与安全：分层检查链 + OS 沙箱](#54-权限与安全分层检查链--os-沙箱)
-   - [5.5 上下文治理：预算、压缩与可恢复状态](#55-上下文治理预算压缩与可恢复状态)
-   - [5.6 长期记忆：提取、召回与后台整理闭环](#56-长期记忆提取召回与后台整理闭环)
-   - [5.7 Skill 系统：三层发现、热重载与 inline/fork 执行](#57-skill-系统三层发现热重载与-inlinefork-执行)
-   - [5.8 MCP 接入：多传输、工具包装与延迟加载](#58-mcp-接入多传输工具包装与延迟加载)
-   - [5.9 子 Agent：定义加载、三种派生路径与工具过滤](#59-子-agent定义加载三种派生路径与工具过滤)
-   - [5.10 Teams 多智能体：文件邮箱 + 共享任务板](#510-teams-多智能体文件邮箱--共享任务板)
-   - [5.11 TUI：Ink 渲染、流式 Markdown 与交互组件](#511-tuiink-渲染流式-markdown-与交互组件)
-   - [5.12 远程模式：WebSocket 协议与内置单文件 Web UI](#512-远程模式websocket-协议与内置单文件-web-ui)
-   - [5.13 Hooks 引擎：事件、条件 DSL 与四种动作](#513-hooks-引擎事件条件-dsl-与四种动作)
-   - [5.14 状态持久化全景：`.MyCode` 目录](#514-状态持久化全景mycode-目录)
-6. [安装、配置与运行](#6-安装配置与运行)
-7. [运行截图](#7-运行截图)
-8. [测试体系](#8-测试体系)
-9. [设计亮点总结](#9-设计亮点总结)
-
----
-
-## 1. 项目概述
+## 1. 它能做什么
 
 MyCode 把「AI 编程助手」拆成一条可恢复、可扩展的 Agent 运行时：
 
-- **能做事**：内置 ReadFile / WriteFile / EditFile / Bash / Glob / Grep 等工具，模型可读写文件、执行命令、搜索代码；
+- **能做事**：内置读文件 / 写文件 / 编辑 / 执行命令 / 搜索等工具，模型可读写文件、运行命令、检索代码；
 - **能扩展**：MCP 外部工具、Skill（SOP 模板）、自定义子 Agent、多智能体团队（Teams）四套扩展机制；
 - **能长跑**：上下文超限自动压缩、工具大结果溢写磁盘、限流等待重试、输出截断续写、进程重启后从压缩边界恢复；
-- **能记住事**：后台记忆提取子 Agent 把会话沉淀为长期记忆文件，后续会话按相关性召回，并定期后台整理去重；
+- **能记住事**：后台记忆提取把会话沉淀为长期记忆文件，后续会话按相关性召回，并定期后台整理去重；
 - **能管住**：四种权限模式 + 危险命令拦截 + 路径沙箱 + OS 级沙箱（bwrap/seatbelt）+ Hooks 事件钩子。
 
-项目同时提供三种前端形态：默认的 **Ink TUI**（交互式终端界面）、**print 模式**（`-p`，脚本化非交互执行）、**远程模式**（`--remote`，WebSocket 服务器 + 内置 Web 页面）。
-
-## 2. 技术栈与依赖
+## 2. 技术栈
 
 | 类别 | 选型 | 用途 |
 | --- | --- | --- |
@@ -62,23 +29,18 @@ MyCode 把「AI 编程助手」拆成一条可恢复、可扩展的 Agent 运行
 | MCP | @modelcontextprotocol/sdk | stdio / Streamable HTTP / SSE 三种传输 |
 | Markdown | marked + marked-terminal | 终端内渲染模型输出的 Markdown |
 | 模糊匹配 | fuse.js | 斜杠命令补全排序 |
-| 配置 | js-yaml | `config.yaml` / 权限规则文件解析 |
+| 配置 | js-yaml | 配置与权限规则文件解析 |
 | WebSocket | ws | 远程模式服务器 |
 
-## 3. 四种运行模式
+## 3. 三种使用形态
 
-入口 `src/main.tsx` 按命令行参数分发到四种形态：
+同一个入口按参数分发到不同形态：
 
-```text
-bun run src/main.tsx                    → 默认：Ink TUI 交互界面
-bun run src/main.tsx -p "<prompt>"      → print 模式：非交互执行，结果写 stdout
-bun run src/main.tsx --remote           → 远程模式：WebSocket 服务器（:18888）+ 内置 Web UI
-bun run src/main.tsx --teammate ...     → 队友 worker：由 Teams 外部后端（tmux/iTerm）拉起
-```
+- **TUI（默认）**：Ink + React 渲染的交互式终端界面，是主要使用方式；
+- **print 模式**：非交互执行，结果写 stdout 后退出，便于脚本集成与评测；支持纯文本或逐事件 JSON 两种输出，并附轮数 / 工具调用数 / token 用量 / 耗时汇总；
+- **远程模式**：启动 WebSocket 服务器（:18888）+ 内置单文件 Web UI，浏览器即客户端。
 
-- **print 模式**（`src/print-mode.ts`）：注册核心工具、`bypassPermissions` 自动放行，支持 `--output-format text|stream-json` 两种输出；stream-json 每事件一行 JSON，并输出 `num_turns / tool_calls / usage / duration_ms` 汇总，便于脚本集成与评测。
-- **远程模式**（`src/remote/server.ts`）：HTTP 对所有路径返回同一个内置单文件 Web UI，WebSocket 承载双向控制消息。
-- **teammate 模式**（`src/teammate.ts`）：被 tmux/iTerm 后端拉起的独立进程入口，跑精简工具集（无团队/子 Agent 工具，防止无限裂变）。
+此外还有第四种内部入口——**teammate 模式**：由多智能体后端（tmux/iTerm）拉起的独立进程，跑精简工具集（无团队/子 Agent 工具，防止无限裂变）。
 
 ## 4. 总体架构
 
@@ -114,29 +76,26 @@ bun run src/main.tsx --teammate ...     → 队友 worker：由 Teams 外部后�
 
 ```text
 用户输入（支持 @文件引用内联、/斜杠命令）
-  ↓ ConversationManager 写入 user message，会话落盘 JSONL
-  ↓ Agent.run()
-    ├─ 注入计划提醒 / Hook 通知 / 团队通知（notificationFn）
-    ├─ applyBudget()：超限工具结果溢写磁盘，留 2KB 预览
-    ├─ manageContext()：按 usage 锚点 + 增量估算判断，超阈值则自动压缩
-    ├─ LLMClient.stream()：统一产出 text_delta / thinking_delta /
-    │   tool_call_complete / stream_end(usage) 事件
-    ├─ executeTools()：连续只读工具合并并行批次；写/命令工具单独串行
+  ↓ 写入 user message，会话落盘 JSONL
+  ↓ Agent 主循环
+    ├─ 注入计划提醒 / Hook 通知 / 团队通知
+    ├─ 工具结果预算检查：超限输出溢写磁盘，上下文只留预览
+    ├─ 上下文管理：按 usage 锚点 + 增量估算判断，超阈值自动压缩
+    ├─ 模型流式调用：统一产出文本/思考增量、工具调用、usage 事件
+    ├─ 工具执行：连续只读工具合并并行批次；写/命令工具单独串行
     │   （执行前统一过 Hook + 权限检查 + 用户确认对话框）
     ├─ 工具结果写回会话 → 进入下一轮
-    └─ 直到模型 end_turn / 中断 / 达到迭代上限
-  ↓ onLoopComplete：后台记忆提取；会话与快照持久化
+    └─ 直到模型结束 / 中断 / 达到迭代上限
+  ↓ 循环结束：后台记忆提取；会话与快照持久化
 ```
 
-## 5. 核心实现方案
+## 5. 核心设计
 
 ### 5.1 Agent 执行循环：可恢复的流式状态机
 
-核心文件：`src/agent/agent.ts`、`src/agent/events.ts`、`src/agent/streaming-executor.ts`。
+Agent 主循环是一个**异步生成器**：模型返回的每个增量事件（文本、思考、工具调用、usage）立即向上层抛出，TUI/远程客户端实时渲染；一轮流结束后把完整 assistant 消息写入会话，执行工具，把结果作为下一轮输入，直到模型结束回合。
 
-`Agent.run()` 是一个**异步生成器**：模型返回的每个增量事件（文本、思考、工具调用、usage）立即向上层 yield，TUI/远程客户端实时渲染；一轮流结束后把完整 assistant 消息写入会话，执行工具，把结果作为下一轮输入，直到 `end_turn`。
-
-**统一事件模型**（`AgentEvent`）让上层不需要知道任何协议细节：
+**统一事件模型**让上层不需要知道任何协议细节：
 
 | 事件 | 含义 |
 | --- | --- |
@@ -147,56 +106,39 @@ bun run src/main.tsx --teammate ...     → 队友 worker：由 Teams 外部后�
 | `compact` / `retry` / `error` | 压缩发生 / 限流或续写重试 / 错误 |
 | `permission_request` | 需要用户确认权限 |
 
-**工具调度策略**：工具按 `category` 分为 `read / write / command` 三类（`src/tools/types.ts`）。Agent 不按 `Promise.all` 一把梭，而是按模型给出的调用顺序切批：**连续的只读工具合并为一个并行批次**（降低等待），**遇到写/命令工具就建立单调用的串行批次**（避免竞态）；分类缺失时按最保守的 `command` 处理。实际执行前每个调用仍统一经过 Hook 和权限检查——并行只作用于已通过策略的安全读操作。
+**工具调度策略**：工具按类别分为 `read / write / command` 三类。Agent 不按 `Promise.all` 一把梭，而是按模型给出的调用顺序切批：**连续的只读工具合并为一个并行批次**（降低等待），**遇到写/命令工具就建立单调用的串行批次**（避免竞态）；分类缺失时按最保守的 `command` 处理。实际执行前每个调用仍统一经过 Hook 和权限检查——并行只作用于已通过策略的安全读操作。
 
 **恢复优先**是这套循环的最大特点，可恢复错误都会回到同一状态机继续：
 
 | 失败/压力场景 | 处理方式 |
 | --- | --- |
-| API 限流 | 读 `Retry-After`，可中断睡眠后重试（`interruptibleSleep`） |
-| 用户中断（Esc/Ctrl+C） | 同一个 `AbortSignal` 打断流读取与限流等待 |
-| 上下文超限（`ContextTooLongError`） | 先工具结果预算，再 `forceCompact()` 强制压缩，重注入长期记忆后**重试本轮** |
+| API 限流 | 读 `Retry-After`，可中断睡眠后重试 |
+| 用户中断（Esc/Ctrl+C） | 同一个中止信号打断流读取与限流等待 |
+| 上下文超限 | 先压缩工具结果预算，再强制整体压缩，重注入长期记忆后**重试本轮** |
 | 输出达到 max_tokens | 先把上限提升到 64000，再最多 3 次「从断点继续写」的多轮续写 |
-| 单条工具输出过大 | 溢写到 `.MyCode/sessions/<id>/tool_results/`，上下文只留预览 |
+| 单条工具输出过大 | 溢写到会话目录下的磁盘文件，上下文只留路径 + 预览 |
 | 未知工具连续调用 | 超过上限才终止循环，防止模型跑偏空转 |
 
-### 5.2 模型接入层：统一 LLMClient 接口与三种协议适配
+### 5.2 模型接入层：统一接口与三种协议适配
 
-核心文件：`src/llm/client.ts`、`src/llm/anthropic.ts`、`src/llm/openai.ts`、`src/llm/model-resolver.ts`。
-
-模型层对外只暴露一个最小接口：
-
-```ts
-export interface LLMClient {
-  stream(
-    conv: ConversationManager,
-    tools: Record<string, unknown>[],
-    abortSignal?: AbortSignal
-  ): AsyncGenerator<StreamEvent>;
-  setSystemPrompt(prompt: string): void;
-}
-```
-
-`createClient()` 按 provider 配置的 `protocol` 懒加载三种客户端实现：
+模型层对外只暴露一个最小接口：给定会话与工具列表，流式产出统一事件；系统提示可随时替换。按 provider 配置的协议懒加载三种客户端实现：
 
 - **anthropic**：Anthropic Messages API 原生流式协议，`input_json_delta` 增量累积 JSON 参数、内容块结束时解析为完整工具调用；
 - **openai**：OpenAI Responses API；
 - **openai-compat**：OpenAI 兼容的 Chat Completions（DeepSeek 等第三方网关）。
 
-三种客户端把各自的供应商事件映射为同一组 `StreamEvent`，差异（消息格式、工具 schema 形状、usage 字段）全部收敛在 `src/llm/` 内部。`ToolRegistry.getAllSchemas(protocol)` 也按协议把 Anthropic 风格的 schema 转写成 OpenAI function schema。
+三种客户端把各自的供应商事件映射为同一组流式事件，差异（消息格式、工具 schema 形状、usage 字段）全部收敛在模型层内部；工具 schema 也按协议在 Anthropic 风格与 OpenAI function 风格之间自动转写。
 
 两个配套机制：
 
-- **模型别名与热切换**（model-resolver）：`haiku/sonnet/opus` 等短名映射到完整模型 ID，同一 provider 配置下可替换模型派生新 client——主 Agent、记忆子 Agent、Skill fork、自定义子 Agent 都复用这套解析；
-- **上下文窗口四层解析**（`src/config/config.ts`）：① 配置显式 `context_window` → ② Anthropic 协议自动抓取 `/v1/models/{model}` 的 `max_input_tokens`（带记忆化缓存）→ ③ 内置模型名子串匹配表 → ④ 保守默认值（claude 200k / 其他 128k）。
+- **模型别名与热切换**：`haiku/sonnet/opus` 等短名映射到完整模型 ID，同一 provider 配置下可替换模型派生新 client——主 Agent、记忆子 Agent、Skill fork、自定义子 Agent 都复用这套解析；
+- **上下文窗口四层解析**：配置显式指定 → Anthropic 协议自动查询模型元信息（带记忆化缓存）→ 内置模型名匹配表 → 保守默认值（claude 200k / 其他 128k）。
 
 ### 5.3 工具系统：分类、注册表与渐进式披露
 
-核心文件：`src/tools/registry.ts`、`src/tools/tool-search.ts`、`src/tools/bash.ts`、`src/tools/file-state-cache.ts`。
+所有工具实现同一个接口（名称 / 描述 / 类别 / schema / 执行），因此内置工具、MCP 工具、团队工具都走**同一条权限 + Hook + 调度 + 结果预算链路**。
 
-所有工具实现同一个 `Tool` 接口（`name / description / category / schema() / execute()`，可选 `deferred`、`system`），因此内置工具、MCP 工具、团队工具都走**同一条权限 + Hook + 调度 + 结果预算链路**。
-
-TUI 下注册的内建工具（`src/tui/app.tsx` 的 `createToolRegistry`）：
+TUI 下注册的内建工具：
 
 | 类别 | 工具 |
 | --- | --- |
@@ -209,35 +151,33 @@ TUI 下注册的内建工具（`src/tui/app.tsx` 的 `createToolRegistry`）：
 | 交互 | AskUserQuestion（结构化多选提问，委托给 UI 弹窗） |
 | 多智能体 | Agent（子 Agent/队友/fork 统一入口）、TeamCreate、SpawnTeammate、SendMessage、ListTeams、TeamDelete |
 
-**渐进式披露（progressive disclosure）**：`deferred = true` 的工具（MCP 工具、任务工具等）默认**不把 schema 发给模型**；模型先用 `ToolSearch` 关键词搜索或 `select:name1,name2` 精确选中，注册表把对应工具标记为「已发现」后才进入请求。MCP 工具多的场景下，这显著降低了无关 schema 对上下文窗口和 prompt cache 的占用。
+**渐进式披露（progressive disclosure）**：标记为延迟加载的工具（MCP 工具、任务工具等）默认**不把 schema 发给模型**；模型先用 `ToolSearch` 关键词搜索或按名精确选中，注册表把对应工具标记为「已发现」后才进入请求。MCP 工具多的场景下，这显著降低了无关 schema 对上下文窗口和 prompt cache 的占用。
 
-**Bash 工具的工程细节**值得一提（bash.ts）：
+**Bash 工具的工程细节**值得一提：
 
-- `spawnSync("bash", ["-c", cmd])`，默认 120s 超时（上限 600s），stdout/stderr 合并；
+- `bash -c` 执行，默认 120s 超时（上限 600s），stdout/stderr 合并；
 - **退出码语义化**：grep/rg/diff/test 等命令退出码 1 不算错误（如 grep exit 1 = "no matches found"），并给 LLM 附加语义提示，避免模型把「没搜到」当成「命令失败」；
 - 可被注入 OS 沙箱包装器（见 5.4）。
 
-**FileStateCache**：跟踪已读文件的 mtime/内容哈希，EditFile 前校验「读之后没被外部改过」，防止基于陈旧上下文的盲写。
+**文件状态缓存**：跟踪已读文件的 mtime/内容哈希，编辑前校验「读之后没被外部改过」，防止基于陈旧上下文的盲写。
 
 ### 5.4 权限与安全：分层检查链 + OS 沙箱
 
-核心文件：`src/permissions/checker.ts`、`src/sandbox/index.ts`、`src/sandbox/bwrap.ts`、`src/sandbox/seatbelt.ts`。
-
-`PermissionChecker.check(toolName, category, args)` 按顺序走以下分层（层号沿用源码注释）：
+每次工具调用按顺序走以下分层检查：
 
 ```text
-Layer 0  plan 模式例外：放行对 .MyCode/plans/ 计划文件的写
+Layer 0  plan 模式例外：放行对计划文件的写
 Layer 2  安全只读命令白名单（ls/cat/git status/bun test…）自动放行
          —— 含元字符防护：带 > | ; && $( ` 的命令一律不算「安全」
 Layer 3  危险命令正则拦截（rm -rf /、mkfs、fork bomb、curl|sh、
          git push --force、git reset --hard 等 14 类，直接 deny）
 Layer 3.5 沙箱自动放行：OS 沙箱开启且非危险命令时跳过人工确认；
          复合命令先按 && || ; | 拆分逐条过规则，防止拼接绕过
-Layer 4  路径沙箱 PathSandbox：文件工具限定在项目目录 + /tmp；
-         .MyCode/config.yaml、permissions.local.yaml、skills/ 永远禁写
+Layer 4  路径沙箱：文件工具限定在项目目录 + /tmp；
+         配置文件、权限规则文件、skills 目录永远禁写
 Layer 4b 会话级临时放行（内存 Set，进程退出即失效）
-Layer 5  规则引擎：~/.MyCode/permissions.yaml → 项目 permissions.yaml
-         → permissions.local.yaml，Tool(glob) 格式，文件内后写优先
+Layer 5  规则引擎：用户级 → 项目级 → 项目本地级权限规则文件，
+         Tool(glob) 格式，文件内后写优先
 Layer 6  权限模式矩阵兜底
 ```
 
@@ -250,202 +190,123 @@ Layer 6  权限模式矩阵兜底
 | `plan` | 只读放行，写/命令询问（配合计划文件例外） |
 | `bypassPermissions` | 全部放行（YOLO，红色警示） |
 
-用户在确认对话框选「Yes, and don't ask again」时，`allowAlways()` 把派生的 `Tool(前缀*)` 规则**持久化到 `permissions.local.yaml`**，重启后仍生效；规则引擎每次检查时重读文件，刚写入的规则立即生效。
+用户在确认对话框选「Yes, and don't ask again」时，派生的 `Tool(前缀*)` 规则会**持久化到本地权限规则文件**，重启后仍生效；规则引擎每次检查时重读文件，刚写入的规则立即生效。
 
-**OS 级沙箱**（`/sandbox` 命令三档：沙箱+自动放行 / 沙箱+常规权限 / 关闭）：Linux 用 **bubblewrap**（`--ro-bind / /` 根只读、按路径放行写、可断网 `--unshare-net`），macOS 用 **seatbelt**（动态生成 `(deny default)` profile，硬编码 `/usr/bin/sandbox-exec` 防 PATH 注入）；Windows 检测为不可用后回退 null，不影响主流程。
+**OS 级沙箱**（三档：沙箱+自动放行 / 沙箱+常规权限 / 关闭）：Linux 用 **bubblewrap**（根目录只读挂载、按路径放行写、可断网），macOS 用 **seatbelt**（动态生成 `(deny default)` profile，硬编码 sandbox-exec 路径防 PATH 注入）；Windows 检测为不可用后回退，不影响主流程。
 
 ### 5.5 上下文治理：预算、压缩与可恢复状态
 
-核心文件：`src/toolresult/budget.ts`、`src/compact/compact.ts`、`src/compact/recovery.ts`、`src/session/session.ts`。
-
 这是「Agent 能长跑」的关键子系统，分四层：
 
-**① 工具结果预算（局部压缩）**。单条工具结果超过 5 万字符、或单条消息聚合超过 20 万字符时，把完整输出溢写到 `.MyCode/sessions/<id>/tool_results/`，上下文中只保留路径 + 前 2KB 预览。带幂等标记避免重复溢写，模型需要细节时可按路径读回。
+**① 工具结果预算（局部压缩）**。单条工具结果超过 5 万字符、或单条消息聚合超过 20 万字符时，把完整输出溢写到磁盘，上下文中只保留路径 + 前 2KB 预览。带幂等标记避免重复溢写，模型需要细节时可按路径读回。
 
 **② 真实 usage 锚点 + 增量估算**。每轮流结束记录 API 返回的 `input + cache_read + cache_creation + output` 作为基线和当时的消息数；下一轮只估算锚点之后新增的消息。冷启动或供应商不返回 usage 时退化为字符估算。比「每轮全量猜 token」既准又快。
 
-**③ 两层渐进压缩（整体压缩）**。发送前先跑 ①，再由 `manageContext()` 判断：超过「窗口 − 输出预留 − 安全余量」阈值时自动摘要压缩。压缩保留策略不是简单留最近 N 条，而是**按 token 预算（1 万）+ 最少消息数（5 条）+ 上限（4 万）**保留近期尾部，并回退边界避免拆开 `tool_use`/`tool_result` 配对。摘要请求自身超限时按 API 轮次从最老的组删减并重试（PTL retry）。
+**③ 两层渐进压缩（整体压缩）**。发送前先跑 ①，再判断：超过「窗口 − 输出预留 − 安全余量」阈值时自动摘要压缩。压缩保留策略不是简单留最近 N 条，而是**按 token 预算（1 万）+ 最少消息数（5 条）+ 上限（4 万）**保留近期尾部，并回退边界避免拆开工具调用/结果配对。摘要请求自身超限时按 API 轮次从最老的组删减并重试。
 
-**④ 恢复附件与跨进程恢复**。压缩清空工作记忆后，`RecoveryState` 负责「让模型想起来自己在干嘛」：最近读过的 5 个文件（每个约 5000 token 预算）、已激活的 Skill（总预算 2.5 万 token）、可用工具清单，作为附件拼在摘要之后。压缩结果同时以 `compact_boundary` 记录**追加写入会话 JSONL**（摘要 + 保留尾部内联），进程重启后 `rebuildFromSession()` 只认最后一个边界，重建「摘要 + 保留尾部 + 边界后新消息」；无边界的旧会话完整回放，向后兼容。
+**④ 恢复附件与跨进程恢复**。压缩清空工作记忆后，恢复机制负责「让模型想起来自己在干嘛」：最近读过的 5 个文件（每个约 5000 token 预算）、已激活的 Skill（总预算 2.5 万 token）、可用工具清单，作为附件拼在摘要之后。压缩结果同时以边界记录**追加写入会话日志**（摘要 + 保留尾部内联），进程重启后只认最后一个边界，重建「摘要 + 保留尾部 + 边界后新消息」；无边界的旧会话完整回放，向后兼容。
 
 ### 5.6 长期记忆：提取、召回与后台整理闭环
 
-核心文件：`src/memory/extractor.ts`、`src/memory/manager.ts`、`src/memory/consolidation.ts`、`src/memory/instructions.ts`。
-
 把「一次性对话」转化为「长期知识」的三段闭环：
 
-- **提取（会后写）**：主 Agent 每轮结束后由 `onLoopComplete` 异步触发 `MemoryExtractor`——一个只有文件操作工具的**子 Agent**，prompt 里附带已有记忆文件的 manifest（名称+描述），要求「先查重再写入」，user/feedback 类写用户目录 `~/.MyCode/memory/`，project/reference 类写项目 `.MyCode/memory/`，写完重建 `MEMORY.md` 索引。`inProgress + pendingContext` 合并并发到达的上下文，不阻塞主回复、不丢最后一轮。
-- **召回（按需读）**：`MemoryManager.findRelevantMemories()` 只把轻量 manifest 交给 selector LLM，最多选 5 个文件再读全文，包成 `<system-reminder># Recalled Memories` 注入。召回以**非阻塞 Promise** 与当前模型请求并行，工具执行完若已就绪就注入下一轮——不是所有记忆常驻上下文。
-- **整理（定期合并）**：`MemoryConsolidator` 三重门控（距上次 ≥24 小时、期间 ≥5 个新会话、拿到进程锁文件）满足后才后台 fork 整理子 Agent，合并近重复文件、删除矛盾事实、维护索引；失败回滚锁，避免并发整理。
+- **提取（会后写）**：主 Agent 每轮结束后异步触发记忆提取——一个只有文件操作工具的**子 Agent**，prompt 里附带已有记忆文件的清单（名称+描述），要求「先查重再写入」，按类型分别写入用户级或项目级记忆目录，写完重建索引。进行中标记 + 待处理上下文合并并发到达的内容，不阻塞主回复、不丢最后一轮。
+- **召回（按需读）**：只把轻量清单交给选择器模型，最多选 5 个文件再读全文，作为系统提醒注入。召回以**非阻塞**方式与当前模型请求并行，工具执行完若已就绪就注入下一轮——不是所有记忆常驻上下文。
+- **整理（定期合并）**：三重门控（距上次 ≥24 小时、期间 ≥5 个新会话、拿到进程锁文件）满足后才后台 fork 整理子 Agent，合并近重复文件、删除矛盾事实、维护索引；失败回滚锁，避免并发整理。
 
-### 5.7 Skill 系统：三层发现、热重载与 inline/fork 执行
-
-核心文件：`src/skills/catalog.ts`、`src/skills/skill.ts`、`src/skills/executor.ts`、`src/skills/load-skill-tool.ts`、`src/skills/install-tool.ts`。
+### 5.7 Skill 系统：三层发现、热重载与两种执行方式
 
 Skill 是「带 frontmatter 的 Markdown SOP 模板」，机制：
 
-- **三层发现**：内置层（当前版本 `loadBuiltins()` 返回空，预留扩展点）→ 用户全局 `~/.MyCode/skills/` → 项目级 `.MyCode/skills/`，**后加载的同名 Skill 覆盖先加载的**（项目优先级最高）；
-- **热重载**：每次 `get()` 按文件 mtime 检测变更并重解析，改完 SKILL.md 立即生效；
-- **按需激活**：模型通过 `LoadSkill` 工具把某个 Skill 的正文拉进上下文（而非开局全塞），激活状态写入 `RecoveryState`，压缩后仍能恢复；
-- **参数注入**：正文中的 `$ARGUMENTS` 占位符替换为用户参数，无占位符则追加 `User Request:`；
-- **两种执行模式**：`inline`（正文作为 SOP 注入当前会话）与 `fork`（派生独立子 Agent 执行，可选带父会话最近 5 条/100 条上下文）；
-- **变成斜杠命令**：`wireSkillsToRegistry` 把 inline skill 注册成 `prompt` 型命令、fork skill 注册成 `skill_fork` 型命令，用户在输入框 `/skill名` 直接调用；
-- **工具面收敛**：Skill 激活后可通过 `toolFilter` 只放行允许的工具 schema（`system=true` 工具始终保留），让 Skill 不只是 prompt 模板，还能动态改变当前 Agent 的能力集合；
-- **安装**：`InstallSkill` 工具从本地路径或 URL 拉取 SKILL.md 写入项目 skills 目录并即时重载。
+- **三层发现**：内置层 → 用户全局层 → 项目层，**后加载的同名 Skill 覆盖先加载的**（项目优先级最高）；
+- **热重载**：每次获取按文件 mtime 检测变更并重解析，改完立即生效；
+- **按需激活**：模型通过 LoadSkill 工具把某个 Skill 的正文拉进上下文（而非开局全塞），激活状态写入恢复机制，压缩后仍能恢复；
+- **参数注入**：正文中的 `$ARGUMENTS` 占位符替换为用户参数，无占位符则追加用户请求原文；
+- **两种执行方式**：`inline`（正文作为 SOP 注入当前会话）与 `fork`（派生独立子 Agent 执行，可选带父会话最近上下文）；
+- **变成斜杠命令**：inline skill 注册为提示型命令、fork skill 注册为派生命令，用户在输入框 `/skill名` 直接调用；
+- **工具面收敛**：Skill 激活后可按白名单只放行允许的工具 schema（系统工具始终保留），让 Skill 不只是 prompt 模板，还能动态改变当前 Agent 的能力集合；
+- **安装**：InstallSkill 工具从本地路径或 URL 拉取 SKILL.md 写入项目 skills 目录并即时重载。
 
 ### 5.8 MCP 接入：多传输、工具包装与延迟加载
 
-核心文件：`src/mcp/client.ts`、`src/mcp/manager.ts`、`src/mcp/tool-wrapper.ts`。
-
-- **三种传输**：stdio（`command + args`）、Streamable HTTP、SSE；配置中的 `env`/`headers` 支持 `${VAR}` 环境变量展开，密钥不落配置文件；
-- **工具包装**：每个 MCP 工具包装成内部统一 `Tool`，命名 `mcp__server__tool`，默认 `deferred = true`（配合 5.3 的 ToolSearch 渐进披露），调用时映射回 MCP 原始名；
-- **容错接入**：`MCPManager` 统一连接所有配置服务器，单个失败进 `errors` 不阻塞其他；各 server 的 instructions 会注入系统提示；
+- **三种传输**：stdio（命令 + 参数）、Streamable HTTP、SSE；配置中的环境变量/请求头支持 `${VAR}` 展开，密钥不落配置文件；
+- **工具包装**：每个 MCP 工具包装成内部统一工具，命名 `mcp__server__tool`，默认延迟加载（配合 5.3 的 ToolSearch 渐进披露），调用时映射回 MCP 原始名；
+- **容错接入**：统一连接所有配置服务器，单个失败进入错误列表不阻塞其他；各 server 的 instructions 会注入系统提示；
 - **权限直通**：`mcp__` 前缀工具在协调者过滤、子 Agent 过滤中始终放行（见 5.9/5.10）。
 
-### 5.9 子 Agent：定义加载、三种派生路径与工具过滤
+### 5.9 子 Agent：三种派生路径与工具过滤
 
-核心文件：`src/agents/agent-tool.ts`、`src/agents/spawn.ts`、`src/agents/definition.ts`、`src/agents/loader.ts`、`src/agents/tool-filter.ts`、`src/agents/task-manager.ts`。
+**定义加载**：内置（通用 / 计划 / 探索三个角色）→ 用户级目录 → 项目级目录，同名覆盖；定义文件 = 工具白/黑名单、模型、轮数上限、权限模式、是否后台、worktree 隔离等元信息 + 正文初始提示。
 
-**定义加载**：内置（`general-purpose` / `plan` / `explore` 三个角色）→ `~/.MyCode/agents/` → 项目 `.MyCode/agents/`，同名覆盖；`.md` 文件 = YAML frontmatter（工具白/黑名单、模型、maxTurns、权限模式、是否后台、worktree 隔离）+ 正文 initialPrompt。
+**统一的 Agent 工具是入口，三条路径**：
 
-**`Agent` 工具是统一入口，三条路径**：
+1. **定义路径**：按类型找到定义，创建**独立上下文**的子 Agent（新会话、独立权限检查器、模型按「调用级 > 定义级 > 父模型」解析）；
+2. **fork 路径**：不传类型时**继承父对话全部历史**（字节对齐 prompt-cache 前缀），注入 fork 样板指令（禁止再 fork、限范围、报告 <500 字）；嵌套 fork 有来源标记 + 历史标签扫描**双层防护**；
+3. **队友路径**：指定团队时作为**长驻队友**运行（见 5.10），注册表额外注入本名的消息工具和团队共享任务板工具。
 
-1. **定义路径**：按 `subagent_type` 找到定义 → `spawnSubAgent()` 创建**独立上下文**的子 Agent（新 ConversationManager、独立 PermissionChecker、模型按「调用级 > 定义级 > 父模型」解析）；
-2. **fork 路径**：不传类型时**继承父对话全部历史**（字节对齐 prompt-cache 前缀），注入 fork 样板指令（禁止再 fork、限范围、报告 <500 字）；嵌套 fork 有 `querySource` 标记 + 历史标签扫描**双层防护**；
-3. **队友路径**：传 `team_name` 时作为**长驻队友**运行（见 5.10），注册表额外注入本名的 SendMessage 和团队共享任务板工具。
+**工具过滤**六层规则：MCP 直通 → 全局禁用（禁止子 Agent 再派 Agent 等递归风险工具）→ 自定义 Agent 附加限制 → 后台任务白名单 → 定义级黑名单 → 定义级白名单交集。
 
-**工具过滤**（tool-filter.ts）六层规则：MCP 直通 → 全局禁用（禁止子 Agent 再派 Agent 等递归风险工具）→ 自定义 Agent 附加限制 → 后台任务白名单 → 定义级黑名单 → 定义级白名单交集。
-
-**后台任务**：`TaskManager` 支持异步派生子 Agent，完成/失败经 `drainNotifications()` 上报主会话。
+**后台任务**：支持异步派生子 Agent，完成/失败经通知队列上报主会话。
 
 ### 5.10 Teams 多智能体：文件邮箱 + 共享任务板
 
-核心文件：`src/teams/team.ts`、`src/teams/file-mailbox.ts`、`src/teams/shared-task.ts`、`src/teams/backend.ts`、`src/teams/coordinator.ts`、`src/teams/tools.ts`。
-
 「一个 Lead + 多个 Teammate」的团队协作：
 
-- **队友运行后端三选一**（`detectBackend()`）：tmux 窗口 / iTerm 标签页（osascript）/ 进程内协程。**Windows 一律回退 in-process**（护栏：tmux 命令在 pwsh 下会失败），外部后端拉起失败也自动降级进程内，跨平台不崩；
-- **文件邮箱是唯一通信通道**：每个成员一个 `<member>.jsonl` 消息文件 + `.read` 读游标文件；写消息用 `open("wx")` 独占锁文件（最多 10 次随机退避重试，**超过 10s 的 stale 锁自动删除**防崩溃僵死）；读游标持久化，进程重启接着读。Lead 与队友、进程内与跨进程，全部走这一套；
-- **idle-poll-continue 队友循环**：队友跑完一轮 → 向 lead 信箱发 `[idle]` 通知 → 500ms 轮询自己信箱 → 收到 `[shutdown]` 退出，否则把新消息拼成下一轮任务继续；
-- **共享任务板**：`tasks.json` 落盘团队目录，`TaskCreate/Get/List/Update` 四件套工具支持 `blocks/blockedBy` 依赖（双向维护），每次读前重读文件保证跨进程一致；
-- **Lead 感知团队**：`TeamManager.drainLeads()` 读所有团队 lead 信箱未读消息，包成 `<team-notification>` 经 `notificationFn` 注入主 Agent 下一轮；
-- **协调者模式**（`enable_coordinator_mode`）：Lead 被 `coordinatorToolFilter` 限制为「只调度不动手」——只放行 Agent/SendMessage/任务管理/团队管理和只读工具；团队全部拆除后下一轮自动恢复完整工具集；
-- **TUI 可视化**：`Ctrl+T` 打开 Teams 对话框（成员列表/详情/kill/shutdown），状态栏显示在线队友数，streaming 时渲染队友进度树（环形缓冲记录最近 5 条活动）。
+- **队友运行后端三选一**：tmux 窗口 / iTerm 标签页 / 进程内协程。**Windows 一律回退进程内**（tmux 命令在 Windows 终端下会失败），外部后端拉起失败也自动降级进程内，跨平台不崩；
+- **文件邮箱是唯一通信通道**：每个成员一个消息文件 + 读游标文件；写消息用独占锁文件（最多 10 次随机退避重试，**超过 10s 的 stale 锁自动删除**防崩溃僵死）；读游标持久化，进程重启接着读。Lead 与队友、进程内与跨进程，全部走这一套；
+- **idle-poll-continue 队友循环**：队友跑完一轮 → 向 lead 信箱发空闲通知 → 500ms 轮询自己信箱 → 收到关闭指令退出，否则把新消息拼成下一轮任务继续；
+- **共享任务板**：任务文件落盘团队目录，四个任务管理工具支持「阻塞/被阻塞」依赖（双向维护），每次读前重读文件保证跨进程一致；
+- **Lead 感知团队**：定期读所有团队 lead 信箱未读消息，包装后注入主 Agent 下一轮；
+- **协调者模式**：Lead 可被限制为「只调度不动手」——只放行 Agent / 消息 / 任务管理 / 团队管理和只读工具；团队全部拆除后下一轮自动恢复完整工具集；
+- **TUI 可视化**：`Ctrl+T` 打开 Teams 对话框（成员列表/详情/终止/关闭），状态栏显示在线队友数，流式期间渲染队友进度树（环形缓冲记录最近 5 条活动）。
 
-### 5.11 TUI：Ink 渲染、流式 Markdown 与交互组件
+### 5.11 TUI：终端渲染、流式 Markdown 与交互组件
 
-核心文件：`src/tui/app.tsx`（约 1600 行主组件）、`src/tui/chat.tsx`、`src/tui/input.tsx`、`src/tui/sync-output.ts`。
+**渲染架构**：Ink 的静态区放已提交消息（写进终端滚动缓冲区，不重绘不闪），动态区放活动消息 + 流式文本 + 活动工具 + Spinner + 对话框 + 输入框。
 
-**渲染架构**：Ink 的 `<Static>` 区放已提交消息（写进终端滚动缓冲区，不重绘不闪），动态区放活动消息 + streamingText + 活动工具 + Spinner + 对话框 + 输入框。
+**流式 Markdown 的性能优化**：以最后一个空行为稳定边界，**只重解析尾部不稳定块**，稳定前缀缓存复用，把每帧全量重渲染的 O(n²) 降为 O(n)；并按终端宽度把逻辑行折算物理行、从末尾裁剪，防止动态区超高触发清屏。
 
-**流式 Markdown 的性能优化**（chat.tsx）：参照 Claude Code 的 StreamingMarkdown——以最后一个 `\n\n` 为稳定边界，**只重解析尾部不稳定块**，稳定前缀缓存复用，把每帧全量重渲染的 O(n²) 降为 O(n)；并按终端宽度把逻辑行折算物理行、从末尾裁剪，防止动态区超高触发 Ink 清屏。
+**工具调用展示**：进行中为彩色圆点 + 动词 Spinner（约 100 个随机动词 + token 数 + 秒数）；完成后 ✓/✗ + 耗时；一轮结束后折叠成回合摘要（"Thought for 4s, read 2 files, ran 1 command"）；编辑工具的 diff 默认展开红绿着色，其余输出 Ctrl+O 展开、超 500 字截断。
 
-**工具调用展示**：进行中 magenta `●` + 动词 Spinner（约 100 个随机动词 + token 数 + 秒数）；完成后 ✓/✗ + 耗时；一轮结束后折叠成 turn summary（"Thought for 4s, read 2 files, ran 1 command"）；EditFile 的 diff 默认展开红绿着色，其余输出 Ctrl+O 展开、超 500 字截断。
+**输入框**：
 
-**输入框**（input.tsx）：
-
-- 多行编辑（Shift+Enter/Ctrl+J 断行）、上下键翻 prompt 历史（`.MyCode/prompt_history.jsonl`，200 条上限）；
-- **斜杠命令补全**：空查询时把「最近使用」排前（使用频率追踪器：次数 × 7 天半衰期衰减，落盘 `command_usage.json`），否则按 精确名→别名→前缀→Fuse 模糊（fuse.js 加权）排序，附 ghost text 灰色提示；
-- **`@` 文件补全**：扫描工作目录（跳过 node_modules 等，上限 2000 文件），前缀优先取前 8；提交时 `@path` 内联为 `<file path="...">内容</file>`（≤100KB）；
+- 多行编辑（Shift+Enter/Ctrl+J 断行）、上下键翻 prompt 历史（落盘保存，200 条上限）；
+- **斜杠命令补全**：空查询时把「最近使用」排前（使用频率追踪：次数 × 7 天半衰期衰减，落盘保存），否则按 精确名→别名→前缀→模糊匹配（fuse.js 加权）排序，附 ghost text 灰色提示；
+- **`@` 文件补全**：扫描工作目录（跳过 node_modules 等，上限 2000 文件），前缀优先取前 8；提交时 `@path` 内联为带路径标签的文件内容（≤100KB）；
 - Shift+Tab 循环权限模式，底部彩色显示当前模式。
 
 **对话框组件**：权限确认（Yes / always / No）、计划批准（YOLO / 逐条批准 / 打回修改，可输入反馈）、rewind 两阶段快照恢复、AskUserQuestion 多问题向导（标签页导航 + 单/多选 + Other 自由输入）、Teams 管理、Provider 选择（多 provider 时启动显示）。
 
-**消闪**：`installSyncOutput()` 检测终端支持后（Windows Terminal / WezTerm / iTerm 等）monkey-patch `stdout.write`，用 `queueMicrotask` 把同一帧的多次写入合并进 DEC 2026 同步输出信封（BSU/ESU），整帧原子渲染。
+**消闪**：检测终端支持后（Windows Terminal / WezTerm / iTerm 等）monkey-patch `stdout.write`，用微任务队列把同一帧的多次写入合并进 DEC 2026 同步输出信封（BSU/ESU），整帧原子渲染。
 
-**Ctrl+C 语义**：streaming 中 = 中断当前轮；空闲时双击退出（2s 内第二次），首次按显示提示。
+**Ctrl+C 语义**：流式中 = 中断当前轮；空闲时双击退出（2s 内第二次），首次按显示提示。
 
-### 5.12 远程模式：WebSocket 协议与内置单文件 Web UI
+### 5.12 远程模式：WebSocket + 内置单文件 Web UI
 
-核心文件：`src/remote/server.ts`、`src/remote/web.ts`。
-
-`--remote` 启动后监听 `:18888`：HTTP 对所有路径返回 `INDEX_HTML`——一个约 800 行的**零构建单文件 Web 前端**（Tokyo Night 深色主题、CDN 引入 marked.js、断线 3s 重连、10s 应用层 ping）。WebSocket 双向协议：
+远程模式监听 `:18888`：HTTP 对所有路径返回同一个内置单文件 Web 前端（Tokyo Night 深色主题、CDN 引入 marked.js、断线 3s 重连、10s 应用层 ping）。WebSocket 双向协议：
 
 | 方向 | 消息类型 |
 | --- | --- |
 | client→server | `user_message`、`permission_response`、`ask_user_response`、`cancel`、`ping` |
 | server→client | `connected`、`commands`、`stream_text`/`thinking_text`、`tool_use`/`tool_result`、`turn_complete`/`loop_complete`、`usage`、`compact`、`retry`、`permission_request`、`ask_user`、`system` 等 |
 
-服务端**完整复刻 TUI 的初始化**（工具注册表、记忆注入、Hooks、Skills、团队工具、AgentTool），权限确认和 AskUser 通过挂起 Promise + 前端弹窗应答实现——同一套 Agent 核心因此同时服务两种前端，互不耦合。
+服务端**完整复刻 TUI 的初始化**（工具注册表、记忆注入、Hooks、Skills、团队工具、Agent 工具），权限确认和提问通过挂起 Promise + 前端弹窗应答实现——同一套 Agent 核心因此同时服务两种前端，互不耦合。
 
 ### 5.13 Hooks 引擎：事件、条件 DSL 与四种动作
 
-核心文件：`src/hooks/hooks.ts`。
+在配置文件中声明 hooks 列表，在 Agent 生命周期九个事件（`session_start / session_end / turn_start / turn_end / pre_send / post_receive / pre_tool_use / post_tool_use / shutdown`）上触发动作：
 
-用户在 `config.yaml` 配置 `hooks:` 列表，在 Agent 生命周期九个事件（`session_start / session_end / turn_start / turn_end / pre_send / post_receive / pre_tool_use / post_tool_use / shutdown`）上触发动作：
-
-- **四种动作**：`command`（execSync 外部命令，注入 `MyCode_EVENT/TOOL/FILE_PATH` 环境变量，30s 超时）、`prompt`（文本直接注入）、`http`（fetch POST JSON）、`agent`（预留的子 Agent 扩展点）；
+- **四种动作**：`command`（执行外部命令，注入事件相关环境变量，30s 超时）、`prompt`（文本直接注入）、`http`（POST JSON）、`agent`（子 Agent 动作的扩展点）；
 - **条件 DSL**：`==` / `!=` / `=~`（正则）/ `=*`（glob）+ `&&` `||` `!`，从 `tool/event/file_path/message/args[key]` 取值；
-- **行为开关**：`once` 只触发一次、`async` 后台执行（结果进通知队列下一轮注入）、`reject` 可拦截 `pre_tool_use` 直接否决工具调用、`on_error` 决定错误时 ignore/fail/reject。
+- **行为开关**：`once` 只触发一次、`async` 后台执行（结果进通知队列下一轮注入）、`reject` 可拦截工具调用前事件直接否决、`on_error` 决定错误时 ignore/fail/reject。
 
 典型用途：保存前自动格式化、危险目录写保护、操作审计上报等。
 
-### 5.14 状态持久化全景：`.MyCode` 目录
+### 5.14 状态持久化：一切皆文件
 
-所有状态都在项目目录的 `.MyCode/` 下（用户级在 `~/.MyCode/`），纯文件、可审计：
+所有状态都以纯文件形式落盘（用户级与项目级分离），可审计、可恢复：会话消息与压缩边界、溢写的超大工具输出、编辑前备份与快照、计划文件、个人任务清单、团队邮箱与共享任务板、长期记忆与索引、自定义 Skill / 命令 / 子 Agent 定义、输入历史与命令使用频率。进程重启、多进程协作都能从磁盘重建一致状态。
 
-| 路径 | 内容 |
-| --- | --- |
-| `config.yaml` / `config.local.yaml` | provider / MCP / hooks / 沙箱 / 协调者模式配置 |
-| `permissions.yaml` / `permissions.local.yaml` | 权限规则（`allowAlways` 写入后者） |
-| `sessions/<id>.jsonl` | 会话消息 + `compact_boundary` 压缩边界 |
-| `sessions/<id>/tool_results/` | 溢写的超大工具输出 |
-| `file-history/<sessionId>/` | 编辑前备份 + snapshots.json（rewind 用） |
-| `plans/<slug>.md` | plan 模式计划文件 |
-| `tasks/<sessionId>.json` | 个人任务清单 |
-| `teams/<team>/` | 团队邮箱 jsonl + 读游标 + tasks.json + transcripts |
-| `memory/` + `MEMORY.md` | 长期记忆文件与索引 |
-| `skills/`、`commands/`、`agents/` | 用户自定义 Skill / 斜杠命令 / 子 Agent 定义 |
-| `prompt_history.jsonl` | 输入历史（200 条） |
-| `command_usage.json` | 斜杠命令使用频率（补全排序用） |
-
-## 6. 安装、配置与运行
-
-```bash
-bun install        # 安装依赖
-bun start          # 即 bun run src/main.tsx，进入 TUI
-```
-
-配置文件 `.MyCode/config.yaml`（三层合并：`~/.MyCode/config.yaml` → 项目 `config.yaml` → 项目 `config.local.yaml`，后者覆盖前者；MCP 按 name 合并、hooks 追加）：
-
-```yaml
-providers:
-  - name: anthropic-official
-    protocol: anthropic            # anthropic / openai / openai-compat
-    base_url: https://api.anthropic.com
-    api_key: "your-api-key-here"   # 也可走 ANTHROPIC_API_KEY / OPENAI_API_KEY 环境变量
-    model: claude-sonnet-4-20250514
-    thinking: true                 # 思考模式；max_output_tokens 默认随之升到 64000
-    # context_window: 200000       # 可选，缺省按 5.2 的四层规则解析
-
-permission_mode: default           # default / acceptEdits / plan / bypassPermissions
-
-mcp_servers:
-  - name: context7
-    command: npx
-    args: ["-y", "@upstash/context7-mcp"]
-  # - name: my-http-mcp
-  #   url: https://example.com/mcp
-  #   transport: http              # 或 sse；headers 支持 ${ENV_VAR} 展开
-
-# sandbox: { enabled: true, auto_allow: true, network_enabled: false }
-# enable_coordinator_mode: false   # true 时 Lead 只调度不写代码
-```
-
-常用命令：
-
-```bash
-bun start                          # TUI
-bun run src/main.tsx -p "修复 src 下的类型错误"   # print 模式（脚本化）
-bun run src/main.tsx -p "..." --output-format stream-json   # 事件级 JSON 输出
-bun run src/main.tsx --remote      # 远程模式，浏览器打开 http://localhost:18888
-bun test                           # 单元测试
-bun run typecheck                  # tsc --noEmit
-```
-
-## 7. 运行截图
-
-以下截图均为**程序真实运行帧**：通过 ConPTY 伪终端实际启动 `bun run src/main.tsx`，用终端模拟器（pyte）解析屏幕缓冲区（含 ANSI 颜色与光标控制序列），再按字符网格 1:1 矢量渲染为 SVG（捕获环境：Windows 11 + Bun 1.3.14，provider 为 Anthropic 协议兼容端点）。捕获脚本见 [capture_tui.py](screenshots/capture_tui.py)（`python capture_tui.py` 可复现全部 5 张截图）。
+## 6. 运行截图
 
 **① TUI 启动界面** —— 版本头（`MyCode v0.1.0` + 当前模型 + 工作目录），底部为输入框（`❯` 提示符）与当前权限模式（`default`）：
 
@@ -463,23 +324,6 @@ bun run typecheck                  # tsc --noEmit
 
 ![任务完成](screenshots/run-task-done.svg)
 
-**⑤ print 模式** —— `bun run src/main.tsx -p "..."` 非交互执行，结果直接写 stdout 后退出：
+**⑤ print 模式** —— 非交互执行，结果直接写 stdout 后退出：
 
 ![print 模式](screenshots/run-print-mode.svg)
-
-## 8. 测试体系
-
-- **单元测试**：`bun test`，25 个测试文件（约 2400 行）覆盖关键边界——`agent.test.ts`（max_tokens 提升续写）、`compact.test.ts`（usage 锚点、tool_use/tool_result 配对不被拆开、消息不足跳过压缩）、`session.test.ts`（从最后一个 compact_boundary 恢复、连续压缩链、旧会话完整回放）、`memory.test.ts` / `consolidation.test.ts`（提取与整理门控）、`permissions.test.ts`（分层检查链）、`skills.test.ts` / `install-skill.test.ts`、`openai-compat.test.ts` / `anthropic-context.test.ts` / `model-resolver.test.ts`（协议适配与模型解析）、`teams*.test.ts` / `file-mailbox.test.ts`（多智能体）等；
-- **E2E 脚本**：`tests/run-e2e.sh` 通过 tmux 拉起真实 TUI 会话，用 `tmux capture-pane` 断言屏幕内容（等待 "Type a message" 就绪标记），批量跑 prompts 目录下的用例并汇总通过/失败/跳过。
-
-## 9. 设计亮点总结
-
-1. **可恢复的执行状态机**：限流、上下文超限、输出截断、进程重启、用户中断都有明确的恢复路径回到同一循环，而不是报错退出（完整场景表见 5.1/5.5）；
-2. **渐进式能力披露**：deferred 工具 + ToolSearch 搜索 + LoadSkill 激活，让「能力很多」不等于「prompt 很长」，同时保护 prompt cache 命中率；
-3. **一切皆接口**：`LLMClient`（三协议）、`Tool`（内置/MCP/团队同链路）、`Asker`/`onPermissionRequest` 回调（TUI 弹窗与 WebSocket 弹窗复用同一 Agent）、`RunAgent` 注入（teams 与单测解耦）——核心循环不依赖任何具体模型、工具或前端；
-4. **保守的平台降级链**：Windows 无 OS 沙箱 → 回退路径沙箱 + 权限链；无 tmux → 队友回退进程内协程；外部后端拉起失败 → 自动降级。功能可缩水，流程不崩溃；
-5. **纯文件持久化、跨进程一致**：会话压缩边界、邮箱读游标、rewind 快照、记忆索引全部落盘在 `.MyCode/`，进程重启/多进程协作都能从磁盘重建一致状态。
-
----
-
-> 深入阅读：三大技术亮点（Agent 执行循环、上下文治理与长期记忆、模型/MCP/Skill 开放扩展）的逐段源码剖析见 `docs/project-technical-highlights.md`。

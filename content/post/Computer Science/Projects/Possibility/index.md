@@ -13,17 +13,15 @@ title = "Possibility"
 
 演示世界「雾影庄」（大正—昭和过渡期的山间老宅，6 人物 / 7 地点）开箱即在运转，访客免登录即可只读围观，并可体验两次预制 Fork。
 
-当前状态：**本地开发、本地验收版本**
-
 ## 2. 技术栈与总体架构
 
 | 层 | 选型 |
 |---|---|
-| 前端 `web/` | Vite + React 19 + TypeScript + Tailwind CSS，SPA，桌面 + 移动自适应 |
-| 后端 `api/` | Cloudflare Worker（本地 `wrangler dev`）+ Hono 路由 + Drizzle ORM |
+| 前端 | Vite + React 19 + TypeScript + Tailwind CSS，SPA，桌面 + 移动自适应 |
+| 后端 | Cloudflare Worker（本地 `wrangler dev`）+ Hono 路由 + Drizzle ORM |
 | 数据库 | Cloudflare D1（本地 = SQLite 文件），23 张表，Drizzle 迁移管理 |
 | LLM | OpenAI 兼容协议（chat completions + streaming + tools），服务商由环境变量切换 |
-| 驱动 | `scripts/engine-pinger.ts`（15s 节拍器）+ `scripts/queue-pinger.ts`（1s 调度监督）两个本进程守护 |
+| 驱动 | 两个本进程守护脚本：15 秒引擎节拍器 + 1 秒调度监督 |
 
 ```text
 ┌────────────────────────── 浏览器（React SPA）──────────────────────────┐
@@ -54,7 +52,7 @@ title = "Possibility"
 
 ### 3.1 人物即自主体
 
-每个 Person = **分层人物模型 + LLM 扮演 + 工具调用**（act / update_state / remember）。聊天（打电话）、懒惰追赶、What-if 推演、世界内生活节拍共用同一套自主体循环（`api/src/agent/`），不会出现「聊天一套人格、世界里另一套人格」的割裂。
+每个 Person = **分层人物模型 + LLM 扮演 + 工具调用**（act / update_state / remember）。聊天（打电话）、懒惰追赶、What-if 推演、世界内生活节拍共用同一套自主体循环，不会出现「聊天一套人格、世界里另一套人格」的割裂。
 
 ### 3.2 世界引擎：虚拟时钟 + 事件驱动决策点
 
@@ -70,7 +68,7 @@ title = "Possibility"
 
 ### 3.3 世界事实与结算
 
-早期实现中，人物的行动几乎可以「自言自话」地成为事实。如今这条链路被拆开为「**人格提出意图，世界确认事实**」：
+人物不能「自言自话」地创造事实——这条链路被拆开为「**人格提出意图，世界确认事实**」：
 
 - **结构化行动意图**：移动 / 地点活动 / 发起交谈 / 回应 / 等待，必须含类型、目标、理由、预期效果；提交意图 ≠ 行动成功。
 - **地点能力约束**：人物只能使用当前位置提供的、经过校验的结构化能力（声明前置条件、参数、候选结果集与概率权重）；能力只在世界创建或暂停时可编辑，每次修改形成新**规则版本**，不追溯改写历史。
@@ -82,7 +80,7 @@ title = "Possibility"
 
 ### 3.4 LLM 调度队列
 
-所有模型决策进入**持久化公平队列**（`api/src/scheduler/`）：
+所有模型决策进入**持久化公平队列**：
 
 - 分层公平：先在 World 之间轮转，再在同 World 的 Timeline 之间轮转，同线内按优先级 + 模拟时间排序——单个世界不能长期占满执行槽。
 - 默认全局 3 个并发模型请求，Admin 可调（1–32）；有空槽时合法任务 2 秒内开始调度。
@@ -113,15 +111,15 @@ title = "Possibility"
 - 密码 PBKDF2 加盐哈希；会话 token 30 天；接口校验登录态与数据归属。
 - 演示世界只读接口免登录但仅暴露 `is_demo=1` 的世界；访客无任何写入口。
 - 地点文本、能力描述、人物记忆、模型回复一律按**不可信数据**处理，不能提升权限或直接写入历史。
-- `.dev.vars` 含全部密钥（LLM key、引擎节拍密钥、本地管理员凭据），已在 .gitignore。
+- 全部密钥（LLM key、引擎节拍密钥、本地管理员凭据）只存在于本地环境变量文件，不进入版本库。
 
 ## 4. 数据模型（D1，23 张表）
 
-账号域：`users` / `sessions`；人物域：`persons` / `person_states`（×Timeline）/ `memories`；世界域：`worlds` / `timelines` / `events` / `dialogues` / `dialogue_turns` / `messages`；世界事实域：`world_canon_entries` / `world_rule_versions` / `location_capabilities` / `action_intents` / `decision_batches` / `decision_jobs` / `world_commits` / `resolution_records` / `social_opportunities`；调度与审计：`scheduler_settings` / `scheduler_leases` / `scheduler_fairness_state` / `llm_call_log` / `llm_raw_payloads`。
+23 张表分为五组：**账号**（用户、会话）；**人物**（人物、按时间线隔离的状态、记忆流）；**世界**（世界、时间线、事件、对话与对白、聊天消息）；**世界事实**（官方事实条目、规则版本、地点能力、行动意图、结算批次与任务、世界提交、结算记录、社交机会）；**调度与审计**（调度设置、租约、公平性状态、LLM 调用日志、模型原始载荷）。
 
 ## 5. 运行截图
 
-以下截图均为本地实跑（`npm run dev`，引擎节拍器与调度队列在线，世界真实运转中）由 Playwright 自动截取。截图为 PNG 位图格式（真实界面截图无法以 SVG 矢量表达；项目品牌插画资产本身为 SVG，见 `web/public/brand/`）。
+以下截图均为本地实跑（引擎节拍器与调度队列在线，世界真实运转中）由 Playwright 自动截取。截图为 PNG 位图格式（真实界面截图无法以 SVG 矢量表达；项目品牌插画资产本身为 SVG）。
 
 ### 5.1 演示世界「雾影庄」访客视图（正在运转）
 
