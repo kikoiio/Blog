@@ -22,7 +22,7 @@ const profiles = [
   { name: 'desktop', viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' },
   { name: 'touch', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' },
   { name: 'reduced-motion', viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' },
-];
+].filter(profile => !process.env.CAPTURE_PROFILES || process.env.CAPTURE_PROFILES.split(',').includes(profile.name));
 report.browserVersion = browser.version();
 
 async function capture(profile) {
@@ -34,16 +34,30 @@ async function capture(profile) {
   const log = (type, data = {}) => session.events.push({ ms: Math.round(performance.now() - start), type, ...data });
   const context = await browser.newContext({
     viewport: profile.viewport,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 0.5,
     isMobile: profile.isMobile ?? false,
     hasTouch: profile.hasTouch ?? false,
     reducedMotion: profile.reducedMotion,
-    recordVideo: { dir: directory, size: profile.viewport },
+    recordVideo: { dir: directory, size: { width: Math.round(profile.viewport.width / 2), height: Math.round(profile.viewport.height / 2) } },
   });
   let page;
+  let screenshotClient;
   const checkpoint = async (name) => {
     const file = `${name}.png`;
-    await page.screenshot({ path: path.join(directory, file), timeout: 20000 });
+    // The first run timed out inside Playwright's screenshot/paint synchronization.
+    // Capture the compositor surface directly without freezing the reference animation.
+    let timer;
+    try {
+      const screenshot = await Promise.race([
+        screenshotClient.send('Page.captureScreenshot', {
+          format: 'png', fromSurface: true, captureBeyondViewport: false, optimizeForSpeed: true,
+        }),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Compositor screenshot exceeded 30 seconds')), 30000); }),
+      ]);
+      await writeFile(path.join(directory, file), Buffer.from(screenshot.data, 'base64'));
+    } finally {
+      clearTimeout(timer);
+    }
     const state = await page.evaluate(() => ({
       url: location.href,
       scrollY,
@@ -72,7 +86,7 @@ async function capture(profile) {
   const settle = async (prefix) => {
     // Save actual timestamps: screenshot encoding can extend the intended intervals.
     const stopped = performance.now();
-    for (const ms of [0, 120, 350, 800, 1600]) {
+    for (const ms of [0, 350, 1000]) {
       const remaining = ms - (performance.now() - stopped);
       if (remaining > 0) await page.waitForTimeout(remaining);
       await checkpoint(`${prefix}-${String(ms).padStart(4, '0')}ms`);
@@ -97,6 +111,7 @@ async function capture(profile) {
       };
     });
     page = await context.newPage();
+    screenshotClient = await context.newCDPSession(page);
     page.on('pageerror', error => {
       if (session.errors.length < 100) session.errors.push({ type: 'pageerror', message: error.message });
     });
@@ -119,7 +134,7 @@ async function capture(profile) {
       const rect = canvas.getBoundingClientRect();
       return canvas.width > 0 && canvas.height > 0 && rect.width > 0 && rect.height > 0;
     }), undefined, { timeout: 30000 });
-    await page.waitForTimeout(15000);
+    await page.waitForTimeout(20000);
     session.environment = await page.evaluate(() => ({
       title: document.title,
       userAgent: navigator.userAgent,
@@ -133,6 +148,19 @@ async function capture(profile) {
     }));
     await checkpoint('01-loaded-pending-review');
     if (!session.environment.contexts.length) throw new Error('No WebGL context observed; capture is not a valid 3D reference.');
+    // Do not start the pointer path while the loader/intro still covers the controls.
+    await page.waitForFunction(() => {
+      let element = document.querySelector('#header-right-menu-btn');
+      if (!element) return false;
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 1 || rect.left < 0 || rect.right > innerWidth || rect.bottom < 0 || rect.top > innerHeight) return false;
+      while (element && element !== document.documentElement) {
+        const style = getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) < 0.9) return false;
+        element = element.parentElement;
+      }
+      return true;
+    }, undefined, { timeout: 120000 });
     await page.waitForTimeout(3000);
     await checkpoint('02-idle');
 

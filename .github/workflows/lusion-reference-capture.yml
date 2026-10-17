@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 15
     env:
       WAYLAND_DISPLAY: ''
+      CAPTURE_PROFILES: desktop
     steps:
       - uses: actions/checkout@v4
         with:
