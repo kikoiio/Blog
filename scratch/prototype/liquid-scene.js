@@ -19,8 +19,8 @@ void main(){
     vec2 curl=vec2(cos(p.y*18.+speed.y*2.),-cos(p.x*18.+speed.x*2.));
     vec2 source=vUv-(speed+curl*field.z*.12)*vec2(1./aspect,1.)*.019*stepSize;
     vec4 carried=texture2D(previous,clamp(source,vec2(.002),vec2(.998)));
-    vec2 result=decode(carried)*pow(.94,stepSize);
-    float weight=carried.z*pow(.92,stepSize);
+    vec2 result=decode(carried)*pow(.985,stepSize);
+    float weight=carried.z*pow(.976,stepSize);
     vec2 a=from*vec2(aspect,1.), b=to*vec2(aspect,1.);
     vec2 segment=b-a;
     float h=clamp(dot(p-a,segment)/max(dot(segment,segment),.000001),0.,1.);
@@ -40,7 +40,7 @@ uniform float strength, fade;
 void main(){
     vec4 data=texture2D(flow,vUv);
     vec2 velocity=(data.xy-.5)*2.;
-    vec2 offset=velocity*data.z*vec2(size.y/size.x,1.)*.045*strength*fade;
+    vec2 offset=velocity*data.z*vec2(size.y/size.x,1.)*.09*strength*fade;
     float light=0.;
     for(int i=0;i<3;i++){
         float age=drops[i].z;
@@ -88,10 +88,10 @@ export function createLiquidScene(canvas, onLabels) {
     const renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'low-power'});
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=1.12;
+    renderer.toneMappingExposure=.95;
     renderer.shadowMap.enabled=true;
     renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-    const float=renderer.capabilities.isWebGL2 && renderer.extensions.has('EXT_color_buffer_float');
+    const float=new URLSearchParams(location.search).get('precision')!=='byte' && renderer.capabilities.isWebGL2 && renderer.extensions.has('EXT_color_buffer_float');
     const type=float?THREE.HalfFloatType:THREE.UnsignedByteType;
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(35,1,.1,100);
@@ -100,13 +100,13 @@ export function createLiquidScene(canvas, onLabels) {
     const environment=pmrem.fromScene(room,.04);
     scene.environment=environment.texture;
     room.dispose(); pmrem.dispose();
-    const sun=new THREE.DirectionalLight(0xf8fcff,3.2);
+    const sun=new THREE.DirectionalLight(0xf8fcff,1.65);
     sun.position.set(-3,8,5); sun.castShadow=true;
     sun.shadow.mapSize.set(1024,1024); sun.shadow.camera.left=-8; sun.shadow.camera.right=8;
     sun.shadow.camera.top=8; sun.shadow.camera.bottom=-8; sun.shadow.normalBias=.025;
     sun.shadow.bias=-.00015; sun.shadow.radius=3;
-    scene.add(sun,new THREE.HemisphereLight(0xe9f8ff,0x547687,1.2));
-    const blue=new THREE.MeshPhysicalMaterial({color:0x00a8ec,metalness:.16,roughness:.19,clearcoat:1,clearcoatRoughness:.16,envMapIntensity:1.1});
+    scene.add(sun,new THREE.HemisphereLight(0xe9f8ff,0x547687,.5));
+    const blue=new THREE.MeshPhysicalMaterial({color:0x008be6,metalness:.08,roughness:.24,clearcoat:.55,clearcoatRoughness:.18,specularIntensity:.5,envMapIntensity:.28});
     const ceramic=new THREE.MeshPhysicalMaterial({color:0xe9ece2,roughness:.27,metalness:.02,clearcoat:.45,envMapIntensity:.8});
     const chrome=new THREE.MeshStandardMaterial({color:0xc5d6d9,metalness:1,roughness:.13,envMapIntensity:1.35});
     const graphite=new THREE.MeshPhysicalMaterial({color:0x123342,metalness:.28,roughness:.22,clearcoat:.8});
@@ -136,11 +136,11 @@ export function createLiquidScene(canvas, onLabels) {
                 #include <colorspace_fragment>
             }`
     };
-    const floor=new Reflector(new THREE.PlaneGeometry(160,160),{color:0x94bdc4,textureWidth:768,textureHeight:512,multisample:0,type,shader:floorShader});
+    const floor=new Reflector(new THREE.PlaneGeometry(160,160),{color:0x94bdc4,textureWidth:1024,textureHeight:768,multisample:0,type,shader:floorShader});
     floor.rotation.x=-Math.PI/2; floor.position.y=-1.65; scene.add(floor);
     const shadow=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.ShadowMaterial({opacity:.13}));
     shadow.rotation.x=-Math.PI/2; shadow.position.y=-1.645; shadow.receiveShadow=true; scene.add(shadow);
-    const target=new THREE.WebGLRenderTarget(1,1,{type,depthBuffer:true});
+    const target=new THREE.WebGLRenderTarget(1,1,{type,depthBuffer:true,samples:renderer.capabilities.isWebGL2?4:0});
     // Scene is cached. Only this small, depth-free field changes during a gesture.
     const fieldWidth=192,fieldHeight=128;
     const fields=[0,1].map(()=>new THREE.WebGLRenderTarget(fieldWidth,fieldHeight,{type,depthBuffer:false,stencilBuffer:false}));
@@ -152,9 +152,9 @@ export function createLiquidScene(canvas, onLabels) {
         velocity:{value:new THREE.Vector2()},aspect:{value:1},stepSize:{value:1},injection:{value:0}};
     const flowMaterial=new THREE.ShaderMaterial({vertexShader:vertex,fragmentShader:flowFragment,uniforms:flowUniforms,depthTest:false,depthWrite:false,toneMapped:false});
     const uniforms={picture:{value:target.texture},flow:{value:fields[0].texture},size:{value:new THREE.Vector2(1,1)},
-        drops:{value:[0,1,2].map(()=>new THREE.Vector4(0,0,-1,0))},strength:{value:1},fade:{value:0}};
+        drops:{value:[0,1,2].map(()=>new THREE.Vector4(0,0,-1,0))},strength:{value:new URLSearchParams(location.search).get('flow')==='soft'?.5:1},fade:{value:0}};
     const composite=new THREE.ShaderMaterial({vertexShader:vertex,fragmentShader:compositeFragment,uniforms,depthTest:false,depthWrite:false});
-    let width=1,height=1,dirty=true,mobile=false,dark=false;
+    let width=1,height=1,dirty=true,mobile=false,dark=false,layoutReady=false;
     let drops=[],pending=[],frame=0,lastInput=0,lastFrame=0,visible=true,hidden=document.hidden,lost=false,reduced=false;
     let renderedFrames=0,sceneRenders=0;
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -228,7 +228,7 @@ export function createLiquidScene(canvas, onLabels) {
     }
     function resize(w,h){
         stop(false);width=w;height=h;const nextMobile=w<650;
-        const changed=mobile!==nextMobile||sceneRenders===0;mobile=nextMobile;
+        const changed=mobile!==nextMobile||!layoutReady;mobile=nextMobile;layoutReady=true;
         const ratio=Math.min(devicePixelRatio||1,mobile?1.25:1.5,1800/w,1200/h);
         renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);
         target.setSize(Math.round(w*ratio),Math.round(h*ratio));
@@ -240,8 +240,8 @@ export function createLiquidScene(canvas, onLabels) {
     function setTheme(value){
         dark=value;scene.background=new THREE.Color(dark?0x122c39:0xb6d1d4);
         floor.material.uniforms.color.value.set(dark?0x1b3b4a:0x9abfc5);
-        blue.color.set(dark?0x00b5f2:0x00a8ec);graphite.color.set(dark?0x1e4a5c:0x123342);
-        sun.intensity=dark?2.2:3.2;renderer.toneMappingExposure=dark?1.05:1.12;dirty=true;
+        blue.color.set(dark?0x009bec:0x008be6);graphite.color.set(dark?0x1e4a5c:0x123342);
+        sun.intensity=dark?1.5:1.65;renderer.toneMappingExposure=dark?.9:.95;dirty=true;
         if(width>1)compose();
     }
     function moveNode(index,dx,dy){
@@ -265,6 +265,7 @@ export function createLiquidScene(canvas, onLabels) {
     }
     clearField();setTheme(false);
     return {resize,setTheme,moveNode,ripple,glide,visibility,hiddenState,reduce,contextLost,dispose,
+        snapshot:()=>{compose();return canvas.toDataURL('image/png');},
         debug:()=>({renderer:'authored-scene + advected-flowmap',float,width,height,mobile,dark,reduced,visible,hidden,lost,
             running:!!frame,pending:pending.length,renderedFrames,sceneRenders,canvas:{width:canvas.width,height:canvas.height}})};
 }

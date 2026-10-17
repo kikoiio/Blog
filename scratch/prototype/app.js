@@ -129,6 +129,7 @@ canvas.addEventListener('webglcontextlost',event=>{
 canvas.addEventListener('webglcontextrestored',()=>{engine?.dispose();engine=null;start();});
 window.addEventListener('pagehide',()=>{release();engine?.visibility(false);});
 window.addEventListener('pageshow',()=>{engine?.visibility(inView);});
+window.__zimaArtwork=()=>engine?.snapshot();
 window.__zimaDebug=()=>({...(engine?.debug()??{running:false,renderer:'static-fallback'}),failure,
     documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth});
 start();theme(root.dataset.theme==='dark');

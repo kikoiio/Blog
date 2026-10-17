@@ -16,11 +16,13 @@
 
 | 参考 | 观察与公开实现依据 | 在本原型中的转化 |
 | --- | --- | --- |
-| [Lusion](https://lusion.co/) / [Awwwards Lusion v3](https://www.awwwards.com/sites/lusion-v3) | 首屏蓝、白、黑装置通过体积、圆滑边缘、环境反射建立材质。公开 `ScreenPaint` 实现以低分辨率速度场、连续线段注入、反馈输运和卷曲扰动驱动后处理；装置本身另有几何和材质。 | 静止画面先成立，再用有方向、可衰减的流动推动已有画面。学习分层方法，自己制作齐马蓝装置，不复制十字模型或贴图。 |
-| [Active Theory](https://activetheory.net/) | 用作沉浸式场景、界面层级和动静关系的视觉对照；重型站点在软件渲染环境中的加载结果单独记录，不把加载画面算成成功效果。 | 原生导航保持清楚；场景承担视觉冲击，交互不遮住操作与内容。 |
+| [Lusion](https://lusion.co/) / [Awwwards Lusion v3](https://www.awwwards.com/sites/lusion-v3) | 2023 v3 录像以蓝、白、黑装置建立材质；2026 在线实拍的强调色已变为黄绿。两者都依靠体积、圆滑边缘和环境反射，不能把某一配色当作效果本身。公开 `ScreenPaint` 实现以低分辨率速度场、连续线段注入、反馈输运和卷曲扰动驱动后处理；装置本身另有几何和材质。 | 静止画面先成立，再用有方向、可衰减的流动推动已有画面。学习分层方法，自己制作齐马蓝装置，不复制十字模型或贴图。 |
+| [Active Theory](https://activetheory.net/) | 在线站在云端返回“不支持此浏览器”。因此改看其 Awwwards v6 官方录像：空间中的玻璃雕塑与粒子构成背景，作品卡片、导航和说明保留清楚的前后层次；进入作品时发生有组织的空间转换。这里的结论来自录像，不冒称已操作在线完整体验。 | 借鉴前后层次与主次分配：原生导航保持清楚，场景承担视觉冲击，文字不跟着背景材质一起碎裂。博客不复制它的持续粒子动画与重型空间导航。 |
 | [OGL fluid distortion](https://oframe.github.io/ogl/examples/post-fluid-distortion.html) / [源码](https://github.com/oframe/ogl/blob/master/examples/post-fluid-distortion.html) | 速度输运、旋度和压力求解推动真实场景采样。流动随手势方向变化，效果不依靠画出有色圆线。技术演示，不作为商业网站排名依据。 | 本轮选低成本的输运 flowmap，不冒称完整 Navier–Stokes 求解。 |
 | [OGL mouse flowmap](https://oframe.github.io/ogl/examples/mouse-flowmap.html) / [Flowmap 源码](https://github.com/oframe/ogl/blob/master/src/extras/Flowmap.js) | 128² 量级的反馈纹理保存速度和强度，移动时注入，停止时衰减；有纹理和明暗结构的底图让折射可见。 | 连续线段注入、低分辨率双缓冲、时间步长校正、停止后回到原场景。 |
 | [Evan Wallace WebGL Water](https://madebyevan.com/webgl-water/) / [源码](https://github.com/evanw/webgl-water) | 水的说服力来自池壁、格线、反射、折射和空间关系共同作用。高度场只是其中一环。 | 保留表面的尺度线索与装置倒影；点击波仅辅助局部触感，避免把整页染成发光油膜。 |
+
+Active Theory 录像依据：[Awwwards v6 页面](https://www.awwwards.com/sites/active-theory-v6)、[首屏与作品导航](https://assets.awwwards.com/awards/element/2024/02/65c0bc8a48110839245666.mp4)、[作品展开](https://assets.awwwards.com/awards/element/2024/02/65c0bf17830be802324716.mp4)。
 
 Lusion 研究补充：[首屏交互录像](https://assets.awwwards.com/awards/element/2023/09/6516c2abeb13c196794165.mp4)、[场景叙事录像](https://assets.awwwards.com/awards/element/2023/09/6516c112a166e447899126.mp4)。源码核对来自其公开页面加载的 `/_astro/hoisted.CUO_IjfL.js`；构建文件名可能变化。录像与源码互相校验，不声称重建了其完整内部系统。
 
@@ -69,4 +71,6 @@ GitHub Actions 仅在 `codex/zima-visual-lab` 分支运行，独立静态服务�
 - 动态停止后的画面与静止基线一致；无 WebGL、reduced-motion、上下文丢失恢复有可检查的降级结果。
 - 检查 `pageerror`、失败资源、实际 canvas 尺寸和运行状态；加载失败的参考站必须明确标注。
 
-旧原型基线：[Actions 38999229243](https://github.com/kikoiio/Blog/actions/runs/38999229243)。本轮改版结果与具体观察将在完成实拍后填写于此，不再追加新的“定稿”章节。
+旧原型与在线参考实拍：[Actions 38999229243](https://github.com/kikoiio/Blog/actions/runs/38999229243)。该轮已产出全部站点截图；因整批采集耗时过长主动取消并保存产物，不将其标成成功验收。旧原型点击截图可见文字破碎、圆圈高光与结构脱节，悬停形变不易察觉。Lusion、OGL fluid 与 Evan 的场景可正常观看；OGL flowmap 当时处于速度场调试显示，Active Theory 在线体验不可用。
+
+第一版重构实拍：[Actions 39000172013](https://github.com/kikoiio/Blog/actions/runs/39000172013)，浏览器无意外错误，拖拽、键盘、阅读选择和静止停止均有记录。人工看片发现桌面物体初始化重叠、蓝色被灯光冲淡、方向尾迹偏弱，已据此修正位置初始化、照明和流场衰减；下一轮同时比较正常与弱流量版本。最终结果以复拍为准。

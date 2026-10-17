@@ -5,7 +5,7 @@ const output=path.resolve('scratch/visual-lab/output');
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--ozone-platform=x11']});
 const report={browser:browser.version(),captures:[]};
-async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=false,reference=false}={}){
+async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=false,reference=false,recovery=false}={}){
     console.log(`START ${name}`);
     const folder=path.join(output,name);await mkdir(folder,{recursive:true});
     const viewport=mobile?{width:390,height:844}:{width:1280,height:800};
@@ -28,6 +28,9 @@ async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=f
         }else{
             const stage=page.locator('#stage'),box=await stage.boundingBox();
             result.initial=await page.evaluate(()=>window.__zimaDebug?.());
+            result.labels=await page.locator('.node').evaluateAll(nodes=>nodes.map(n=>({x:n.offsetLeft,y:n.offsetTop})));
+            const artwork=await page.evaluate(()=>window.__zimaArtwork?.());
+            if(artwork)await writeFile(path.join(folder,'scene-only.png'),Buffer.from(artwork.split(',')[1],'base64'));
             if(!mobile){await page.getByRole('button',{name:/触碰水面/}).click();}else await page.touchscreen.tap(box.x+box.width*.5,box.y+box.height*.45);
             await page.waitForTimeout(120);await shot('01-click');
             await page.waitForTimeout(1500);
@@ -37,8 +40,9 @@ async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=f
                     for(let i=1;i<=18;i++){
                         await page.mouse.move(box.x+box.width*(start+direction*i/18*.40),box.y+box.height*(.45+Math.sin(i/18*Math.PI)*.13));await page.waitForTimeout(20);
                     }
-                    await shot(label);await page.waitForTimeout(1500);
+                    await shot(label);await page.mouse.move(10,10);await page.waitForTimeout(1700);
                 }
+                await shot('03b-restored');
                 const node=page.locator('.node').first();const before=await node.boundingBox();
                 await page.mouse.move(before.x+before.width/2,before.y+before.height/2);await page.mouse.down();
                 await page.mouse.move(before.x+before.width/2+65,before.y+before.height/2-28,{steps:12});await page.mouse.up();await shot('04-drag');
@@ -48,10 +52,17 @@ async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=f
             }
             await page.mouse.move(10,10);await page.waitForTimeout(1900);await shot('05-settled');
             result.settled=await page.evaluate(()=>window.__zimaDebug?.());
+            await page.waitForTimeout(250);
+            result.idleStable=await page.evaluate(()=>window.__zimaDebug?.());
             await stage.screenshot({path:path.join(folder,'stage-idle.png'),timeout:15000});
             if(!noWebgl&&!reduced&&!mobile){
                 await page.getByRole('button',{name:/切换.*主题/}).click();await page.waitForTimeout(500);await shot('06-theme-switch');
                 result.theme=await page.locator('html').getAttribute('data-theme');
+            }
+            if(recovery){
+                result.canLose=await page.evaluate(()=>{const c=document.querySelector('#webgl-canvas');const gl=c.getContext('webgl2')||c.getContext('webgl');window.__lose=gl.getExtension('WEBGL_lose_context');window.__lose?.loseContext();return !!window.__lose;});
+                await page.waitForTimeout(300);result.lost=await page.evaluate(()=>window.__zimaDebug?.());await shot('06b-context-lost');
+                await page.evaluate(()=>window.__lose?.restoreContext());await page.waitForTimeout(1200);result.restored=await page.evaluate(()=>window.__zimaDebug?.());await shot('06c-context-restored');
             }
             await page.locator('#reading').scrollIntoViewIfNeeded();await page.waitForTimeout(300);await shot('07-reading');
             result.selection=await page.evaluate(()=>{const p=document.querySelector('.content p');const range=document.createRange();range.selectNodeContents(p);const selection=getSelection();selection.removeAllRanges();selection.addRange(range);return selection.toString();});
@@ -70,9 +81,12 @@ async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=f
 if(process.env.REFERENCE_ONLY==='true'){
     for(const [name,url] of [['lusion','https://lusion.co/'],['active-theory','https://activetheory.net/'],['ogl-flowmap','https://oframe.github.io/ogl/examples/mouse-flowmap.html'],['evan-water','https://madebyevan.com/webgl-water/']])await capture('reference-'+name,url,{reference:true});
 }else{
-    await capture('prototype-light','http://127.0.0.1:4173');
+    await capture('prototype-light','http://127.0.0.1:4173',{recovery:true});
+    await capture('prototype-soft','http://127.0.0.1:4173?flow=soft');
     await capture('prototype-dark','http://127.0.0.1:4173',{dark:true});
     await capture('prototype-mobile','http://127.0.0.1:4173',{mobile:true});
+    await capture('prototype-mobile-dark','http://127.0.0.1:4173',{mobile:true,dark:true});
+    await capture('prototype-byte','http://127.0.0.1:4173?precision=byte');
     await capture('prototype-reduced','http://127.0.0.1:4173',{reduced:true});
     await capture('prototype-no-webgl','http://127.0.0.1:4173',{noWebgl:true});
 }
