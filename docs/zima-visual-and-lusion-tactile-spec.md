@@ -73,4 +73,20 @@ GitHub Actions 仅在 `codex/zima-visual-lab` 分支运行，独立静态服务�
 
 旧原型与在线参考实拍：[Actions 38999229243](https://github.com/kikoiio/Blog/actions/runs/38999229243)。该轮已产出全部站点截图；因整批采集耗时过长主动取消并保存产物，不将其标成成功验收。旧原型点击截图可见文字破碎、圆圈高光与结构脱节，悬停形变不易察觉。Lusion、OGL fluid 与 Evan 的场景可正常观看；OGL flowmap 当时处于速度场调试显示，Active Theory 在线体验不可用。
 
-第一版重构实拍：[Actions 39000172013](https://github.com/kikoiio/Blog/actions/runs/39000172013)，浏览器无意外错误，拖拽、键盘、阅读选择和静止停止均有记录。人工看片发现桌面物体初始化重叠、蓝色被灯光冲淡、方向尾迹偏弱，已据此修正位置初始化、照明和流场衰减；下一轮同时比较正常与弱流量版本。最终结果以复拍为准。
+最终原型实拍：[Actions 39001075455](https://github.com/kikoiio/Blog/actions/runs/39001075455)，结果 **success**；验证代码提交 `4fa1b1fa6b0b242d3bb71754c9070835a9439365`。截图、录像在该运行的 `visual-evidence` 附件中，保留 14 天；关键截图与[诊断报告](evidence/zima-visual-report.json)另存于仓库。
+
+| 检查 | 本轮实际观察 |
+| --- | --- |
+| 构图与主题 | 桌面浅色/深色、390px 触屏仿真的浅色/深色均无横向溢出；修正了首拍中的物体重叠与蓝色过曝。 |
+| 方向流动 | 默认与 `?flow=soft` 均已实拍。弱版本的形变太容易忽略，采用默认强度；左右划动使轮廓朝对应方向形变，标签保持稳定。 |
+| 停止与复原 | 正常、弱流量、深色、强制 RGBA8 四组，停止后的整幅截图均与初始截图逐像素一致；额外观察 250ms，渲染帧计数不增加。 |
+| 原生交互 | 桌面拖拽、方向键移动、主题切换通过；正文原生选择高亮正常。移动端检查了布局和触碰，未冒充真机长时间手势测试。 |
+| 能力降级 | 强制 RGBA8、reduced-motion、无 WebGL 均完成采集。无 WebGL 的初始化错误是故意阻止上下文后的预期记录，随后静态图正常显示。 |
+| 上下文恢复 | 使用真实 `WEBGL_lose_context` 扩展触发丢失与恢复；失效期间展示相同构图的静态图，恢复后重新建立场景，未再出现 `INVALID_OPERATION` 资源释放警告。 |
+| 浏览器诊断 | 八组均无未捕获脚本异常、采集失败或资源加载失败；正常渲染组无 console 错误或警告。 |
+
+[前后对比](evidence/zima-comparison.webp) · [动作分帧](evidence/zima-motion-study.webp) · [浅色](evidence/zima-after.webp) · [深色](evidence/zima-after-dark.webp) · [移动端](evidence/zima-after-mobile.webp) · [失效降级](evidence/zima-context-fallback.webp)
+
+![旧版点击画面与新版静止构图对比](evidence/zima-comparison.webp)
+
+本轮选择：**保留具有真实材质和方向流场的装置展台，原生文字保持稳定。** 已完成隔离原型的视觉与基础交互复拍；正式 D3 集成、整站任意 DOM 折射、真实移动设备帧率和功耗仍不属于已验证成果。

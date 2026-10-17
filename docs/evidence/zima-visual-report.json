@@ -1,0 +1,1110 @@
+{
+  "run": "https://github.com/kikoiio/Blog/actions/runs/39001075455",
+  "validatedSource": "4fa1b1fa6b0b242d3bb71754c9070835a9439365",
+  "pixelRestoration": {
+    "prototype-light": true,
+    "prototype-soft": true,
+    "prototype-dark": true,
+    "prototype-byte": true
+  },
+  "browser": "141.0.7390.37",
+  "captures": [
+    {
+      "name": "prototype-light",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n深色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 1198,
+            "height": 480
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "drag": {
+        "before": {
+          "x": 560.1484375,
+          "y": 573.09375,
+          "width": 112.890625,
+          "height": 37
+        },
+        "after": {
+          "x": 623.0234375,
+          "y": 546.015625,
+          "width": 112.890625,
+          "height": 37
+        },
+        "moved": true
+      },
+      "keyboardMoved": true,
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 162,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 162,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "theme": "dark",
+      "canLose": true,
+      "lost": {
+        "running": false,
+        "renderer": "static-fallback",
+        "lost": true,
+        "failure": "context lost",
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "restored": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 4,
+        "sceneRenders": 2,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 4,
+        "sceneRenders": 2,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-soft",
+      "url": "http://127.0.0.1:4173?flow=soft",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n深色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 1198,
+            "height": 480
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "drag": {
+        "before": {
+          "x": 560.1484375,
+          "y": 573.09375,
+          "width": 112.890625,
+          "height": 37
+        },
+        "after": {
+          "x": 623.0234375,
+          "y": 546.015625,
+          "width": 112.890625,
+          "height": 37
+        },
+        "moved": true
+      },
+      "keyboardMoved": true,
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 165,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 165,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "theme": "dark",
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 167,
+        "sceneRenders": 19,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-dark",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n浅色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 1198,
+            "height": 480
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "drag": {
+        "before": {
+          "x": 560.1484375,
+          "y": 573.09375,
+          "width": 112.890625,
+          "height": 37
+        },
+        "after": {
+          "x": 623.0234375,
+          "y": 546.015625,
+          "width": 112.890625,
+          "height": 37
+        },
+        "moved": true
+      },
+      "keyboardMoved": true,
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 163,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 163,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "theme": "light",
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 165,
+        "sceneRenders": 19,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-mobile",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n◐\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\nDesign\n↗\nNotes\n↗\nPhoto\n↗\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 350,
+            "height": 490
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "labels": [
+        {
+          "x": 176,
+          "y": 282
+        },
+        {
+          "x": 80,
+          "y": 348
+        },
+        {
+          "x": 245,
+          "y": 328
+        },
+        {
+          "x": 141,
+          "y": 406
+        }
+      ],
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 59,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 59,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 59,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-mobile-dark",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n◐\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\nDesign\n↗\nNotes\n↗\nPhoto\n↗\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 350,
+            "height": 490
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "labels": [
+        {
+          "x": 176,
+          "y": 282
+        },
+        {
+          "x": 80,
+          "y": 348
+        },
+        {
+          "x": 245,
+          "y": 328
+        },
+        {
+          "x": 141,
+          "y": 406
+        }
+      ],
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 58,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 58,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 350,
+        "height": 490,
+        "mobile": true,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 58,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 350,
+          "height": 490
+        },
+        "failure": null,
+        "documentWidth": 390,
+        "viewportWidth": 390
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-byte",
+      "url": "http://127.0.0.1:4173?precision=byte",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n深色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n装置就绪",
+        "canvases": [
+          {
+            "width": 1198,
+            "height": 480
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": false,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "drag": {
+        "before": {
+          "x": 560.1484375,
+          "y": 573.09375,
+          "width": 112.890625,
+          "height": 37
+        },
+        "after": {
+          "x": 623.0234375,
+          "y": 546.015625,
+          "width": 112.890625,
+          "height": 37
+        },
+        "moved": true
+      },
+      "keyboardMoved": true,
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": false,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 176,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": false,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 176,
+        "sceneRenders": 17,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "theme": "dark",
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": false,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": true,
+        "reduced": false,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 178,
+        "sceneRenders": 19,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "装置就绪",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-reduced",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n深色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n静态装置 · 减少动态",
+        "canvases": [
+          {
+            "width": 1198,
+            "height": 480
+          }
+        ]
+      },
+      "initial": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": true,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 8,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "settled": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": true,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 9,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": true,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 9,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "renderer": "authored-scene + advected-flowmap",
+        "float": true,
+        "width": 1198,
+        "height": 480,
+        "mobile": false,
+        "dark": false,
+        "reduced": true,
+        "visible": true,
+        "hidden": false,
+        "lost": false,
+        "running": false,
+        "pending": 0,
+        "renderedFrames": 9,
+        "sceneRenders": 4,
+        "canvas": {
+          "width": 1198,
+          "height": 480
+        },
+        "failure": null,
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "静态装置 · 减少动态",
+      "overflow": false,
+      "fallbackLoaded": true
+    },
+    {
+      "name": "prototype-no-webgl",
+      "url": "http://127.0.0.1:4173",
+      "errors": [],
+      "console": [
+        {
+          "type": "error",
+          "text": "THREE.WebGLRenderer: Error creating WebGL context."
+        },
+        {
+          "type": "warning",
+          "text": "Static artwork fallback: Error: Error creating WebGL context.\n    at new WebGLRenderer (http://127.0.0.1:4173/vendor/three.module.js:28435:13)\n    at createLiquidScene (http://127.0.0.1:4173/liquid-scene.js:88:20)\n    at start (http://127.0.0.1:4173/app.js:48:16)\n    at http://127.0.0.1:4173/app.js:152:1"
+        }
+      ],
+      "requests": [],
+      "page": {
+        "title": "Zima Blue — A return to the essential",
+        "text": "ZIMA\nBLUE\n®\n独立思考，回到本质。\nA personal journal.\n◐\n深色\n关于这里\n↗\nA RETURN TO THE ESSENTIAL — 001\nReturn to blue.\n\n走得再远，也不忘最初的那抹蓝。\n关于设计、代码，和一些简单的事。\n\nFIG. 01 / THE FIRST BLUE\n轻轻划过，感受流动\n01\nDesign\n↗\n02\nNotes\n↗\n03\nPhoto\n↗\n04\nCode\n↗\n一块蓝，一切的起点。\n触碰水面\n↗\n＋\nLESS, BUT WITH FEELING.\nSCROLL TO EXPLORE ↓\n＋\n01 / THE ESSENTIAL\n纯粹，\n是一种回归。\n\n齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。\n\n把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。\n\n回到那抹蓝\n↗\nZIMA BLUE\nKEEP THE ESSENTIAL.\n© 2026\n静态装置",
+        "canvases": [
+          {
+            "width": 300,
+            "height": 150
+          }
+        ]
+      },
+      "initial": {
+        "running": false,
+        "renderer": "static-fallback",
+        "lost": false,
+        "failure": "Error: Error creating WebGL context.",
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "labels": [
+        {
+          "x": 576,
+          "y": 312
+        },
+        {
+          "x": 383,
+          "y": 319
+        },
+        {
+          "x": 815,
+          "y": 372
+        },
+        {
+          "x": 539,
+          "y": 402
+        }
+      ],
+      "settled": {
+        "running": false,
+        "renderer": "static-fallback",
+        "lost": false,
+        "failure": "Error: Error creating WebGL context.",
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "idleStable": {
+        "running": false,
+        "renderer": "static-fallback",
+        "lost": false,
+        "failure": "Error: Error creating WebGL context.",
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "selection": "齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。",
+      "reading": {
+        "running": false,
+        "renderer": "static-fallback",
+        "lost": false,
+        "failure": "Error: Error creating WebGL context.",
+        "documentWidth": 1280,
+        "viewportWidth": 1280
+      },
+      "status": "静态装置",
+      "overflow": false,
+      "fallbackLoaded": true
+    }
+  ]
+}
