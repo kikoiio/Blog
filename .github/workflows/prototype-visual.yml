@@ -7,6 +7,11 @@ on:
       - 'scratch/visual-lab/**'
       - '.github/workflows/prototype-visual.yml'
   workflow_dispatch:
+    inputs:
+      references:
+        description: Capture reference sites only
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -17,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CAPTURE_REFERENCES: ${{ contains(github.event.head_commit.message, '[references]') }}
+      REFERENCE_ONLY: ${{ inputs.references == true }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +39,7 @@ jobs:
           python3 -m http.server 4173 --bind 127.0.0.1 --directory scratch/prototype > "$RUNNER_TEMP/prototype-server.log" 2>&1 &
           echo "PROTOTYPE_SERVER_PID=$!" >> "$GITHUB_ENV"
       - name: Inspect prototype and references
+        timeout-minutes: 12
         run: node scratch/visual-lab/capture.mjs
       - name: Stop server
         if: always()

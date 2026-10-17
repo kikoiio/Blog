@@ -4,48 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <title>Zima Blue — Liquid studies</title>
+    <title>Zima Blue — A return to the essential</title>
+    <script>document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';</script>
     <link rel="stylesheet" href="style.css">
+    <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
     <header class="site-header">
-        <a class="wordmark" href="#" data-paint="text" aria-label="Zima Blue 首页">ZIMA<span class="brand-dot">®</span></a>
-        <p class="header-note" data-paint="text">A study in water,<br>motion &amp; the essential.</p>
+        <a class="wordmark" href="#water" aria-label="Zima Blue 首页">ZIMA<span>BLUE</span><sup>®</sup></a>
+        <a class="header-note" href="#reading">独立思考，回到本质。<span>A personal journal.</span></a>
         <nav aria-label="原型控制">
-            <button class="pill" id="theme-toggle" type="button" aria-pressed="false" data-paint="surface"><span data-paint="text">深海模式 ↗</span></button>
-            <button class="pill primary" id="ripple-button" type="button" data-paint="surface"><span data-paint="text">触碰水面 ＋</span></button>
+            <button id="theme-toggle" class="theme-button" type="button" aria-pressed="false" aria-label="切换深色主题"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label">深色</span></button>
+            <a href="#reading" class="about-link">关于这里 <span>↗</span></a>
         </nav>
     </header>
-
     <main>
-        <section class="hero" id="water" aria-labelledby="hero-title" data-paint="surface">
-            <div class="hero-topline"><span data-paint="text">EXPERIMENT NO. 001</span><span data-paint="text">ZIMA BLUE × LIQUID MATTER</span></div>
-            <h1 id="hero-title" data-paint="text">Less noise.<br>More feeling.</h1>
-            <div id="graph" class="graph" data-paint="links" aria-label="可拖动的浮动图谱节点">
-                <svg id="graph-links" aria-hidden="true"><path></path></svg>
-                <button class="node node-blue" data-x="0.30" data-y="0.37" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Design 节点"><span data-paint="text">Design ↗</span></button>
-                <button class="node node-zima" data-x="0.57" data-y="0.28" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Zima 节点"><span data-paint="text">Zima Blue</span></button>
-                <button class="node node-white" data-x="0.78" data-y="0.52" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Notes 节点"><span data-paint="text">Notes ＋</span></button>
-                <button class="node node-dark" data-x="0.43" data-y="0.73" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Code 节点"><span data-paint="text">Code ⌘</span></button>
+        <section class="hero" id="water" aria-labelledby="hero-title">
+            <div class="hero-heading">
+                <div><span class="eyebrow">A RETURN TO THE ESSENTIAL — 001</span><h1 id="hero-title">Return to <em>blue.</em></h1></div>
+                <p class="hero-intro">走得再远，也不忘最初的那抹蓝。<br>关于设计、代码，和一些简单的事。</p>
             </div>
-            <div class="hero-bottom"><p data-paint="text">回到最初的那一抹蓝。<br>轻轻划过，点击，或拨动一枚浮标。</p><a href="#reading" class="explore" data-paint="text">向下探索 ↓</a></div>
+            <div class="stage" id="stage">
+                <img class="scene-fallback" src="fallback.svg" alt="" aria-hidden="true">
+                <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+                <div class="stage-caption"><span>FIG. 01 / THE FIRST BLUE</span><span class="stage-hint">轻轻划过，感受流动</span></div>
+                <div id="graph" class="graph" aria-label="可拖动的装置图谱">
+                    <svg id="graph-links" aria-hidden="true"><path></path></svg>
+                    <button class="node" data-piece="0" type="button" aria-label="拖动或使用方向键移动 Design 节点"><span>01</span>Design <i>↗</i></button>
+                    <button class="node" data-piece="1" type="button" aria-label="拖动或使用方向键移动 Notes 节点"><span>02</span>Notes <i>↗</i></button>
+                    <button class="node" data-piece="2" type="button" aria-label="拖动或使用方向键移动 Photo 节点"><span>03</span>Photo <i>↗</i></button>
+                    <button class="node" data-piece="3" type="button" aria-label="拖动或使用方向键移动 Code 节点"><span>04</span>Code <i>↗</i></button>
+                </div>
+                <div class="stage-bottom"><span>一块蓝，一切的起点。</span><button id="ripple-button" type="button">触碰水面 <span>↗</span></button></div>
+            </div>
+            <div class="ruler" aria-hidden="true"><span>＋</span><span>LESS, BUT WITH FEELING.</span><span>SCROLL TO EXPLORE ↓</span><span>＋</span></div>
         </section>
-
-        <div class="ruler" aria-hidden="true"><span data-paint="text">＋</span><span data-paint="text">A LITTLE LESS. A LITTLE DEEPER.</span><span data-paint="text">＋</span></div>
-
         <article id="reading" class="reading" aria-labelledby="reading-title">
-            <div class="reading-label"><span data-paint="text">01 / THE ESSENTIAL</span><h2 id="reading-title" data-paint="text">纯粹，<br>是一种回归。</h2></div>
+            <div class="reading-label"><span class="eyebrow">01 / THE ESSENTIAL</span><h2 id="reading-title">纯粹，<br>是一种回归。</h2></div>
             <div class="content">
-                <p data-paint="text" data-reading>齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。</p>
-                <p data-paint="text" data-reading>水面会回应每一次触碰，文字则保留安静的空间。试着让波纹穿过这一段文字，或者选中你喜欢的一句话；让感受流动，也让阅读自然发生。</p>
-                <a href="#water" class="text-link" data-paint="text">回到水面 ↗</a>
+                <p>齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。</p>
+                <p>把复杂留给思考，把简单留给感受。在这里，记录设计的直觉、代码的秩序，还有值得停留的日常。</p>
+                <a href="#water" class="text-link">回到那抹蓝 <span>↗</span></a>
             </div>
         </article>
     </main>
-
-    <footer><span data-paint="text">ZIMA BLUE / LIQUID STUDIES</span><span id="engine-status" role="status" aria-live="polite" data-paint="text">静态画廊</span></footer>
-    <canvas id="webgl-canvas" aria-hidden="true"></canvas>
-    <div id="motion-glow" aria-hidden="true"></div>
+    <footer><a href="#water">ZIMA BLUE</a><span>KEEP THE ESSENTIAL.</span><span>© 2026</span></footer>
+    <output id="engine-status" class="sr-only" aria-live="polite">静态装置</output>
     <script type="module" src="app.js"></script>
 </body>
 </html>
