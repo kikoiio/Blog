@@ -18,7 +18,7 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory scratch/prototype
 
 ## 实拍
 
-云端流程：`.github/workflows/prototype-visual.yml`。仅隔离分支运行，不部署网站。截图、录像和诊断上传为 `visual-evidence`。覆盖浅色、深色、移动端、拖拽、键盘、主题切换、阅读选择、reduced-motion、无 WebGL。实际观察与运行链接见设计规范。
+云端流程：`.github/workflows/prototype-visual.yml`。仅隔离分支运行，不部署网站。截图、录像和诊断上传为 `visual-evidence`。覆盖浅色、深色、移动端、拖拽、键盘、主题切换、阅读选择、reduced-motion、无 WebGL。实际观察与运行链接见设计规范。默认采用可辨识的正常流量；`?flow=soft` 是复拍对照的较弱版本，`?precision=byte` 强制检查 RGBA8 降级。静态降级图直接来自本轮场景渲染，按桌面/移动与明暗主题切换。
 
 旧版高度场代码与模拟 GL 测试只证明旧模型的一些数学性质，已从当前原型移除；旧基线保存在隔离分支提交 `52899cab172834e5322141f01e2ba513827467e9`。本轮以真实浏览器视觉和交互证据判断，不以旧测试计数代替。
 

@@ -8,7 +8,7 @@ const nodes=[...document.querySelectorAll('.node')];
 const status=document.querySelector('#engine-status');
 const themeButton=document.querySelector('#theme-toggle');
 const motion=matchMedia('(prefers-reduced-motion: reduce)');
-let engine=null,drag=null,pointer=null,inView=true,disposed=false;
+let engine=null,drag=null,pointer=null,inView=true;
 let failure=null;
 const now=()=>performance.now();
 const local=event=>{const r=stage.getBoundingClientRect();return {x:event.clientX-r.left,y:event.clientY-r.top,time:now()};};
@@ -18,18 +18,32 @@ function labels(points){
     document.querySelector('#graph-links path').setAttribute('d',
         [1,0,2,3].map((id,i)=>`${i?'L':'M'}${points[id].x},${points[id].y}`).join(' '));
 }
+function fallbackLayout(){
+    const mobile=stage.clientWidth<660;
+    const size=mobile?[350,490]:[1198,480];
+    const positions=mobile?[[176,282],[80,348],[245,328],[141,406]]:[[576,312],[383,319],[815,372],[539,402]];
+    const scale=Math.max(stage.clientWidth/size[0],stage.clientHeight/size[1]);
+    labels(positions.map(([x,y])=>({x:Math.max(45,Math.min(stage.clientWidth-45,x*scale+(stage.clientWidth-size[0]*scale)/2)),
+        y:Math.max(70,Math.min(stage.clientHeight-75,y*scale+(stage.clientHeight-size[1]*scale)/2))})));
+}
+function fallbackTheme(dark){
+    const picture=document.querySelector('.scene-fallback');
+    const suffix=dark?'dark':'light';
+    picture.querySelectorAll('source').forEach(source=>{source.srcset=`media/fallback-${source.hasAttribute('data-mobile')?'mobile-':''}${suffix}.webp`;});
+    picture.querySelector('img').src=`media/fallback-${suffix}.webp`;
+}
 function setStatus(){
     status.textContent=failure?'静态装置':motion.matches?'静态装置 · 减少动态':'装置就绪';
 }
 function theme(dark){
     root.dataset.theme=dark?'dark':'light';
+    fallbackTheme(dark);
     themeButton.setAttribute('aria-pressed',String(dark));
     themeButton.setAttribute('aria-label',dark?'切换浅色主题':'切换深色主题');
     themeButton.querySelector('.theme-label').textContent=dark?'浅色':'深色';
     engine?.setTheme(dark);
 }
 function start(){
-    if(disposed)return;
     try{
         engine=createLiquidScene(canvas,labels);
         engine.setTheme(root.dataset.theme==='dark');
@@ -40,6 +54,7 @@ function start(){
         failure=null;
     }catch(error){
         failure=String(error);engine?.dispose();engine=null;canvas.style.opacity='0';
+        fallbackLayout();
         console.warn('Static artwork fallback:',error);
     }
     setStatus();
@@ -117,19 +132,21 @@ window.addEventListener('zima:node-motion',event=>{
     engine?.glide({x:(p.startX??p.x-p.vx/60)-r.left,y:(p.startY??p.y-p.vy/60)-r.top,time:now()-16.667},
         {x:p.x-r.left,y:p.y-r.top,time:now()},1.25);
 });
-new ResizeObserver(()=>engine?.resize(stage.clientWidth,stage.clientHeight)).observe(stage);
+new ResizeObserver(()=>engine?engine.resize(stage.clientWidth,stage.clientHeight):fallbackLayout()).observe(stage);
 new IntersectionObserver(entries=>{
     inView=entries[0].isIntersecting;engine?.visibility(inView);if(!inView)release();
 },{threshold:0}).observe(stage);
 motion.addEventListener('change',()=>{release();engine?.reduce(motion.matches);setStatus();});
 document.addEventListener('visibilitychange',()=>{release();engine?.hiddenState(document.hidden);});
 canvas.addEventListener('webglcontextlost',event=>{
-    event.preventDefault();release();engine?.contextLost();failure='context lost';setStatus();
+    event.preventDefault();release();failure='context lost';engine?.contextLost();
+    // Delete handles while the context is lost; they must not be deleted after restoration.
+    engine?.dispose();engine=null;fallbackLayout();setStatus();
 });
 canvas.addEventListener('webglcontextrestored',()=>{engine?.dispose();engine=null;start();});
 window.addEventListener('pagehide',()=>{release();engine?.visibility(false);});
 window.addEventListener('pageshow',()=>{engine?.visibility(inView);});
 window.__zimaArtwork=()=>engine?.snapshot();
-window.__zimaDebug=()=>({...(engine?.debug()??{running:false,renderer:'static-fallback'}),failure,
+window.__zimaDebug=()=>({...(engine?.debug()??{running:false,renderer:'static-fallback',lost:failure==='context lost'}),failure,
     documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth});
 start();theme(root.dataset.theme==='dark');

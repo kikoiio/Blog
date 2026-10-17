@@ -25,7 +25,7 @@
                 <p class="hero-intro">走得再远，也不忘最初的那抹蓝。<br>关于设计、代码，和一些简单的事。</p>
             </div>
             <div class="stage" id="stage">
-                <img class="scene-fallback" src="fallback.svg" alt="" aria-hidden="true">
+                <picture class="scene-fallback" aria-hidden="true"><source data-mobile media="(max-width:700px) and (prefers-color-scheme:dark)" srcset="media/fallback-mobile-dark.webp"><source data-mobile media="(max-width:700px)" srcset="media/fallback-mobile-light.webp"><source media="(prefers-color-scheme:dark)" srcset="media/fallback-dark.webp"><img src="media/fallback-light.webp" alt=""></picture>
                 <canvas id="webgl-canvas" aria-hidden="true"></canvas>
                 <div class="stage-caption"><span>FIG. 01 / THE FIRST BLUE</span><span class="stage-hint">轻轻划过，感受流动</span></div>
                 <div id="graph" class="graph" aria-label="可拖动的装置图谱">

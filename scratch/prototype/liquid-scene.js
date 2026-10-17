@@ -227,7 +227,7 @@ export function createLiquidScene(canvas, onLabels) {
         pending.push(input);lastInput=performance.now();wake();
     }
     function resize(w,h){
-        stop(false);width=w;height=h;const nextMobile=w<650;
+        stop(false);width=w;height=h;const nextMobile=w<660;
         const changed=mobile!==nextMobile||!layoutReady;mobile=nextMobile;layoutReady=true;
         const ratio=Math.min(devicePixelRatio||1,mobile?1.25:1.5,1800/w,1200/h);
         renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);

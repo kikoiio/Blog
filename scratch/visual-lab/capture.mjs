@@ -70,6 +70,7 @@ async function capture(name,url,{mobile=false,dark=false,reduced=false,noWebgl=f
             result.reading=await page.evaluate(()=>window.__zimaDebug?.());
             result.status=await page.locator('#engine-status').textContent();
             result.overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+            result.fallbackLoaded=await page.locator('.scene-fallback img').evaluate(img=>img.complete&&img.naturalWidth>0);
         }
     }catch(error){result.failure=String(error);console.log(`FAILED ${name}: ${error}`);await page.screenshot({path:path.join(folder,'failure.png'),timeout:5000}).catch(()=>{});}
     finally{
@@ -91,4 +92,4 @@ if(process.env.REFERENCE_ONLY==='true'){
     await capture('prototype-no-webgl','http://127.0.0.1:4173',{noWebgl:true});
 }
 await browser.close();
-if(report.captures.some(c=>!c.name.startsWith('reference-')&&(c.failure||c.errors.length||c.overflow||(!c.name.endsWith('no-webgl')&&c.console.some(m=>m.type==='error')))))process.exitCode=1;
+if(report.captures.some(c=>!c.name.startsWith('reference-')&&(c.failure||c.errors.length||c.overflow||c.fallbackLoaded===false||c.console.some(m=>/INVALID_OPERATION/.test(m.text))||(!c.name.endsWith('no-webgl')&&c.console.some(m=>m.type==='error')))))process.exitCode=1;
