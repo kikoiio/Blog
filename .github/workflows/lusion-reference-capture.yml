@@ -1,0 +1,59 @@
+name: Capture Lusion homepage reference
+
+on:
+  push:
+    branches: ['reference/lusion-*']
+    paths:
+      - '.github/workflows/lusion-reference-capture.yml'
+      - 'scratch/lusion-reference/capture.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lusion-reference-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WAYLAND_DISPLAY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: scratch/lusion-reference
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prepare capture runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lusion-reference"
+          cp scratch/lusion-reference/capture.mjs "$RUNNER_TEMP/lusion-reference/capture.mjs"
+          cd "$RUNNER_TEMP/lusion-reference"
+          npm install --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Record public reference homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/lusion-reference"
+          node capture.mjs
+
+      - name: Upload reference recordings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lusion-reference-${{ github.run_id }}
+          path: ${{ runner.temp }}/lusion-reference/evidence/
+          if-no-files-found: error
+          retention-days: 14
