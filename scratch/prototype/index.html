@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Zima Blue — Liquid studies</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="wordmark" href="#" data-paint="text" aria-label="Zima Blue 首页">ZIMA<span class="brand-dot">®</span></a>
+        <p class="header-note" data-paint="text">A study in water,<br>motion &amp; the essential.</p>
+        <nav aria-label="原型控制">
+            <button class="pill" id="theme-toggle" type="button" aria-pressed="false" data-paint="surface"><span data-paint="text">深海模式 ↗</span></button>
+            <button class="pill primary" id="ripple-button" type="button" data-paint="surface"><span data-paint="text">触碰水面 ＋</span></button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" id="water" aria-labelledby="hero-title" data-paint="surface">
+            <div class="hero-topline"><span data-paint="text">EXPERIMENT NO. 001</span><span data-paint="text">ZIMA BLUE × LIQUID MATTER</span></div>
+            <h1 id="hero-title" data-paint="text">Less noise.<br>More feeling.</h1>
+            <div id="graph" class="graph" data-paint="links" aria-label="可拖动的浮动图谱节点">
+                <svg id="graph-links" aria-hidden="true"><path></path></svg>
+                <button class="node node-blue" data-x="0.30" data-y="0.37" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Design 节点"><span data-paint="text">Design ↗</span></button>
+                <button class="node node-zima" data-x="0.57" data-y="0.28" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Zima 节点"><span data-paint="text">Zima Blue</span></button>
+                <button class="node node-white" data-x="0.78" data-y="0.52" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Notes 节点"><span data-paint="text">Notes ＋</span></button>
+                <button class="node node-dark" data-x="0.43" data-y="0.73" type="button" data-paint="surface" aria-label="拖动或使用方向键移动 Code 节点"><span data-paint="text">Code ⌘</span></button>
+            </div>
+            <div class="hero-bottom"><p data-paint="text">回到最初的那一抹蓝。<br>轻轻划过，点击，或拨动一枚浮标。</p><a href="#reading" class="explore" data-paint="text">向下探索 ↓</a></div>
+        </section>
+
+        <div class="ruler" aria-hidden="true"><span data-paint="text">＋</span><span data-paint="text">A LITTLE LESS. A LITTLE DEEPER.</span><span data-paint="text">＋</span></div>
+
+        <article id="reading" class="reading" aria-labelledby="reading-title">
+            <div class="reading-label"><span data-paint="text">01 / THE ESSENTIAL</span><h2 id="reading-title" data-paint="text">纯粹，<br>是一种回归。</h2></div>
+            <div class="content">
+                <p data-paint="text" data-reading>齐马走过漫长的探索，最终回到泳池里那一块蓝色瓷砖。有时我们寻找的答案，就藏在最初那件简单的事情里。</p>
+                <p data-paint="text" data-reading>水面会回应每一次触碰，文字则保留安静的空间。试着让波纹穿过这一段文字，或者选中你喜欢的一句话；让感受流动，也让阅读自然发生。</p>
+                <a href="#water" class="text-link" data-paint="text">回到水面 ↗</a>
+            </div>
+        </article>
+    </main>
+
+    <footer><span data-paint="text">ZIMA BLUE / LIQUID STUDIES</span><span id="engine-status" role="status" aria-live="polite" data-paint="text">静态画廊</span></footer>
+    <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+    <div id="motion-glow" aria-hidden="true"></div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
