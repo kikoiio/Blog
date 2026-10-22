@@ -15,12 +15,12 @@ export function surfacePoint(x,baseZ){
  const shore=21.24+.465*x;
  let z=baseZ,y=0,foam=0,crest=0;
  for(let i=0;i<breakers.length;i++){
-  const b=breakers[i],center=b.z+.18*x+Math.sin(x*.17+i*1.8)*.58;
+  const b=breakers[i],center=b.z+.18*x+Math.sin(x*.33+i*1.8)*.72+Math.sin(x*.91+i)*.24;
   const t=(baseZ-center+5)/11;if(t<=0||t>=1)continue;
   const clearance=center-shore;
-  const lateral=.78+.22*Math.sin(x*.19+i*2.1);
+  const lateral=.75+.21*Math.sin(x*.37+i*2.1)+.10*Math.sin(x*1.19+i*3.7)+.035*Math.sin(x*3.1);
   const gain=smooth(.2,5,clearance)*b.h*lateral;
-  const roll=b.curl*(.70+.30*Math.sin(x*.28+i));
+  const roll=b.curl*(.70+.22*Math.sin(x*.48+i)+.08*Math.sin(x*1.73));
   const [pz,py]=spline(t);
   const hump=Math.pow(Math.sin(t*Math.PI),3)*1.65;
   z+=(pz-(baseZ-center))*roll;

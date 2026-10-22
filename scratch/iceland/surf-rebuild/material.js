@@ -39,7 +39,9 @@ void main(){
  vec2 q=world.xz;
  // Fine material features live on the surface in metres, through the curl.
  // One palette and light source cover the face, back, lip and foam.
- float a=fbm(q*vec2(2.1,9.3)),b=fbm(q*vec2(10.7,31.));
+ float footprint=length(fwidth(q));
+ float fine=1.-smoothstep(.045,.24,footprint);
+ float a=mix(.5,fbm(q*vec2(2.1,9.3)),.25+.75*fine),b=mix(.5,fbm(q*vec2(10.7,31.)),fine);
  N=normalize(N+vec3((a-.5)*.12,(b-.5)*.018,(b-.5)*.16));
  vec3 L=normalize(vec3(.12,.18,.98));
  float facing=clamp(dot(N,V),0.,1.),diff=max(0.,dot(N,L));
@@ -48,13 +50,15 @@ void main(){
  vec2 skyUV=vec2(clamp(.51+reflected.x*.44,0.,1.),clamp(.30-max(0.,reflected.y)*.26,.01,.30));
  vec3 reflection=texture(sky,skyUV).rgb;
  vec3 sea=mix(vec3(.032,.145,.205),vec3(.092,.274,.348),diff*.50+.12);
- sea=mix(sea,reflection*.68,fresnel*.73);
+ float skyVisible=smoothstep(-.35,.75,N.y);
+ sea=mix(sea,reflection*.68,fresnel*.73*skyVisible);
+ sea*=.60+.40*skyVisible;
  float subsurface=pow(max(0.,dot(V,-L)),2.)*smoothstep(.3,1.8,world.y)*.08;
  sea+=vec3(.02,.22,.25)*subsurface;
  float ripple=sin(world.z*34.+a*9.+world.x*2.3)*.5+.5;
  sea*=.86+.18*a+.08*b+.045*ripple;
  // A concentrated, broken reflection; no rectangular highlight texture.
- float glint=pow(max(0.,dot(reflect(-L,N),V)),130.);
+ float glint=pow(max(0.,dot(reflect(-L,N),V)),130.)*fine;
  glint*=smoothstep(.41,.75,noise(q*vec2(23.,57.)));
  sea+=vec3(.79,.79,.72)*glint*.65;
  // Turbulent lace has holes, connected strands and islands at several sizes.
@@ -63,16 +67,20 @@ void main(){
  float patches=fbm(q*vec2(4.2,7.8)+vec2(a,b)*2.);
  float shore=1.-smoothstep(1.,6.5,info.z);
  float crest=info.x;
- float mass=clamp(.025+crest*.88+shore*.35,0.,1.);
- float foam=smoothstep(.67-mass*.52,.76-mass*.52,network*.61+patches*.57);
- float holes=smoothstep(.09,.23,noise(q*vec2(42.,65.)));
- foam*=mix(holes,1.,crest*.45);
+ // Dense crest pigment breaks into foam islands; connective lace is
+ // confined to the wash. Open water does not carry a uniform cellular net.
+ float crestFoam=smoothstep(.52-crest*.40,.68-crest*.35,patches*.65+network*.35)*smoothstep(.08,.65,crest);
+ float washMass=shore*(.30+.70*fbm(q*.55));
+ float wash=smoothstep(.48,.69,network*.60+patches*.50)*washMass;
+ float foam=max(crestFoam,wash)*(.3+.7*fine);
+ float holes=smoothstep(.08,.22,noise(q*vec2(42.,65.)));
+ foam*=mix(holes,1.,crest*.55);
  vec3 foamShade=mix(vec3(.39,.54,.67),vec3(.89,.93,.94),.52+.40*max(N.y,0.));
  foamShade*=.91+.10*patches;
  sea=mix(sea,foamShade,foam);
  float grain=hash(floor(pixel));
  // Close palette ramps preserve tiny hard clusters, without enlarging pixels.
- sea=floor(clamp(sea,0.,1.)*42.+grain*.65)/42.;
+ sea=floor(clamp(sea,0.,1.)*52.+grain*.35)/52.;
  float haze=1.-exp(-world.z*.0009);
  sea=mix(sea,vec3(.42,.53,.62),haze*.26);
  color=vec4(clamp(sea,0.,1.),mask);
