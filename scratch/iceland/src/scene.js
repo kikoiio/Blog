@@ -1,5 +1,4 @@
 import { SurfState } from './water/surf-state.js';
-import { createWaterPalette } from './water/water-palette.js';
 import { domains, waterSettings, waterWeight } from './water/water-domain.js';
 import { PaintedWater } from './water/painted-water.js';
 import { WaterSurface } from './water/water-surface.js';
@@ -59,7 +58,7 @@ export class FrameScene {
     pixels.data[k+3]=255;}
    ec.putImageData(pixels,0,0);
   }
-  this.surf=null;let palette=null;
+  this.surf=null;
   if(this.file==='04-black-beach.png'){
    this.surf=new SurfState(144,88);
    const wet=new Float32Array(this.surf.width*this.surf.rows);
@@ -67,11 +66,10 @@ export class FrameScene {
    this.surf.configure({wet,width:this.surf.width,height:this.surf.rows,horizon:waterSettings(this.file).horizon,axis:waterSettings(this.file).axis});
    // Establish incoming water before the scene is revealed; not a playback loop.
    for(let step=0;step<3;step++)this.surf.advance(4,this.wind.base);
-   palette=createWaterPalette(this.image,this.file);
   }
   const sky=this.cloudImage||(this.profile?createSkyLayer(this.image,this.profile,environment):this.image);
   this.motionChannels={sky:!!this.profile?.skyline?.length,grass:!!this.profile?.grass?.length,mist:!!this.profile?.mist?.length,flow:!!this.profile?.flow?.length,rain:!!this.profile?.rain};
-  this.surface.configure(mask,this.image,environment,sky,waterSettings(this.file),!!this.cloudImage,ambientSettings(this.file),this.surf,palette);
+  this.surface.configure(mask,this.image,environment,sky,waterSettings(this.file),!!this.cloudImage,ambientSettings(this.file),this.surf);
  }
  resize(){
   const w=innerWidth,h=innerHeight,dpr=Math.min(devicePixelRatio||1,1.3);this.weather.width=Math.round(w*dpr);this.weather.height=Math.round(h*dpr);this.ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -84,7 +82,7 @@ export class FrameScene {
    this.time+=dt;this.wind.advance(dt);this.surf?.advance(dt,this.wind.velocity);this.birds.advance(dt,this.wind.velocity);
    if(this.wet||this.profile?.flow?.length)this.water.advance(dt,this.wind.velocity);
   }
-  if(this.surface&&!this.surface.canvas.hidden)this.surface.draw(this.camera,this.wind,this.time,this.water);
+  if(this.surface&&!this.surface.canvas.hidden)this.surface.draw(this.camera,this.wind,this.time,this.water,paused?0:dt);
   const ctx=this.ctx,w=innerWidth,h=innerHeight;ctx.clearRect(0,0,w,h);
   const rainy=this.profile?.rain;
   if(rainy){
@@ -101,5 +99,5 @@ export class FrameScene {
   }
   this.birds.draw(ctx,this.camera,w,h,this.time);
  }
- measure(){return {file:this.file,mode:this.status,water:this.surf?{style:'propagating-surf',...this.surf.measure()}:this.wet||this.profile?.flow?.length?this.water.measure():null,environment:{layered:!!this.profile,climate:this.profile?.climate,clouds:!!this.cloudImage,channels:this.motionChannels,wind:this.wind.measure(),birds:this.birds.measure()},camera:this.camera,time:+this.time.toFixed(3)};}
+ measure(){return {file:this.file,mode:this.status,water:this.surf?{style:'propagating-surf',materialTime:this.surface.material?.time||0,...this.surf.measure()}:this.wet||this.profile?.flow?.length?this.water.measure():null,environment:{layered:!!this.profile,climate:this.profile?.climate,clouds:!!this.cloudImage,channels:this.motionChannels,wind:this.wind.measure(),birds:this.birds.measure()},camera:this.camera,time:+this.time.toFixed(3)};}
 }

@@ -31,7 +31,7 @@ const settings={
  '01-city-rain.png':{horizon:.38,amplitude:.45,axis:[.2,1]},
  '02-city-clear.png':{horizon:.38,amplitude:.45,axis:[.2,1]},
  '03-harbor.png':{horizon:.46,amplitude:.7,axis:[.25,1]},
- '04-black-beach.png':{horizon:.344,amplitude:2.1,axis:[-.28,1]},
+ '04-black-beach.png':{horizon:.344,amplitude:2.1,axis:[.45,1]},
  '05-glacial-outlet.png':{horizon:.31,amplitude:.65,axis:[.15,1]},
  '11-autumn-fjord.png':{horizon:.43,amplitude:.6,axis:[.15,1]},
  '13-hornbjarg.png':{horizon:.32,amplitude:1.3,axis:[.4,1]},
