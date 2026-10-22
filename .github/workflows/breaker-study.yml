@@ -16,7 +16,7 @@ jobs:
       - name: Install runner-only browser
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
-          npx playwright install --with-deps chromium
+          google-chrome --version
       - name: Record actual wave lifecycle and controls
         env:
           WAYLAND_DISPLAY: ''

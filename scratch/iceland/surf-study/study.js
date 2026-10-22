@@ -14,7 +14,7 @@ function request(){if(!raf&&!document.hidden)raf=requestAnimationFrame(tick);}
 function tick(now){
  raf=0;
  if(!last||now-last>=32){
-  const dt=last?Math.min(.25,(now-last)/1000):0;
+  const dt=last?(now-last)/1000:0;
   if(!original){const start=performance.now();motion.draw(camera,paused?0:dt,{x:.48+.10*Math.sin(motion.model.time*.13),y:.02});const cost=performance.now()-start;metrics.frames++;metrics.totalDrawMs+=cost;metrics.maxDrawMs=Math.max(metrics.maxDrawMs,cost);}
   last=now;
   if(now-report>200){host.dataset.state=JSON.stringify({ready:true,paused,original,water:motion.measure(),performance:metrics});report=now;}

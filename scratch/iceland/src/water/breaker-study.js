@@ -70,11 +70,12 @@ export class BreakerStudy {
  drawWave(w){
   const c=this.pc,face=this.assets['swell-pigment'],broken=this.assets['breaker-pigment'];
   // Paint from the foot to the lip, so the folding tip occludes its own face.
-  const columns=216,rows=7,dx=W/columns;
+  const columns=216,dx=W/columns;
   for(let i=0;i<columns;i++){
    const x=i*dx,p=this.model.pose(w,x);
    if(p.age<0||p.age>1.42)continue;
-   if(p.height>1.5){
+   if(p.height>3&&p.collapse<.96){
+    const rows=p.breaking>.01?7:1;
     const sx=((i/columns*.91+w.shift/1000)%1)*face.width;
     for(let j=rows-1;j>=0;j--){
      const v0=j/rows,v1=(j+1)/rows;

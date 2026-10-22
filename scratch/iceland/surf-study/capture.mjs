@@ -2,7 +2,7 @@
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 await mkdir('ci-evidence',{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--disable-gpu','--ozone-platform=x11']});
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--disable-gpu','--ozone-platform=x11']});
 const context=await browser.newContext({viewport:{width:1004,height:565},deviceScaleFactor:1,recordVideo:{dir:'ci-evidence',size:{width:1004,height:565}}});
 const page=await context.newPage(),errors=[],states=[];
 page.on('pageerror',error=>errors.push(error.message));
