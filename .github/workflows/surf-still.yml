@@ -1,0 +1,40 @@
+name: Iceland continuous surf still
+on:
+  push:
+    branches: ['codex/iceland-breaker-study-*-rebuild']
+permissions:
+  contents: read
+jobs:
+  still:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install runner-only capture tool
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          google-chrome --version
+      - name: Render full resolution material and geometry
+        env:
+          WAYLAND_DISPLAY: ''
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          python3 scratch/iceland/serve.py > server.log 2>&1 &
+          still_server=$!
+          trap 'kill "$still_server"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8153/scratch/iceland/surf-rebuild/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node scratch/iceland/surf-rebuild/capture.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuous-surf-still
+          path: |
+            ci-evidence/
+            server.log
+          retention-days: 7
