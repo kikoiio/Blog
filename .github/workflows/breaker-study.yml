@@ -1,0 +1,40 @@
+name: Iceland painted breaker study
+on:
+  push:
+    branches: ['codex/iceland-breaker-study-*']
+permissions:
+  contents: read
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install runner-only browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Record actual wave lifecycle and controls
+        env:
+          WAYLAND_DISPLAY: ''
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          python3 scratch/iceland/serve.py > server.log 2>&1 &
+          study_server=$!
+          trap 'kill "$study_server"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8153/scratch/iceland/surf-study/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node scratch/iceland/surf-study/capture.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: painted-breaker-evidence
+          path: |
+            ci-evidence/
+            server.log
+          retention-days: 7
