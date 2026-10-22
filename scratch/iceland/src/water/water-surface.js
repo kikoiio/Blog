@@ -24,27 +24,42 @@ vec3 flowingPigment(vec2 p,vec2 direction,vec3 drift,int kind,float coverage){
  float safe1=smoothstep(.03,.65,coverageAt(q1,kind));
  return mix(texture(art,mix(p,q0,safe0)).rgb,texture(art,mix(p,q1,safe1)).rgb,drift.z);
 }
+float grainHash(vec2 p){
+ vec2 a=fract(p*vec2(.1031,.11369));a+=dot(a,a.yx+19.19);return fract(a.x*a.y*23.7);
+}
+float grainNoise(vec2 p){
+ vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(grainHash(i),grainHash(i+vec2(1.,0.)),f.x),mix(grainHash(i+vec2(0.,1.)),grainHash(i+1.),f.x),f.y);
+}
 vec3 renderSurf(vec2 p,float wet){
- // Simulation coordinates remain anchored to this coast; no image phase/reset.
- vec2 cell=1./surfSize;
- vec4 state=texture(surfState,p);
- float h=(state.r*2.-1.)*2.;
- float hx=(texture(surfState,p+vec2(cell.x,0.)).r-texture(surfState,p-vec2(cell.x,0.)).r)*4.;
- float hy=(texture(surfState,p+vec2(0.,cell.y)).r-texture(surfState,p-vec2(0.,cell.y)).r)*4.;
+ // Persistent wave geometry projects upward. Fine marks follow the current;
+ // neither the surface state nor its material coordinates wrap to a first frame.
  float depth=clamp((p.y-waterInfo.x)/(1.-waterInfo.x),0.,1.);
- vec3 normal=normalize(vec3(-hx*2.6,-hy*1.8,1.));
+ vec2 cell=1./surfSize,q=p;
+ float rise=mix(1.5,19.,depth)/worldSize.y;
+ for(int k=0;k<3;k++)q.y=p.y+(texture(surfState,q).r*4.-2.)*rise;
+ vec4 state=texture(surfState,q);
+ float h=state.r*4.-2.;
+ float hx=(texture(surfState,q+vec2(cell.x,0.)).r-texture(surfState,q-vec2(cell.x,0.)).r)*4.;
+ float hy=(texture(surfState,q+vec2(0.,cell.y)).r-texture(surfState,q-vec2(0.,cell.y)).r)*4.;
+ vec2 pixel=floor(p*worldSize*.5)/(worldSize*.5);
+ vec2 current=vec2(wind.x*.08+.035,-.22)*time;
+ vec2 marks=pixel*vec2(115.,410.)+current;
+ float fine=grainNoise(marks*3.1),mid=grainNoise(marks);
+ vec3 normal=normalize(vec3(-hx*12.,-hy*10.,1.));
+ float facing=clamp(dot(normal,normalize(vec3(-.35,-.7,1.))),0.,1.);
  vec3 base=texture(waterPalette,p).rgb;
- float facing=clamp(dot(normal,normalize(vec3(-.35,-.5,1.))),0.,1.);
- float slope=length(vec2(hx,hy));
- // The palette is inherited from the illustration, not from a new blue overlay.
- vec3 water=base*(.78+facing*.40+h*.08);
- vec3 sky=texture(clouds,vec2(clamp(p.x-cloudOffset.x,0.,1.),.25)).rgb;
- water=mix(water,sky,min(.18,.06+slope*.10)*(1.-depth*.4));
+ vec3 water=base*(.34+facing*.95+(fine-.5)*.24);
+ // Short wind ripples are subordinate to the propagating long wave fronts.
+ float ridge=smoothstep(.04,.23,h)*smoothstep(-.08,.20,hy);
+ water=mix(water,vec3(.075,.30,.34),ridge*.24);
  float foam=state.g;
- float grain=fract(sin(dot(floor(p*worldSize*.55),vec2(127.1,311.7)))*43758.5453);
- float lace=smoothstep(.04,.23,foam)*(.72+.28*step(grain,foam*2.));
- vec3 white=mix(base*1.65,vec3(.89,.94,.95),.85);
- water=mix(water,white,clamp(lace*.88,0.,.92));
+ float lace=smoothstep(.012,.09,foam)*smoothstep(.18,.55,mid*.55+fine*.45+foam*2.);
+ float crest=ridge*smoothstep(.58,.85,mid*.65+fine*.35)*.55;
+ vec3 white=mix(base*1.65,vec3(.89,.94,.95),.90);
+ water=mix(water,white,clamp(max(lace,crest),0.,.96));
+ // Narrow bright facets, never an unbounded screen reflection.
+ water+=vec3(.10,.13,.14)*smoothstep(.84,.97,facing)*smoothstep(.65,.91,fine)*(.3+.7*depth);
  return clamp(water,0.,1.);
 }
 void main(){
