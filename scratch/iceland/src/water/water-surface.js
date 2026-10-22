@@ -43,7 +43,10 @@ vec3 renderSurf(vec2 p,float wet){
  vec4 state=texture(surfState,q);
  float hx=(texture(surfState,q+vec2(cell.x,0.)).r-texture(surfState,q-vec2(cell.x,0.)).r)*4.;
  float hy=(texture(surfState,q+vec2(0.,cell.y)).r-texture(surfState,q-vec2(0.,cell.y)).r)*4.;
- vec3 water=texture(waterMaterial,q).rgb;
+ vec4 coordinates=texture(waterMaterial,q);
+ vec2 materialUV=vec2(dot(coordinates.rg,vec2(65280.,255.)),dot(coordinates.ba,vec2(65280.,255.)))/65535.;
+ float materialWet=smoothstep(.05,.80,texture(waterMask,materialUV).a);
+ vec3 water=texture(art,mix(q,materialUV,materialWet)).rgb;
  float light=dot(normalize(vec3(-hx*3.,-hy*3.,1.)),normalize(vec3(-.35,-.5,1.)));
  water*=.95+clamp(light,0.,1.)*.07;
  float detail=grainNoise(q*vec2(125.,490.));
@@ -104,7 +107,7 @@ export class WaterSurface{
   for(const [unit,source]of [[0,mask],[1,image],[2,environment],[3,cloudImage]]){this.texture(unit,unit===2?gl.NEAREST:gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);if(unit===3)gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.MIRRORED_REPEAT);}
   this.texture(4,gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,surf?.width||1,surf?.rows||1,0,gl.RGBA,gl.UNSIGNED_BYTE,surf?.pixels||new Uint8Array([128,0,128,0]));
   this.texture(5,gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
-  if(surf)this.material=new WaterMaterial(gl,image,mask,surf);
+  if(surf)this.material=new WaterMaterial(gl,surf);
   gl.useProgram(this.program);gl.uniform1i(this.uniforms.surfState,4);gl.uniform1i(this.uniforms.waterMaterial,5);gl.uniform1i(this.uniforms.liveSurf,surf?1:0);gl.uniform2f(this.uniforms.surfSize,surf?.width||1,surf?.rows||1);
   for(const [i,name]of ['waterMask','art','environmentMask','clouds'].entries())gl.uniform1i(this.uniforms[name],i);
   gl.uniform2f(this.uniforms.worldSize,image.width,image.height);

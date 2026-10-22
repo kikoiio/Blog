@@ -20,6 +20,7 @@ jobs:
       - name: Simulation checks
         run: |
           node scratch/iceland/tests/verify-surf-state.mjs
+          node scratch/iceland/tests/verify-material-coordinates.mjs
           node scratch/iceland/tests/verify-painted-water.mjs
           node scratch/iceland/tests/verify-environment.mjs
       - name: Browser and real-time recording
