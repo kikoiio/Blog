@@ -46,7 +46,10 @@ vec3 renderSurf(vec2 p,float wet){
  vec4 coordinates=texture(waterMaterial,q);
  vec2 materialUV=vec2(dot(coordinates.rg,vec2(65280.,255.)),dot(coordinates.ba,vec2(65280.,255.)))/65535.;
  float materialWet=smoothstep(.05,.80,texture(waterMask,materialUV).a);
- vec3 water=texture(art,mix(q,materialUV,materialWet)).rgb;
+ // A finite painting has no new detail beyond either side of the frame.
+ // Fade its displacement before the crop, rather than stretching an edge column.
+ float frameEdge=smoothstep(.015,.13,min(p.x,1.-p.x));
+ vec3 water=texture(art,mix(q,materialUV,materialWet*frameEdge)).rgb;
  float light=dot(normalize(vec3(-hx*3.,-hy*3.,1.)),normalize(vec3(-.35,-.5,1.)));
  water*=.95+clamp(light,0.,1.)*.07;
  float detail=grainNoise(q*vec2(125.,490.));
