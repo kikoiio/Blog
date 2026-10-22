@@ -10,7 +10,7 @@ uniform vec2 gridSize,texel;
 uniform float stepTime;
 uniform int pass;
 vec2 sourceAt(vec2 p,float direction){
- vec2 speed=(texture(current,p).rg*2.-1.)*5.;
+ vec2 speed=(texture(current,p).rg*255.-128.)/127.*5.;
  return clamp(p-speed/gridSize*stepTime*.16*direction,vec2(0.),vec2(1.));
 }
 void main(){
@@ -22,8 +22,9 @@ void main(){
  if(pass<2){outColor=texture(previous,q);return;}
  vec4 value=texture(forwardPass,uv)+.5*(texture(previous,uv)-texture(backwardPass,uv));
  vec4 lo=vec4(1.),hi=vec4(0.);
+ ivec2 size=textureSize(previous,0),donor=ivec2(floor(q*vec2(size)-.5));
  for(int y=0;y<2;y++)for(int x=0;x<2;x++){
-  vec4 neighbor=texture(previous,q+(vec2(float(x),float(y))-.5)*texel);
+  vec4 neighbor=texelFetch(previous,clamp(donor+ivec2(x,y),ivec2(0),size-1),0);
   lo=min(lo,neighbor);hi=max(hi,neighbor);
  }
  value=clamp(value,lo,hi);
@@ -48,7 +49,7 @@ export class WaterMaterial{
  advance(seconds){
   const dt=Math.min(6,Math.max(0,seconds));if(!dt)return;
   const gl=this.gl,s=this.surf;this.time+=dt;
-  for(let i=0;i<s.length;i++){const k=i*4;this.vectors[k]=Math.round(Math.max(0,Math.min(255,(s.currentX[i]/10+.5)*255)));this.vectors[k+1]=Math.round(Math.max(0,Math.min(255,(s.currentY[i]/10+.5)*255)));this.vectors[k+2]=Math.round(s.foam[i]*255);this.vectors[k+3]=255;}
+  for(let i=0;i<s.length;i++){const k=i*4;this.vectors[k]=Math.round(Math.max(0,Math.min(255,128+s.currentX[i]/5*127)));this.vectors[k+1]=Math.round(Math.max(0,Math.min(255,128+s.currentY[i]/5*127)));this.vectors[k+2]=Math.round(s.foam[i]*255);this.vectors[k+3]=255;}
   this.bind(4,this.current);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,s.width,s.rows,gl.RGBA,gl.UNSIGNED_BYTE,this.vectors);
   gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.bindFramebuffer(gl.FRAMEBUFFER,this.framebuffer);gl.viewport(0,0,this.width,this.height);
   for(const [i,name]of ['original','previous','forwardPass','backwardPass','current','mask'].entries())gl.uniform1i(this.uniforms[name],i);

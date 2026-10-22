@@ -36,7 +36,7 @@ export class FrameScene {
   this.wet=!!domains[this.file]&&!!this.surface;
   if(!this.surface)return;
   this.surface.canvas.hidden=!this.wet&&!this.profile;
-  if(this.surface.canvas.hidden){for(const texture of this.surface.textures)this.surface.gl.deleteTexture(texture);this.surface.textures=[];return;}
+  if(this.surface.canvas.hidden){this.surf=null;this.surface.material?.destroy();this.surface.material=null;for(const texture of this.surface.textures)this.surface.gl.deleteTexture(texture);this.surface.textures=[];return;}
   // One continuous spatial mask includes the painting's foam and water alike.
   const mask=document.createElement('canvas');mask.width=836;mask.height=471;
   const c=mask.getContext('2d'),data=c.createImageData(mask.width,mask.height);
