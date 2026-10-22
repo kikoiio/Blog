@@ -17,6 +17,7 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
           google-chrome --version
+          npx playwright install ffmpeg
       - name: Record actual wave lifecycle and controls
         env:
           WAYLAND_DISPLAY: ''
