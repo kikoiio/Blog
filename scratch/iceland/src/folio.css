@@ -1,0 +1,454 @@
+:root {
+  --folio-paper: #eae8df;
+  --folio-ink: #343d3a;
+  --folio-muted: #788176;
+  --folio-edge: #858a7e;
+  --folio-accent: #87504a;
+}
+
+#folio-open {
+  position: fixed;
+  z-index: 19;
+  right: 14px;
+  bottom: 8px;
+  width: 92px;
+  height: 96px;
+  padding: 0;
+  overflow: visible;
+  touch-action: none;
+  color: var(--folio-ink);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#folio-open .folio-leaf {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: block;
+  width: 78px;
+  height: 80px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background-color: var(--folio-paper);
+  background-image: repeating-linear-gradient(0deg, transparent 0 8px, #74807312 8px 9px), linear-gradient(137deg, #f4f1e9, #e5e3d8 78%);
+  box-shadow: 0 9px 18px #10232c35;
+  transition: transform 240ms cubic-bezier(.23, 1, .32, 1), filter 180ms ease;
+}
+
+#folio-open .folio-back {
+  right: 5px;
+  bottom: 3px;
+  width: 85px;
+  height: 86px;
+  transform: rotate(-6deg);
+  filter: brightness(.95);
+}
+
+#folio-open .folio-front {
+  border-top: 1px solid #ffffffb0;
+  border-left: 1px solid #ffffffa6;
+  box-shadow: 0 10px 19px #0d202b45, inset 1px 1px 1px #fff9;
+}
+
+#folio-open .folio-ink {
+  position:absolute;right:13px;bottom:13px;display:block;width:28px;height:22px;
+  border:1px solid #58655ba3;border-radius:1px;transform:rotate(-6deg);
+}
+#folio-open .folio-ink::before {
+  position:absolute;left:13px;bottom:0;width:1px;height:20px;
+  background:#58655b8a;content:"";
+}
+#folio-open .folio-ink::after {
+  position:absolute;right:3px;bottom:5px;width:6px;height:1px;
+  background:#58655b80;box-shadow:0 -4px #58655b80,0 -8px #58655b80;content:"";
+}
+
+#folio-open:hover .folio-front,
+#folio-open:focus-visible .folio-front {
+  transform: translate(-5px, -6px) rotate(-4deg);
+  filter: brightness(1.035);
+}
+
+#folio-open:hover .folio-back,
+#folio-open:focus-visible .folio-back {
+  transform: translate(-2px, -2px) rotate(-9deg);
+}
+
+#folio-open:active .folio-front {
+  transform: translate(-8px, -9px) rotate(-6deg);
+}
+
+#folio-open:focus-visible {
+  outline: 2px solid #f4f0e7;
+  outline-offset: -6px;
+  filter: drop-shadow(0 0 2px #172c30);
+}
+
+#reader.folio-dialog {
+  position: fixed;
+  inset: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #a1a191;
+  border-radius: 1px;
+  background-color: var(--folio-paper);
+  background-image: repeating-linear-gradient(0deg, transparent 0 8px, #7881740b 8px 9px), linear-gradient(90deg, #f1efe6, #eae8df 8%, #eae8df 91%, #e2e0d5);
+  color: var(--folio-ink);
+  box-shadow: 0 22px 78px #07182170, inset 1px 0 #ffffffa0, inset -1px 0 #7a7e7235;
+  overscroll-behavior: contain;
+}
+
+#reader.folio-dialog:not([open]) { display: none; }
+
+#reader.folio-dialog::backdrop {
+  background: rgb(15 35 47 / var(--folio-shade, 0));
+}
+
+#reader.folio-dialog::before {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  background: linear-gradient(136deg, transparent 49.5%, #a8a798 50%, #f7f4ea 51.6%, #e5e2d7 55%, transparent 55.8%);
+  content: "";
+  opacity: calc(1 - var(--folio-progress, 0));
+  pointer-events: none;
+}
+
+#reader .reader-head {
+  flex: 0 0 64px;
+  min-height: 64px;
+  border-color: #68736930;
+  color: var(--folio-ink);
+  opacity: var(--folio-content, 1);
+}
+
+#reader .reader-head span {
+  color: #788176;
+  font-family: Georgia, "Noto Serif CJK SC", serif;
+  font-size: 13px;
+}
+
+#reader .reader-head button {
+  min-width: 38px;
+  min-height: 42px;
+  color: #59645a;
+}
+
+#reader .reader-head button:hover {
+  color: var(--folio-accent);
+}
+
+#reader-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  padding: 35px clamp(24px, 7vw, 72px) 72px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8b9183 transparent;
+  font-size: 14px;
+  line-height: 1.95;
+  opacity: var(--folio-content, 1);
+  -webkit-overflow-scrolling: touch;
+}
+
+#reader:not([data-folio-ready="true"]) .reader-head,
+#reader:not([data-folio-ready="true"]) #reader-content {
+  pointer-events: none;
+}
+
+.folio-kicker {
+  margin: 0 0 12px;
+  color: #858c7d;
+  font-size: 9px;
+  letter-spacing: .14em;
+}
+
+.folio-index-head {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #68736930;
+}
+
+#reader-title {
+  margin: 0 0 19px;
+  color: var(--folio-ink);
+  font-family: Georgia, "Noto Serif CJK SC", serif;
+  font-size: clamp(27px, 5vw, 34px);
+  font-weight: 400;
+  letter-spacing: -.035em;
+  line-height: 1.4;
+}
+
+.folio-index {
+  position: relative;
+  padding: 12px 0 3px;
+}
+
+.post {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px 8px;
+  border-bottom: 1px solid #79827030;
+  color: var(--folio-ink);
+  text-align: left;
+  transition: color 160ms ease, padding 180ms ease, background-color 160ms ease;
+}
+
+.post:hover,
+.post:focus-visible {
+  padding-left: 14px;
+  background: #ffffff30;
+  color: var(--folio-accent);
+}
+
+.post-number {
+  align-self: flex-start;
+  min-width: 24px;
+  padding-top: 4px;
+  color: #909587;
+  font: italic 12px Georgia, "Noto Serif CJK SC", serif;
+}
+
+.post-copy,
+.resume-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.post-title {
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Noto Serif CJK SC", serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.post-meta {
+  margin-top: 4px;
+  color: #838a7d;
+  font-size: 9px;
+  letter-spacing: .035em;
+  line-height: 1.5;
+}
+
+.post-mark {
+  flex: 0 0 auto;
+  color: #899083;
+  font-size: 14px;
+  opacity: 0;
+  transform: translate(-3px, 3px);
+  transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.post:hover .post-mark,
+.post:focus-visible .post-mark {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+.folio-resume {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 12px 24px 13px 13px;
+  overflow: hidden;
+  border: 1px solid #77817438;
+  background: linear-gradient(100deg, #f1efe5ad, #dedfd2a0);
+  color: var(--folio-ink);
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.folio-resume:hover,
+.folio-resume:focus-visible {
+  border-color: #87504a77;
+  background-color: #f6f2e7;
+}
+
+.resume-label {
+  flex: 0 0 auto;
+  color: var(--folio-accent);
+  font: italic 12px Georgia, "Noto Serif CJK SC", serif;
+}
+
+.resume-title {
+  overflow: hidden;
+  font-family: Georgia, "Noto Serif CJK SC", serif;
+  font-size: 14px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resume-meta {
+  margin-top: 3px;
+  color: #858c7e;
+  font-size: 9px;
+}
+
+.resume-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 15px solid #a1a18f55;
+  border-left: 15px solid transparent;
+}
+
+.reader-error-note {
+  color: #737d71;
+  font-size: 12px;
+}
+
+.folio-loading {
+  color: #858c7d;
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+.folio-retry {
+  margin-top: 8px;
+  padding: 8px 13px;
+  border: 1px solid #76817466;
+  color: #59665b;
+  font-size: 12px;
+}
+
+.folio-retry:hover {
+  border-color: var(--folio-accent);
+  color: var(--folio-accent);
+}
+
+#reader .meta {
+  margin: -12px 0 34px;
+  color: #7e8776;
+  font-size: 10px;
+}
+
+#reader .body {
+  overflow-wrap: anywhere;
+  color: #3c443d;
+}
+
+#reader .body img {
+  max-width: 100%;
+  height: auto;
+}
+
+#reader .body pre {
+  overflow: auto;
+  padding: 16px;
+  background: #dfe2d7;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#reader .body table {
+  display: block;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#reader .body h1 { font-size: 25px; }
+#reader .body h2 { font-size: 21px; }
+#reader .body a,
+#reader .credits a {
+  color: #625e4f;
+  text-decoration: underline;
+  text-decoration-color: #7f867777;
+  text-underline-offset: 3px;
+}
+
+#reader .credits p { margin: 0 0 22px; }
+
+.folio-grip {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  place-items: end;
+  background: transparent;
+  color: #6f776a;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.folio-grip::before {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-right: 47px solid #d8d7c9;
+  border-top: 47px solid transparent;
+  content: "";
+  filter: drop-shadow(-1px -1px 1px #888c7b55);
+}
+
+.folio-grip span {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  margin: 0 8px 8px 0;
+  border-right: 1px solid #778173aa;
+  border-bottom: 1px solid #778173aa;
+  transform: rotate(-45deg);
+}
+
+.folio-grip:hover::before { border-right-color: #e4e2d7; }
+.folio-grip:focus-visible { outline: 2px solid var(--folio-accent); outline-offset: -5px; }
+
+@media (max-width: 600px) {
+  #folio-open { right: 3px; bottom: 1px; width: 79px; height: 81px; }
+  #folio-open .folio-leaf { width: 68px; height: 70px; }
+  #folio-open .folio-back { width: 74px; height: 75px; }
+  #folio-open .folio-ink { right: 11px; bottom: 11px; transform: scale(.88) rotate(-2deg); transform-origin: bottom right; }
+  #reader .reader-head { flex-basis: 57px; min-height: 57px; padding: 0 15px; }
+  #reader-content { padding: 27px 23px 64px; font-size: 13px; }
+  .folio-index-head { padding-bottom: 15px; }
+  .post { min-height: 63px; gap: 10px; padding-left: 2px; }
+  .post:hover, .post:focus-visible { padding-left: 7px; }
+  .post-title { font-size: 15px; }
+  .post-meta { font-size: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #folio-open .folio-leaf,
+  .post,
+  .post-mark,
+  .folio-resume {
+    transition: none !important;
+  }
+}
+
+/* The upper corner has room to travel back toward the closed lower corner. */
+#reader .reader-head{padding-left:67px}
+.folio-grip{left:0;top:0;right:auto;bottom:auto;place-items:start}
+.folio-grip::before{left:0;top:0;right:auto;bottom:auto;border:0;border-left:47px solid #d8d7c9;border-bottom:47px solid transparent;filter:drop-shadow(1px 1px 1px #888c7b55)}
+.folio-grip:hover::before{border-left-color:#e4e2d7}
+.folio-grip span{margin:8px 0 0 8px;transform:rotate(135deg)}
+#reader-title:focus{outline:none}
+@media(max-width:600px){#reader .reader-head{padding-left:57px}}

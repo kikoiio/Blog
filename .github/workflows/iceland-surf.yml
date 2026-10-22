@@ -1,0 +1,43 @@
+name: Iceland surf validation
+on:
+  push:
+    branches: ['codex/iceland-surf-validation-*']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install cloud browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Simulation checks
+        run: |
+          node scratch/iceland/tests/verify-surf-state.mjs
+          node scratch/iceland/tests/verify-water-palette.mjs
+          node scratch/iceland/tests/verify-painted-water.mjs
+          node scratch/iceland/tests/verify-environment.mjs
+      - name: Browser and real-time recording
+        run: |
+          python3 scratch/iceland/serve.py > server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8153/scratch/iceland/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node scratch/iceland/tests/cloud/browser-check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iceland-surf-evidence
+          path: |
+            ci-evidence/
+            server.log
+          retention-days: 7

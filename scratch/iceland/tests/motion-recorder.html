@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>环境动态连续验证</title>
+<style>html,body{margin:0;background:#243b49;color:#fff;font:14px sans-serif}#source{position:fixed;inset:0;visibility:hidden}#source img,.landscape-layer,#weather{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}#output{display:block;width:100vw;height:100vh;object-fit:contain}#controls{position:fixed;z-index:3;bottom:16px;left:16px;padding:12px;background:#f2f4eced;color:#203743}#frames{display:flex;flex-wrap:wrap}#frames img{width:160px;height:auto}#frames:empty{display:none}</style>
+<div id="source"><img id="art"><canvas id="weather"></canvas></div><canvas id="output"></canvas><div id="controls"><button id="start" disabled>采集六秒原速帧</button><span id="status" role="status">载入中</span></div><div id="frames" aria-label="原速采样帧"></div>
+<script type="module">
+import {elapsedSeconds} from '../src/animation-clock.js';
+import {FrameScene} from '../src/scene.js';
+const $=s=>document.querySelector(s),scene=new FrameScene($('#source'),$('#art'),$('#weather')),out=$('#output'),ctx=out.getContext('2d');
+const requested=new URLSearchParams(location.search).get('scene')||'13-hornbjarg.png';
+const file=/^\d{2}-[a-z-]+\.png$/.test(requested)?requested:'13-hornbjarg.png';
+out.width=innerWidth;out.height=innerHeight;
+let raf=0,last=0,recording=false,started=0,nextCapture=0;
+function draw(now){
+ if(last&&now-last<32){raf=requestAnimationFrame(draw);return;}
+ const dt=elapsedSeconds(now,last);last=now;scene.render(dt);
+ const c=scene.camera;ctx.drawImage(scene.image,c.sx,c.sy,c.sw,c.sh,0,0,out.width,out.height);
+ if(scene.surface&&!scene.surface.canvas.hidden)ctx.drawImage(scene.surface.canvas,0,0,out.width,out.height);
+ ctx.drawImage($('#weather'),0,0,out.width,out.height);
+ if(recording&&now-started>=nextCapture){
+  const frame=new Image();frame.alt=`原速帧 ${$('#frames').children.length+1}`;
+  frame.dataset.time=(now-started).toFixed(2);frame.dataset.sceneTime=scene.time.toFixed(3);
+  frame.src=out.toDataURL('image/jpeg',.85);$('#frames').append(frame);nextCapture+=200;
+  if(now-started>=6000){recording=false;$('#status').textContent='六秒原速帧已完成';$('#status').dataset.state='ready';cancelAnimationFrame(raf);return;}
+ }
+ raf=requestAnimationFrame(draw);
+}
+$('#start').onclick=()=>{if(recording)return;$('#frames').replaceChildren();started=performance.now();nextCapture=0;recording=true;$('#start').disabled=true;$('#status').textContent='采集中：保持原速';};
+scene.set(file).then(()=>{$('#start').disabled=scene.measure().mode!=='ready';$('#status').textContent=scene.measure().mode==='ready'?'可采集':'渲染回退';$('#controls').dataset.renderer=scene.measure().mode;raf=requestAnimationFrame(draw);}).catch(error=>{$('#status').textContent=error.message;console.error(error);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);recording=false;$('#status').dataset.interrupted='true';}else if(!$('#status').dataset.state){last=0;raf=requestAnimationFrame(draw);}});
+</script></html>
