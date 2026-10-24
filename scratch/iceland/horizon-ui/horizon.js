@@ -21,13 +21,19 @@ function preload(p) {
 
 function render() {
   const p = places[index];
-  back.src = preload(p).src;
-  back.alt = `${p.zh}风景插画`;
-  back.onload = () => {
+  const next = preload(p);
+  const reveal = () => {
     back.classList.add('on');
     front.classList.remove('on');
     [front, back] = [back, front];
   };
+  if (next.complete) requestAnimationFrame(reveal);
+  else {
+    back.onload = reveal;
+    back.onerror = reveal;
+  }
+  back.src = next.src;
+  back.alt = `${p.zh}风景插画`;
   $('#region').textContent = p.region;
   $('#name').textContent = p.name;
   $('#zh').textContent = p.zh;
@@ -38,9 +44,9 @@ function render() {
   preload(places[(index + 1) % places.length]);
 }
 
-function go(next, delta) {
+function go(next) {
   index = (next + places.length) % places.length;
-  if (delta) render();
+  render();
 }
 
 for (const p of places) {
