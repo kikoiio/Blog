@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071523">
+<title>Ísland · 冰岛图集</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="atlas.css">
+<script type="module" src="atlas.js"></script>
+</head>
+<body>
+<div id="app" data-state="loading">
+  <main id="scene" aria-label="冰岛风景">
+    <img id="scene-art" alt="" src="../assets/landscapes/01-city-rain.png">
+    <div class="scene-shade" aria-hidden="true"></div>
+    <header class="world-header">
+      <a href="#reykjavik" id="brand">Aries<span> / Ísland</span></a>
+      <nav aria-label="全局导航">
+        <button id="open-map" type="button">地图 <span>M</span></button>
+        <button id="open-index" type="button">文章 <span>R</span></button>
+      </nav>
+    </header>
+    <section class="scene-caption" aria-live="polite">
+      <p id="scene-region">西南部 / 城市</p>
+      <h1 id="scene-title">Reykjavík</h1>
+      <p class="scene-detail"><span id="scene-zh">雷克雅未克</span><i aria-hidden="true"></i><span id="scene-weather">雨后</span></p>
+      <p id="scene-line">雨落在屋檐上，海在街道的尽头。</p>
+      <div class="scene-actions">
+        <button id="prev-place" type="button">上一处</button>
+        <button id="next-place" type="button">下一处</button>
+        <button id="cycle-weather" type="button">换天气</button>
+      </div>
+    </section>
+    <footer class="world-footer"><span id="scene-coordinates"></span><span id="scene-index"></span></footer>
+    <p id="loading" role="status">正在打开图集…</p>
+  </main>
+
+  <section id="atlas" role="dialog" aria-modal="true" aria-labelledby="atlas-title" hidden>
+    <header class="atlas-header">
+      <div><p>Aries 的远方手记</p><h2 id="atlas-title">Ísland<span>二十五处停留</span></h2></div>
+      <button class="close" type="button" aria-label="收起地图">收起</button>
+    </header>
+    <div class="atlas-body">
+      <div class="map-drawing">
+        <svg id="map" viewBox="0 0 1000 720" role="img" aria-label="冰岛海岸线与地点"></svg>
+        <div id="markers"></div>
+      </div>
+      <aside class="place-preview">
+        <img id="preview-image" alt="" src="../assets/landscapes/01-city-rain.png">
+        <p id="preview-region"></p>
+        <h3 id="preview-title"></h3>
+        <p id="preview-description"></p>
+        <button id="enter-place" type="button">进入这处风景</button>
+      </aside>
+    </div>
+  </section>
+
+  <section id="reading" role="dialog" aria-modal="true" aria-labelledby="reading-title" hidden>
+    <header><h2 id="reading-title">Aries 的文章</h2><button class="close" type="button" aria-label="关闭文章目录">关闭</button></header>
+    <div id="article-list"></div>
+  </section>
+</div>
+</body>
+</html>
