@@ -1,0 +1,186 @@
+:root {
+  color-scheme: dark;
+  --paper: #f4f1e9;
+  --ink: #101418;
+  --muted: #6d777c;
+  --gold: #b7873a;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  background: #07090b;
+  color: var(--paper);
+  font-family: "Avenir Next", "Helvetica Neue", sans-serif;
+}
+
+#app, #film, #film img, #grain { position: absolute; inset: 0; }
+#app { overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+#app.dragging { cursor: grabbing; }
+#film img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+#film img.on { opacity: 1; }
+
+/* Dark field on both sides of every scene; the copy stays in a stable reading pocket. */
+#grain {
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(4,6,8,.92), rgba(4,6,8,.58) 17%, transparent 36%),
+    linear-gradient(270deg, rgba(4,6,8,.82), transparent 34%),
+    linear-gradient(0deg, rgba(4,6,8,.62), transparent 44%);
+}
+
+#brand, #copy, #track, #hint, #index-open {
+  position: absolute;
+  z-index: 3;
+}
+#brand {
+  top: clamp(22px,4vh,46px);
+  left: clamp(22px,4vw,62px);
+  display: flex;
+  baseline-shift: super;
+  gap: 10px;
+  align-items: baseline;
+}
+#brand strong { letter-spacing: .55em; font-size: 16px; }
+#brand span { color: #b9c4c7; letter-spacing: .34em; font-size: 11px; }
+
+#index-open {
+  top: clamp(18px,3.4vh,38px);
+  right: clamp(20px,3.6vw,56px);
+  border: 1px solid rgba(244,241,233,.32);
+  border-radius: 999px;
+  background: rgba(6,9,11,.38);
+  color: var(--paper);
+  padding: 9px 18px;
+  font-size: 13px;
+  backdrop-filter: blur(12px);
+}
+
+#copy {
+  left: clamp(22px,4vw,62px);
+  bottom: clamp(28px,8vh,82px);
+  max-width: min(520px,72vw);
+  margin: 0;
+  text-shadow: 0 2px 26px rgba(0,0,0,.68);
+}
+#copy p, #copy h1 { margin: 0; }
+#region {
+  color: #d8b676;
+  font-size: 11px;
+  letter-spacing: .34em;
+}
+#name {
+  margin-top: clamp(6px,1.2vh,12px) !important;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: clamp(44px,7.8vw,112px);
+  line-height: .94;
+  letter-spacing: -.025em;
+}
+#zh {
+  margin-top: clamp(4px,1vh,10px) !important;
+  color: #e8e3d7;
+  font-size: clamp(15px,1.35vw,20px);
+  letter-spacing: .20em;
+}
+#line {
+  margin-top: clamp(10px,2vh,20px) !important;
+  max-width: 390px;
+  border-top: 1px solid rgba(244,241,233,.24);
+  padding-top: .9em;
+  color: #d5d8d8;
+  font-size: clamp(13px,1.02vw,16px);
+  line-height: 1.75;
+}
+
+#track {
+  right: clamp(22px,4vw,62px);
+  bottom: clamp(30px,7vh,72px);
+  width: min(320px,30vw);
+  height: 1px;
+  background: rgba(244,241,233,.22);
+}
+#track i {
+  position: absolute;
+  top: -2.5px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(244,241,233,.46);
+  transform: translateX(-50%);
+}
+#track i.now {
+  width: 10px; height: 10px;
+  top: -4.5px;
+  background: #e4b65c;
+  box-shadow: 0 0 16px rgba(228,182,92,.72);
+}
+
+#hint {
+  left: 50%;
+  bottom: clamp(22px,5vh,48px);
+  transform: translateX(-50%);
+  color: rgba(238,236,228,.82);
+  font-size: 12px;
+  letter-spacing: .30em;
+  transition: opacity 350ms ease;
+}
+#hint.hide { opacity: 0; }
+
+#index {
+  margin: auto;
+  width: min(520px,92vw);
+  max-height: min(680px,82vh);
+  border: 1px solid rgba(244,241,233,.20);
+  border-radius: 18px;
+  background: rgba(9,12,15,.94);
+  color: var(--paper);
+  padding: 0;
+  backdrop-filter: blur(20px);
+}
+#index::backdrop { background: rgba(3,5,7,.62); }
+#index header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 22px 12px;
+}
+#index h2 { margin: 0; font-size: 16px; letter-spacing: .28em; }
+#index .close {
+  border: 0;
+  background: transparent;
+  color: #b9c4c7;
+  font-size: 13px;
+}
+#index menu {
+  margin: 0;
+  padding: 8px 12px 18px;
+  max-height: 62vh;
+  overflow: auto;
+  list-style: none;
+}
+#index button.place {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border: 0;
+  border-bottom: 1px solid rgba(244,241,233,.09);
+  background: transparent;
+  color: var(--paper);
+  padding: 13px 10px;
+  text-align: left;
+}
+#index button.place span { color: #a7b1b4; font-size: 12px; }
+
+@media (max-width: 760px) {
+  #brand { left: 20px; }
+  #copy { left: 20px; bottom: 94px; max-width: 86vw; }
+  #name { font-size: 14.5vw; }
+  #line { max-width: 78vw; }
+  #track { width: 76vw; right: 12vw; bottom: 48px; }
+  #hint { bottom: 20px; }
+}

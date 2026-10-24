@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aries · Ísland</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="horizon.css">
+</head>
+<body>
+<main id="app" aria-label="冰岛横向长卷">
+  <div id="film">
+    <img id="a" alt="">
+    <img id="b" alt="">
+  </div>
+  <div id="grain"></div>
+
+  <header id="brand">
+    <strong>ARIES</strong>
+    <span>ÍSLAND</span>
+  </header>
+
+  <button id="index-open" type="button" aria-haspopup="dialog">目录</button>
+
+  <section id="copy" aria-live="polite">
+    <p id="region"></p>
+    <h1 id="name"></h1>
+    <p id="zh"></p>
+    <p id="line"></p>
+  </section>
+
+  <div id="track" aria-hidden="true"></div>
+  <p id="hint">横向拖动</p>
+
+  <dialog id="index">
+    <header>
+      <h2>路线</h2>
+      <button class="close" type="submit" form="index-form">关闭</button>
+    </header>
+    <form id="index-form" method="dialog">
+      <menu></menu>
+    </form>
+  </dialog>
+</main>
+<script type="module" src="horizon.js"></script>
+</body>
+</html>
