@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aries · Ring Road</title>
+  <link rel="stylesheet" href="ringroad.css">
+</head>
+<body>
+<main id="app" aria-label="冰岛环岛旅程原型">
+  <section id="stage" aria-live="off">
+    <div id="panorama">
+      <div id="world">
+        <img class="plate" alt="">
+        <img class="plate" alt="">
+        <img class="plate" alt="">
+      </div>
+      <div id="heat"></div>
+      <div id="rain"></div>
+      <div id="fog"></div>
+    </div>
+
+    <header id="masthead">
+      <div>
+        <strong>ARIES</strong><span>ÍSLAND · ROUTE 1</span>
+      </div>
+      <div id="drive-state">READY</div>
+    </header>
+
+    <div id="dashboard">
+      <div id="place-copy">
+        <p id="kicker">SOUTHWEST / CITY</p>
+        <h1 id="place-name">Reykjavík</h1>
+        <p id="place-zh">雷克雅未克</p>
+        <p id="place-line">雨落在屋檐上，海在街道的尽头。</p>
+      </div>
+    </div>
+
+    <div id="route-ring" aria-hidden="true"></div>
+    <div id="compass">
+      <span id="bearing">000°</span>
+      <span>HEADING</span>
+    </div>
+    <div id="odo">
+      <span id="odo-value">0</span><span> km</span>
+    </div>
+    <div id="hint">横向拖动 · 开始逆时针环岛</div>
+    <div id="signal"></div>
+  </section>
+</main>
+
+<script type="module" src="ringroad.js"></script>
+</body>
+</html>

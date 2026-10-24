@@ -1,0 +1,295 @@
+:root {
+  color-scheme: dark;
+  --ink: #f2f6f8;
+  --muted: #9fb2b8;
+  --dim: #63767d;
+  --amber: #f2b13d;
+  --ice: #8bd8e8;
+  --glass: rgba(9,16,20,.54);
+  --line: rgba(143,181,190,.24);
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-ui: "Avenir Next", "Franklin Gothic Medium", "Helvetica Neue", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  background: #05090c;
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+button { font: inherit; color: inherit; }
+
+#app, #stage { height: 100%; }
+#stage {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+#stage.dragging { cursor: grabbing; }
+#stage.settled { cursor: default; }
+
+#panorama, #world, .plate, #heat, #rain, #fog { position: absolute; inset: 0; }
+#panorama {
+  view-timeline: --journey x;
+  background: #05090c;
+  contain: strict;
+}
+#world {
+  display: grid;
+  grid-template-columns: repeat(3, 100%);
+  height: 100%;
+  will-change: transform;
+}
+.plate {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: auto;
+  filter: saturate(.96) contrast(1.04);
+  transform: scale(1.035);
+}
+.plate:nth-child(2) { transform: scale(1.075); }
+.plate[data-active] { filter: saturate(1.02) contrast(1.07); }
+.plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #05090c;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.plate:not([data-active])::after { opacity: .92; }
+
+#heat {
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(60% 45% at 62% 65%, rgba(255,104,42,.26), transparent 72%),
+    radial-gradient(35% 22% at 68% 73%, rgba(255,176,64,.22), transparent 70%);
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+#rain {
+  pointer-events: none;
+  opacity: 0;
+  background-image:
+    repeating-linear-gradient(104deg, rgba(190,219,226,.30) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(101deg, rgba(190,219,226,.14) 0 1px, transparent 1px 29px);
+  background-size: 100% 34%, 100% 47%;
+  animation: rain-a 920ms linear infinite paused;
+}
+#fog {
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(120% 65% at 30% 78%, rgba(197,214,215,.31), transparent 66%),
+    radial-gradient(100% 58% at 75% 84%, rgba(169,193,196,.21), transparent 64%),
+    linear-gradient(180deg, rgba(178,203,205,.07), transparent 35%);
+  transition: opacity 800ms ease;
+}
+#heat[data-on], #fog[data-on] { opacity: 1; }
+#rain[data-on] { opacity: .48; animation-play-state: running; }
+
+@keyframes rain-a {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: -26px 96px, -34px 132px; }
+}
+
+#masthead, #dashboard, #route-ring, #compass, #odo, #hint, #signal {
+  position: absolute;
+  z-index: 4;
+}
+#masthead {
+  top: clamp(20px,3.5vh,42px);
+  left: clamp(20px,3.5vw,58px);
+  right: clamp(20px,3.5vw,58px);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+#masthead strong {
+  display: block;
+  letter-spacing: .58em;
+  font-size: clamp(17px,1.5vw,24px);
+}
+#masthead span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: .32em;
+}
+#drive-state {
+  min-width: 92px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(15px);
+  color: var(--amber);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: .24em;
+}
+#drive-state.motion { color: var(--ice); }
+
+#dashboard {
+  left: clamp(20px,3.5vw,58px);
+  bottom: clamp(26px,7vh,74px);
+  max-width: min(560px,68vw);
+  pointer-events: none;
+  text-shadow: 0 2px 24px rgba(3,7,10,.75);
+}
+#kicker {
+  margin: 0 0 1vh;
+  color: var(--amber);
+  font-size: clamp(10px,.8vw,12px);
+  letter-spacing: .32em;
+}
+#place-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(46px,8.4vw,122px);
+  line-height: .92;
+  letter-spacing: -.025em;
+}
+#place-zh {
+  margin: 1.2vh 0 0;
+  color: var(--ink);
+  font-size: clamp(15px,1.45vw,22px);
+  letter-spacing: .22em;
+}
+#place-line {
+  display: inline-block;
+  margin: 2.2vh 0 0;
+  max-width: 420px;
+  border-top: 1px solid var(--line);
+  padding-top: 1.4vh;
+  color: #cbd8dc;
+  font-size: clamp(13px,1.05vw,16px);
+  line-height: 1.7;
+}
+
+#route-ring {
+  right: clamp(20px,3.2vw,52px);
+  bottom: clamp(24px,6vh,64px);
+  width: min(30vw,270px);
+  aspect-ratio: 100 / 72;
+  border-radius: 50%;
+  border: 1px solid rgba(242,177,61,.50);
+  box-shadow:
+    inset 0 0 48px rgba(139,216,232,.06),
+    0 0 34px rgba(139,216,232,.05);
+  transform: rotate(0.001deg);
+}
+#route-ring::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  border: 1px solid rgba(143,181,190,.19);
+}
+#route-ring .node {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(190,211,214,.52);
+  box-shadow: 0 0 8px rgba(140,180,188,.24);
+  transform: translate(-50%,-50%);
+}
+#route-ring .node.visited { background: rgba(139,216,232,.82); }
+#route-ring .node.active {
+  width: 13px;
+  height: 13px;
+  background: var(--amber);
+  box-shadow: 0 0 18px rgba(242,177,61,.78);
+}
+#route-ring .vehicle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 16px rgba(255,255,255,.80);
+  transform: translate(-50%,-50%);
+}
+
+#compass {
+  right: clamp(20px,3.2vw,52px);
+  top: clamp(20px,3.5vh,42px);
+  display: grid;
+  gap: 3px;
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-align: right;
+}
+#bearing { color: var(--ice); font-size: 18px; letter-spacing: .08em; }
+
+#odo {
+  left: 50%;
+  bottom: clamp(18px,4vh,38px);
+  transform: translateX(-50%);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass);
+  padding: 7px 16px;
+  font-size: 11px;
+  letter-spacing: .22em;
+}
+#odo-value { color: var(--ink); font-variant-numeric: tabular-nums; }
+#hint {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  color: rgba(226,237,239,.86);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(5,9,12,.50);
+  padding: 12px 22px;
+  font-size: 12px;
+  letter-spacing: .22em;
+  backdrop-filter: blur(12px);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+#hint.hide { opacity: 0; transform: translate(-50%,10px); pointer-events: none; }
+#signal {
+  left: 50%;
+  bottom: clamp(58px,12vh,92px);
+  transform: translateX(-50%);
+  height: 1px;
+  min-width: 0;
+  background: var(--amber);
+  box-shadow: 0 0 14px var(--amber);
+  opacity: 0;
+  transition: opacity 180ms ease, min-width 180ms ease;
+}
+#signal[data-on] { opacity: 1; }
+
+@media (max-width: 760px) {
+  #masthead { align-items: center; }
+  #masthead strong { font-size: 15px; letter-spacing: .44em; }
+  #drive-state { display: none; }
+  #dashboard { bottom: 82px; max-width: 86vw; }
+  #place-name { font-size: 15vw; }
+  #place-zh { font-size: 14px; }
+  #place-line { font-size: 13px; max-width: 74vw; }
+  #route-ring { width: 72vw; bottom: auto; top: 48%; right: 50%; transform: translate(50%,-50%); opacity: .36; }
+  #compass { right: 18px; top: auto; bottom: 132px; }
+  #hint { width: 78vw; text-align: center; font-size: 11px; }
+  #odo { bottom: 20px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #rain { animation: none !important; }
+}
