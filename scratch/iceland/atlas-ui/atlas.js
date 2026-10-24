@@ -1,6 +1,6 @@
 import {VIEWBOX,coastPaths,glacierPaths,project} from './geography.js';
 const $=q=>document.querySelector(q);
-const app=$('#app'),art=$('#scene-art'),markers=$('#markers'),articleList=$('#articleList=document.querySelector("#article-list")');
+const app=$('#app'),art=$('#scene-art'),markers=$('#markers'),articleList=$('#article-list');
 const places=await fetch('places.json').then(r=>r.json());
 const posts=await fetch('articles.json').then(r=>r.json());
 let current=places.find(p=>p.id===location.hash.slice(1))||places[0],currentFile=current.image,preview=current,mapOpen=false,readingOpen=false;
