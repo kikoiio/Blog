@@ -20,7 +20,9 @@ const route = ordered.map(p => {
 });
 const totalKm = 1332;
 const startIndex = route.findIndex(p => p.id === 'reykjavik');
-let progress = route[startIndex].angle; // radians around the route
+const startAngle = route[startIndex].angle;
+for (const p of route) p.angle = routeAngle(p.angle - startAngle);
+let progress = 0;                       // radians around the route
 let velocity = 0;                 // radians/s
 let dragging = null;
 let settledAt = 0;
@@ -70,7 +72,7 @@ function syncPlates(force = false) {
     if (s === 1) plates[s].dataset.active = '';
     else delete plates[s].dataset.active;
   }
-  world.style.transform = `translateX(${-ci * 100}vw)`;
+  world.style.transform = `translateX(${-(ci + 1) * 100}vw)`;
   requestAnimationFrame(() => requestAnimationFrame(() => {
     for (const plate of plates) plate.style.transition = '';
   }));
@@ -143,7 +145,7 @@ function layout() {
   let local = routeAngle(i1.angle - i0.angle);
   const t = Math.min(1, Math.max(0, routeAngle(progress - i0.angle) / local));
   // Three full-viewport plates; the active one is always the middle slot.
-  world.style.transform = `translateX(${-(ci + t) * 100}vw)`;
+  world.style.transform = `translateX(${-(ci + t + 1) * 100}vw)`;
 }
 
 function frame(now) {
