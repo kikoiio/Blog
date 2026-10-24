@@ -4,6 +4,7 @@ await mkdir('ci-evidence',{recursive:true});
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--disable-gpu','--ozone-platform=x11']});
 const page=await (await browser.newContext({viewport:{width:1440,height:900}})).newPage();const errors=[];
 page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});page.on('response',r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`)});
+ await page.screenshot({path:'ci-evidence/loading.png'}).catch(()=>{});
 try{
  await page.goto('http://127.0.0.1:8153/scratch/iceland/atlas-ui/');
  await page.waitForSelector('#app[data-ready]',{timeout:30000});await page.screenshot({path:'ci-evidence/desktop-scene.png'});
