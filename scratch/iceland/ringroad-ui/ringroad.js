@@ -22,6 +22,7 @@ const totalKm = 1332;
 const startIndex = route.findIndex(p => p.id === 'reykjavik');
 const startAngle = route[startIndex].angle;
 for (const p of route) p.angle = routeAngle(p.angle - startAngle);
+route.sort((a, b) => a.angle - b.angle);
 let progress = 0;                       // radians around the route
 let velocity = 0;                 // radians/s
 let dragging = null;
