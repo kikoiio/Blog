@@ -55,15 +55,10 @@ button { font: inherit; color: inherit; }
 }
 .plate:nth-child(2) { transform: scale(1.075); }
 .plate[data-active] { filter: saturate(1.02) contrast(1.07); }
-.plate::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: #05090c;
-  opacity: 0;
-  transition: opacity 320ms ease;
+.plate:not([data-active]) {
+  filter: saturate(.55) contrast(1.02) brightness(.10);
+  transition: filter 320ms ease;
 }
-.plate:not([data-active])::after { opacity: .92; }
 
 #heat {
   pointer-events: none;
