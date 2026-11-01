@@ -37,6 +37,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: aries-blog
+          projectName: blog
           directory: out
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

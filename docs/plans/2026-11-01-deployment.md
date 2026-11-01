@@ -8,7 +8,7 @@ Next.js 静态站点已经在本地完成迁移和构建验证。当前构建使
 
 - `next.config.ts` 已启用 `output: 'export'`，生成可直接托管的静态目录。
 - Cloudflare Pages 的构建命令确定为 `npm run build`，输出目录确定为 `out`。
-- 已加入 `.github/workflows/deploy.yml`，生产分支 `master` 更新后自动构建并发布到 `aries-blog` Pages 项目。
+- 已加入 `.github/workflows/deploy.yml`，生产分支 `master` 更新后自动构建并发布到 `blog` Pages 项目。
 - 已加入 `wrangler.toml`，记录 Pages 项目名和 `out` 发布目录。
 - 本地已验证 lint、TypeScript 和静态构建；构建生成首页、文章列表、7 个 `/post/` 旧入口、7 个 `/articles/` 入口及文章附件。
 - 旧 Hugo 主题、子模块和 Hugo Actions 已从运行路径移除，不再需要验证 `hugo-theme-stack` 或迁移 Hugo 工作流。
@@ -34,7 +34,7 @@ https://cdn.jsdelivr.net/gh/{owner}/{repo}@{tag-or-commit}/{path}
 
 待完成事项：
 
-1. 在 Cloudflare Pages 创建名为 `aries-blog` 的项目，生产分支设为 `master`。
+1. 在 Cloudflare Pages 创建名为 `blog` 的项目，生产分支设为 `master`。
 2. 在 GitHub 仓库添加 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret。
 3. 推送 `master`，确认 Actions 完成构建并发布到 Pages 预览域名。
 4. 将 `aries727.site` 接入 Pages，配置 DNS 和自定义域名证书。

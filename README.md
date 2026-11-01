@@ -48,4 +48,4 @@ docs/                        产品意图、架构、研究和执行计划
 
 ## 部署
 
-项目使用 `output: 'export'`，Cloudflare Pages 发布目录为 `out`。`.github/workflows/deploy.yml` 会在 `master` 更新后安装依赖、运行 `npm run build`，再发布到名为 `aries-blog` 的 Pages 项目。仓库需要配置 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret；自定义域名仍需在 Cloudflare Pages 中绑定。
+项目使用 `output: 'export'`，Cloudflare Pages 发布目录为 `out`。`.github/workflows/deploy.yml` 会在 `master` 更新后安装依赖、运行 `npm run build`，再发布到名为 `blog` 的 Pages 项目。仓库需要配置 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 两个 Actions Secret；自定义域名仍需在 Cloudflare Pages 中绑定。
