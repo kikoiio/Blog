@@ -1,17 +1,43 @@
-# Hugo generated files (recreated by local builds)
-/public/
-/resources/_gen/
-/.hugo_build.lock
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Local writing and agent state
-/.obsidian/
-/.claude/
-/.codex/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Editors
-/.vscode/
-/.idea/
+# testing
+/coverage
 
-# Operating system files
+# next.js
+/.next/
+/out/
+/public/article-assets/
+/scratch/
+
+# production
+/build
+
+# misc
 .DS_Store
-Thumbs.db
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
