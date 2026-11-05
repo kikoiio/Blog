@@ -1,58 +1,90 @@
-# 当前架构
+# 技术架构
 
-更新：2026-11-01。本文描述仓库当前实现，产品目标见 [intent.md](intent.md)，执行状态见 [plans/2026-11-01-implementation.md](plans/2026-11-01-implementation.md)。
+更新日期：2026-11-05。本文档描述当前实现。
 
-## 运行边界
+## 概述
 
-这是一个 Next.js 16 App Router 静态导出站点：`next build --webpack` 运行服务端组件并生成 `out/`，浏览器只加载静态 HTML、CSS、JavaScript 和 `public/` 资源。项目没有数据库、服务端 API 或在线 CMS。
+这是一个 Next.js 16 静态站点，生成完全静态的 HTML/CSS/JS 输出。没有数据库、服务端 API 或在线 CMS。内容以 Markdown 文件形式存储在仓库中。
 
-`next.config.ts` 开启 `output: 'export'`，图片使用 `unoptimized`，并把构建 worker 限制为一个，适应本机有限内存。生产构建使用 Webpack；本项目不依赖 Turbopack 的 CSS loader。
+## 技术栈
 
-## 页面与数据流
+- **框架**：Next.js 16（App Router）
+- **语言**：TypeScript
+- **样式**：Tailwind CSS 4
+- **内容**：Markdown + TOML frontmatter
+- **部署**：静态导出到 Cloudflare Pages
 
-```mermaid
-flowchart TD
-  Content[content/articles Markdown 页面包] --> Articles[lib/articles.ts]
-  Articles --> Listing[app/articles/page.tsx]
-  Articles --> Canonical[app/articles/[...slug]/page.tsx]
-  Articles --> Legacy[app/post/[slug]/page.tsx]
-  Listing --> ArticlePage[components/ArticlePage.tsx]
-  Canonical --> ArticlePage
-  Legacy --> ArticlePage
-  ArticlePage --> Markdown[Markdown AST 渲染]
-  ArticlePage --> Photos[PhotoGallery + ZimaCanvas]
-  Assets[scripts/sync-article-assets.mjs] --> Public[public/article-assets]
-  Public --> Markdown
-  Public --> Photos
+## 项目结构
+
+```
+├── app/                    # Next.js App Router 页面
+│   ├── page.tsx           # 首页（笔记索引）
+│   ├── articles/          # 文章列表和详情页
+│   ├── photography/       # 摄影专辑列表
+│   ├── post/              # 旧版文章路由
+│   └── layout.tsx         # 根布局（含导航）
+├── components/            # React 组件
+│   ├── ArticlePage.tsx    # 文章渲染
+│   ├── PhotoGallery.tsx   # 摄影展示
+│   ├── Navbar.tsx         # 导航栏
+│   └── ...
+├── content/articles/      # 博客内容（Markdown + 资源）
+│   ├── Computer Science/  # 技术文章
+│   └── Photography/       # 照片专辑
+├── lib/                   # 工具函数
+│   └── articles.ts        # 文章加载和解析
+├── scripts/               # 构建脚本
+│   └── sync-article-assets.mjs  # 复制资源到 public/
+└── public/                # 静态资源
+    └── article-assets/    # 生成的文章图片（不提交）
 ```
 
-首页由 `app/page.tsx` 组合三个客户端交互：
+## 内容模型
 
-- `LandscapeContainer` 从 `lib/landscapes.json` 随机选择 27 张风景，使用 Framer Motion 淡入、缩放并避免连续重复。
-- `MusicPlayer` 延迟导入 `bellowsjs`，将 A–Z 映射到 MIDI 音高，音量由界面滑块控制。
-- `Navbar` 提供风景、文章和关于三个入口。
+文章存储在 `content/articles/` 目录的 Markdown 文件中：
 
-## 文章模型
+- **页面包**：`index.md` 文件代表完整页面（如摄影专辑）
+- **单文件**：普通 `.md` 文件是单篇文章
+- **Frontmatter**：TOML 格式（`+++` 分隔符），包含标题、日期、布局
+- **资源**：图片和文件与文章存储在一起
 
-`lib/articles.ts` 从 `content/articles/` 递归发现 `.md` 文件。`index.md` 被视为页面包，目录名作为旧站 slug；普通 Markdown 文件使用文件名作为 slug。每篇文章包含分类、日期、布局、资源目录和照片清单。
+文章类型：
+- `layout: article` - 标准博客文章（默认）
+- `layout: photography` - 照片专辑，带图库视图
 
-文章列表链接到 `/post/<slug>`，保持旧站按 `contentbasename` 生成的入口。`/articles/<path>` 同时保留完整内容路径，便于分类浏览。摄影页面识别 `layout = "photography"`，加载同目录图片，并显示照片切换、缩放、键盘导航和 Zima Blue 池面动画。
+## 构建流程
 
-文章正文使用 `mdast-util-from-markdown`、`mdast-util-to-hast` 和 `hast-util-to-jsx-runtime` 渲染标准 Markdown。构建前脚本把页面包附件复制到 `public/article-assets/`，所以相对图片在静态导出后仍可访问。
+1. **预构建**：`scripts/sync-article-assets.mjs` 将 `content/articles/` 中的非 Markdown 文件复制到 `public/article-assets/`
+2. **构建**：`next build --webpack` 在 `out/` 生成静态 HTML
+3. **部署**：GitHub Actions 将 `out/` 部署到 Cloudflare Pages
 
-## 静态资源
+## 核心功能
 
-- `public/landscapes/` 保存首页使用的 27 张风景图。
-- `content/articles/` 保存文章附件的源文件。
-- `public/article-assets/` 是构建生成目录，不提交到 Git。
-- 当前附件包含原始 JPG 和 PNG，部署前仍可进一步转 WebP、缩小照片并上传到独立 CDN 仓库。
+- **静态生成**：所有页面在构建时预渲染
+- **Markdown 渲染**：自定义 AST 渲染器，支持标准 Markdown
+- **响应式设计**：移动优先，支持所有设备
+- **暗色主题**：统一的深色界面
+- **图片优化**：资源从 `public/article-assets/` 提供
 
-## 验证入口
+## URL 结构
 
-```bash
-npm run lint
-npx tsc --noEmit
-npm run build
-```
+- `/` - 首页，笔记索引
+- `/articles` - 所有文章列表
+- `/articles/<path>` - 文章详情（规范路径）
+- `/post/<slug>` - 旧版文章路由（重定向）
+- `/photography` - 摄影专辑列表
+- `/photography/<album>` - 照片专辑详情
 
-构建结果应包含首页、关于页、文章列表、7 个旧 `/post/` 文章入口、7 个 `/articles/` 文章入口和文章附件。
+## 性能
+
+- 静态导出消除服务端渲染开销
+- 图片作为静态文件提供（当前未优化）
+- 最小 JavaScript 包（仅必要的 React 组件）
+- 通过 Cloudflare CDN 快速加载
+
+## 限制
+
+- 无动态内容（所有页面静态）
+- 无用户认证或账户
+- 无评论或实时功能
+- Next.js 不优化图片（按原样提供）

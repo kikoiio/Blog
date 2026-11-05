@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import ArticlePage from '@/components/ArticlePage'
-import { getAllArticles, getArticleBySlug } from '@/lib/articles'
+import { decodeRouteParam, getAllArticles, getArticleBySlug, getRelatedArticles } from '@/lib/articles'
 
 export function generateStaticParams() {
   return getAllArticles().map((article) => ({ slug: article.slug }))
@@ -14,8 +14,18 @@ export default async function LegacyArticleRoute({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const article = getArticleBySlug(slug)
+  const article = getArticleBySlug(decodeRouteParam(slug))
   if (!article) notFound()
 
-  return <ArticlePage article={article} />
+  return (
+    <ArticlePage
+      article={article}
+      related={getRelatedArticles(article).map((item) => ({
+        href: `/post/${item.slug}`,
+        title: item.title,
+        virtualPath:
+          item.layout === 'photography' ? `photography/${item.slug}.md` : `articles/${item.routePath}.md`,
+      }))}
+    />
+  )
 }

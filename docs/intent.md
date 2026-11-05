@@ -1,29 +1,28 @@
-# Blog Redesign Intent
+# 博客意图
 
-## Users
-- Primary: Aries (site owner) - first user, pursuing personal enjoyment and visual satisfaction
-- Secondary: Visitors interested in computer science content and photography
+## 用户
+- 主要用户：Aries（站长）- 个人博客，用于计算机科学笔记和摄影作品
+- 次要用户：对技术内容和摄影感兴趣的访客
 
-## Problem
-The current Hugo blog lacks interactive appeal and visual freshness. The site owner wants a more engaging experience with rich interactions and repeated visit novelty while preserving existing content and URL structure.
+## 目标
+- 清晰优雅地展示博客内容
+- 保留现有文章 URL 和内容结构
+- 免费部署，可在中国大陆访问
+- 简单、可维护的架构
 
-## Goals
-- Create an immersive landscape roaming experience with 25 Iceland pixel-art images
-- Implement real-time music synthesis triggered by keyboard (A-Z keys)
-- Preserve existing blog content (Computer Science and Photography articles)
-- Maintain a fixed navigation structure while enabling smooth transitions between landscape mode and article reading
-- Deploy with free hosting that works well in both mainland China and internationally
+## 非目标
+- 无服务端渲染或数据库
+- 无在线 CMS（内容通过 Git 管理）
+- 无实时功能（评论、聊天等）
+- 无商业功能或用户账户
+- 无复杂交互元素（仅基础导航）
 
-## Non-goals
-- No server-side rendering or database
-- No CMS for online editing
-- No real-time comments (can use third-party services later if needed)
-- No commercial features or user accounts
+## 内容类型
+- **笔记**：计算机科学文章、教程、项目文档
+- **摄影**：按日期/地点组织的照片专辑
 
-## Acceptance criteria
-- Site loads directly into landscape roaming mode
-- Keyboard A-Z triggers different musical notes
-- Landscape images switch randomly with smooth animations
-- Article list and detail pages remain accessible
-- Deployment is free and accessible from mainland China
-- Existing article URLs are preserved
+## 验收标准
+- 文章和摄影专辑可访问且格式良好
+- 网站加载快，支持移动设备
+- 部署免费，可在中国大陆访问
+- 保留现有文章 URL

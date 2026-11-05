@@ -1,9 +1,7 @@
-# Documentation Index
+# 文档索引
 
-| Type | Status | Updated | Link |
-|------|--------|---------|------|
-| Project intent | active | 2026-11-01 | [intent.md](intent.md) |
-| Architecture | active | 2026-11-01 | [architecture.md](architecture.md) |
-| Research | frozen | 2026-10-24 | [research/2026-10-24-iceland-cultural-symbol-research.md](research/2026-10-24-iceland-cultural-symbol-research.md) |
-| Plan | implemented | 2026-11-01 | [plans/2026-11-01-implementation.md](plans/2026-11-01-implementation.md) |
-| Plan | active | 2026-11-01 | [plans/2026-11-01-deployment.md](plans/2026-11-01-deployment.md) |
+| 文档 | 说明 | 更新日期 |
+|------|------|----------|
+| [intent.md](intent.md) | 项目目标和需求 | 2026-11-05 |
+| [architecture.md](architecture.md) | 技术架构和结构 | 2026-11-05 |
+| [deployment.md](deployment.md) | 部署指南和免费托管方案 | 2026-11-05 |

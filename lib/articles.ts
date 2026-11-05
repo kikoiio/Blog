@@ -92,9 +92,33 @@ function getPhotos(articleDirectory: string, assetDirectory: string, title: stri
     }))
 }
 
+function parseTomlFrontmatter(source: string): Record<string, string> {
+  const data: Record<string, string> = {}
+
+  for (const line of source.split('\n')) {
+    const trimmed = line.trim()
+    if (trimmed === '' || trimmed.startsWith('#')) continue
+
+    const separator = trimmed.indexOf('=')
+    if (separator === -1) continue
+
+    const key = trimmed.slice(0, separator).trim()
+    const rawValue = trimmed.slice(separator + 1).trim()
+    const quoted = rawValue.length >= 2 && rawValue.startsWith('"') && rawValue.endsWith('"')
+    data[key] = quoted ? rawValue.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\') : rawValue
+  }
+
+  return data
+}
+
 function buildArticle(filePath: string): Article {
   const fileContent = fs.readFileSync(filePath, 'utf8')
-  const parsed = matter(fileContent)
+  // Hugo content uses +++ TOML. gray-matter 4 only splits --- unless delimiters and a TOML engine are set.
+  const parsed = matter(fileContent, {
+    delimiters: '+++',
+    engines: { toml: parseTomlFrontmatter },
+    language: 'toml',
+  })
   const data: Record<string, unknown> = parsed.data
   const relativeFile = toPosixPath(path.relative(contentRoot, filePath))
   const isPageBundle = path.posix.basename(relativeFile) === 'index.md'
@@ -129,12 +153,35 @@ export function getAllArticles(): Article[] {
     })
 }
 
+export function getWritings(): Article[] {
+  return getAllArticles().filter((article) => article.layout === 'article')
+}
+
+export function getPhotographyAlbums(): Article[] {
+  return getAllArticles().filter((article) => article.layout === 'photography')
+}
+
+export function decodeRouteParam(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 export function getArticleByRoutePath(routePath: string): Article | undefined {
   return getAllArticles().find((article) => article.routePath === routePath)
 }
 
 export function getArticleBySlug(slug: string): Article | undefined {
   return getAllArticles().find((article) => article.slug === slug)
+}
+
+export function getRelatedArticles(article: Article, limit = 6): Article[] {
+  const pool = getAllArticles().filter((item) => item.layout === article.layout && item.slug !== article.slug)
+  const sameCategory = pool.filter((item) => item.category === article.category)
+  const others = pool.filter((item) => item.category !== article.category)
+  return [...sameCategory, ...others].slice(0, limit)
 }
 
 export function getArticleAssetUrl(article: Pick<Article, 'assetDirectory'>, filename: string): string {
