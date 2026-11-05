@@ -1,129 +1,143 @@
 # 部署指南
 
-更新日期：2026-11-05。本文档介绍博客的免费部署方案。
+更新日期：2026-11-05。本文档介绍博客的部署方案，全部基于 Cloudflare，无需自建服务器。
 
 ## 概述
 
-博客是静态站点，可部署到多个免费托管平台。主要目标是 **Cloudflare Pages**，因其慷慨的免费额度和全球 CDN。
+博客可以部署到 Cloudflare 的两种形态：
 
-## 当前配置
+- **静态站点**：Next.js 静态导出 → Cloudflare Pages（当前方案）
+- **全栈应用**：Next.js → Cloudflare Workers + D1 + R2 + KV + Queue（可扩展方案）
 
-- **构建命令**：`npm run build`
-- **输出目录**：`out/`
-- **框架**：Next.js 静态导出
+Cloudflare 香港节点对中国大陆访问友好（约 50–150ms 延迟），免费额度对个人博客足够。
 
-## 免费部署选项
+## Cloudflare 服务一览
 
-### 选项 1：Cloudflare Pages（推荐）
+| 服务 | 用途 | 免费额度 |
+|------|------|----------|
+| **Pages** | 静态站点托管 | 无限带宽、无限请求 |
+| **Workers** | 运行后端代码 | 10 万请求/天、10ms CPU/请求 |
+| **D1** | SQLite 数据库 | 5GB 存储 |
+| **R2** | 对象存储（图片/文件） | 10GB 存储、出口流量免费 |
+| **KV** | 键值缓存 | 100k 读/天、1k 写/天 |
+| **Queue** | 异步任务队列 | 按量计费，免费额度够用 |
+| **Images** | 图片缩放/压缩 | 有免费额度，按量计费 |
 
-**优点：**
-- 无限带宽和请求
-- 免费 SSL 证书
-- 全球 CDN
-- Git 集成
-- 国际访问良好
+全部在 Cloudflare 控制台管理，无需任何服务器。
 
-**缺点：**
-- 中国大陆访问较慢
-- 单文件大小限制 25MB
+## 方案 A：静态部署（当前）
 
-**设置步骤：**
-1. 创建 Cloudflare 账户
-2. 连接 GitHub 仓库
-3. 配置构建设置：
-   - 构建命令：`npm run build`
-   - 输出目录：`out`
-   - Node 版本：22
-4. 部署
+适合：只展示内容，不需要动态功能。
 
-### 选项 2：GitHub Pages
+```bash
+npm run build   # 生成 out/ 目录
+```
 
-**优点：**
-- 公开仓库免费
-- 设置简单
-- 适合技术内容
+- 构建命令：`npm run build`
+- 输出目录：`out`
+- Node 版本：22
 
-**缺点：**
-- 仓库大小限制 1GB
-- 构建较慢
-- 功能有限
+优点：最简单、最快、零运维。
+缺点：无评论、无用户系统、无动态内容。
 
-**设置步骤：**
-1. 添加 GitHub Actions 工作流部署到 GitHub Pages
-2. 配置仓库设置
+## 方案 B：全栈部署（可扩展）
 
-### 选项 3：Vercel
+适合：需要评论、用户系统、动态内容等功能。
 
-**优点：**
-- 优秀的 Next.js 集成
-- 有免费额度
-- 性能好
+架构：
 
-**缺点：**
-- 免费额度有限
-- 自定义域名可能需要付费
+```
+Next.js 应用 → Cloudflare Workers（运行时）
+                ├── D1        文章/评论/用户数据
+                ├── R2        图片和文件存储
+                ├── KV        缓存和 session
+                └── Queue     异步任务（通知、索引等）
+```
 
-## 图片优化
+可实现的功能：
 
-### 当前状态
+- **评论系统**：读者评论存入 D1，支持审核
+- **用户认证**：GitHub OAuth 或邮箱登录（参考 flare-stack-blog 的 Better Auth 方案）
+- **图片托管**：上传到 R2，配合 Images 做缩放压缩
+- **草稿/发布流程**：管理员后台管理文章状态
+- **通知**：Queue 异步处理邮件/推送
+- **搜索**：D1 全文检索或外部服务
 
-图片存储在 `content/articles/` 中，构建时复制到 `public/article-assets/`。按原样提供，无优化。
+部署方式：
 
-### 免费图床选项
+- 使用 `@opennextjs/cloudflare` 或 `@cloudflare/next-on-pages` 将 Next.js 部署到 Workers
+- 移除 `next.config.ts` 中的 `output: 'export'`
+- 在 Cloudflare 控制台创建 D1、R2、KV、Queue 资源
+- 用 `wrangler.toml` 声明绑定关系
 
-为提升性能并减少仓库大小，可考虑外部图床：
+参考项目：[du2333/flare-stack-blog](https://github.com/du2333/flare-stack-blog) 展示了完整的 Cloudflare 全家桶博客架构（Workers + D1 + R2 + KV + Queue + OAuth），但我们保留自己的 Next.js 代码和设计。
 
-#### 七牛云
-- **免费额度**：10GB 存储 + 10GB 流量/月
-- **中国大陆访问**：快
-- **适合**：中文用户
+## 方案 C：混合部署
 
-#### 腾讯云 COS
-- **免费额度**：50GB 存储 + 10GB 流量（6 个月）
-- **中国大陆访问**：快
-- **适合**：大量照片
+前端静态导出到 Pages，动态功能走 Workers API：
 
-#### Cloudinary
-- **免费额度**：25GB 存储 + 25GB 流量/月
-- **全球 CDN**
-- **适合**：国际用户
+```
+静态页面 → Cloudflare Pages（快速、缓存友好）
+API/评论 → Cloudflare Workers + D1（动态功能）
+图片     → R2 + CDN 域名
+```
 
-### 图片优化步骤
+适合渐进式迁移：先保持静态，评论等功能后加。
 
-1. **本地压缩图片**：
-   ```bash
-   # 将 JPG 转换为 WebP
-   find content/articles -name "*.jpg" -exec cwebp -q 85 {} {}.webp \;
-   ```
+## 图片方案
 
-2. **上传到图床**：
-   - 使用服务商的 CLI 或 API
-   - 更新 Markdown 文件中的图片 URL
+### 当前：图片随仓库
 
-3. **更新文章引用**：
-   ```markdown
-   # 之前
-   ![photo](images/photo.jpg)
-   
-   # 之后
-   ![photo](https://your-bucket.qiniucdn.com/images/photo.webp)
-   ```
+- 存储在 `content/articles/`，构建时复制到 `public/article-assets/`
+- 仓库约 139MB（主要是摄影 JPG）
 
-## 内容管理
+### 可选：R2 图床（推荐用于全栈方案）
 
-### 当前工作流
+```bash
+# 上传图片到 R2
+wrangler r2 object put blog-media/path/to/image.webp --file=image.webp
+```
 
-1. 在 `content/articles/` 编辑 Markdown 文件
-2. 提交更改到 Git
-3. 推送触发部署
+- 免费 10GB 存储，出口流量免费
+- 可绑定自定义域名（如 `img.aries727.site`）
+- 配合 Images 服务自动压缩/转 WebP
+- 文章中直接引用 R2 URL
 
-### 可选：可视化编辑器
+### 可选：国内图床（中国大陆加速）
 
-为获得更好的编辑体验，可考虑：
+若 R2 在国内速度不理想：
 
-- **Obsidian**：在 Obsidian 中写作，同步到 `content/articles/`
-- **VS Code**：直接编辑，带 Markdown 预览
-- **Headless CMS**：Outstatic、Tina CMS（需要配置）
+- **七牛云**：10GB 存储 + 10GB 流量/月免费
+- **腾讯云 COS**：50GB 存储 + 10GB 流量（6 个月）免费
+
+图片压缩为 WebP 后体积可降 30–50%。
+
+## 域名与 DNS
+
+- 域名需托管在 Cloudflare（免费 DNS）
+- Pages/Workers 自动提供 SSL 证书
+- 可绑定自定义域名和子域名
+
+## 免费额度估算（个人博客）
+
+| 资源 | 预计用量 | 免费额度 | 结论 |
+|------|----------|----------|------|
+| Workers 请求 | <1 万/天 | 10 万/天 | 够用 |
+| D1 存储 | <100MB | 5GB | 够用 |
+| R2 存储 | <1GB（压缩后） | 10GB | 够用 |
+| KV | 少量 | 10 万读/天 | 够用 |
+| Pages 带宽 | 无限 | 无限 | 够用 |
+
+结论：个人博客全部功能都在免费额度内。
+
+## 迁移路径建议
+
+1. **现在**：保持静态部署，专注内容
+2. **需要评论时**：添加 Workers API + D1（混合方案 C）
+3. **需要用户系统时**：完整迁移到 Workers（方案 B）
+4. **图片变大时**：迁移到 R2
+
+每一步都向后兼容，不需要一次性重写。
 
 ## 部署检查清单
 
@@ -133,8 +147,7 @@
 - [ ] 运行 `npm run build` 验证构建
 - [ ] 检查所有文章链接是否正常
 - [ ] 验证图片是否正确加载
-- [ ] 在移动设备上测试
-- [ ] 检查页面加载速度
+- [ ] 从中国大陆测试访问速度
 
 ## 故障排除
 
@@ -144,22 +157,14 @@
 - 清除 `.next` 和 `out` 目录
 - 运行 `npm ci` 重新安装依赖
 
+### Workers 部署问题
+
+- 检查 `wrangler.toml` 绑定配置
+- 确认 D1/R2/KV 资源已创建
+- 查看 `wrangler tail` 实时日志
+
 ### 图片问题
 
-- 验证 Markdown 中的图片路径
-- 检查 `public/article-assets/` 目录
-- 确保图片不超过 25MB
-
-### 部署问题
-
-- 检查托管平台的构建日志
-- 验证环境变量
-- 检查域名 DNS 设置
-
-## 未来改进
-
-- 图片优化（WebP、懒加载）
-- RSS 订阅生成
-- SEO 增强（sitemap、meta 标签）
-- 评论系统（Giscus、Utterances）
-- 分析统计（Cloudflare Web Analytics）
+- 验证图片路径
+- 检查 R2 存储桶权限
+- 确保图片不超过 25MB（Pages 限制）

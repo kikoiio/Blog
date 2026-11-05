@@ -84,7 +84,16 @@
 
 ## 限制
 
-- 无动态内容（所有页面静态）
+- 当前为全静态输出，无动态内容
 - 无用户认证或账户
-- 无评论或实时功能
+- 无评论或实时功能（架构上可通过 Cloudflare Workers + D1 扩展，见 deployment.md）
 - Next.js 不优化图片（按原样提供）
+
+## 可扩展路径
+
+当前静态导出部署到 Cloudflare Pages。若未来需要动态功能，可迁移到 Cloudflare Workers 全栈架构：
+
+- 移除 `output: 'export'`，通过 `@opennextjs/cloudflare` 部署到 Workers
+- D1 数据库存储文章、评论、用户
+- R2 存储图片，KV 做缓存，Queue 处理异步任务
+- 保留现有 Next.js 代码和内容模型，无需重写
