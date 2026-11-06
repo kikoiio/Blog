@@ -35,7 +35,7 @@
 npm run publish
 ```
 
-脚本扫描允许的文件并计算 SHA-256，上传缺失原件到私有 source 桶，写入 R2 的 `releases/<revision>.json` 与 `releases/latest.json`，然后直接触发网站工作流。最后自动启用发布门控，执行 `gh workflow run deploy.yml --repo <website-repository> -f revision=<hash>`。
+脚本扫描允许的文件并计算 SHA-256，上传缺失原件到私有 source 桶，写入 R2 的 `releases/<revision>.json` 与 `releases/latest.json`，自动启用发布门控，并按固定版本执行 `gh workflow run deploy.yml --repo <website-repository> -f revision=<hash>`。
 
 CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校验 SHA-256。在云端生成最长边不超过 2400、640 像素的 WebP 及配色，上传衍生图片，静态构建并部署 Pages，然后执行在线与浏览器验证。
 
@@ -86,3 +86,9 @@ npm run restore-release
 此次发布包含 2 个相册、20 张图片，原件共 151.7 MiB；`blogs/` 为空，文章 UI 未实现。CI 完成全部 20 个原件的校验恢复、lint、3 项测试、TypeScript 检查、完整 Next.js 构建、WebP 与配色生成、Pages 部署。
 
 在线验证通过全部 20 张图片的 HEAD 请求、公开原件路径 404、无鉴权私有请求 401，以及鉴权后不存在对象 404。Playwright 等待图片实际解码、绘制完成后，桌面和手机检查通过前后切换、相册选择与页面无滚动溢出；截图保存在该工作流的 `folio-browser-check` artifact 中（保留 7 天）。
+
+### 取消私有 GitHub 归档依赖的验证
+
+2026-11-06，使用网站仓库之外、没有 Git 的临时普通目录，链接同一批本地资料执行真实发布。发布成功，临时目录未生成 `.git/` 或本地清单，旧私有仓库未产生新提交。原件与清单均直接保存到 R2，再触发 Folio 工作流。
+
+[验证工作流 42268829281](https://github.com/kikoiio/Folio/actions/runs/42268829281) 全部通过：5 项测试、类型检查、完整构建、上线后的图片访问与隐私检查、桌面和手机浏览器交互。此版快照含 20 张图片及新增的 `blogs/hello.md` 原文；文章阅读 UI 仍未实现。

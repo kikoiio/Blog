@@ -25,7 +25,7 @@ The UI provides a large image viewer, album selection, previous/next controls, c
 
 ## First-time setup
 
-Requires Node.js 22+, Wrangler signed in with OAuth, and GitHub CLI signed in with `gh auth login`. Git must also be able to push to your private archive repository.
+Requires Node.js 22+, Wrangler signed in with OAuth, and GitHub CLI signed in with `gh auth login`. Access to the Folio website repository is needed to request its Actions build; the archive has no Git requirements.
 
 1. Install dependencies with `npm ci`, then copy `.env.example` to `.env.local`. Keep `.env.local` untracked; set the absolute archive path, the website repository name, bucket names, Cloudflare account, Pages project and required `FOLIO_SITE_URL` as described in [deployment setup](docs/deployment.md).
 2. Create an ordinary archive directory outside the Folio checkout containing `blogs/` and `pictures/`. It does not need Git, a remote repository, or any publication metadata files.
