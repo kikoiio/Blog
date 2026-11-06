@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      FOLIO_ARCHIVE_PATH: ${{ runner.temp }}/folio-archive
+      FOLIO_ARCHIVE_PATH: ${{ github.workspace }}/../folio-archive
       FOLIO_RELEASE_REVISION: ${{ inputs.revision || 'latest' }}
       FOLIO_SOURCE_BUCKET: ${{ vars.FOLIO_SOURCE_BUCKET }}
       FOLIO_MEDIA_BUCKET: ${{ vars.FOLIO_MEDIA_BUCKET }}
@@ -34,7 +34,6 @@ jobs:
       FOLIO_SITE_TITLE: ${{ vars.FOLIO_SITE_TITLE || 'Folio' }}
       FOLIO_SITE_URL: ${{ vars.FOLIO_SITE_URL }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TMPDIR: ${{ runner.temp }}
     steps:
       - name: Check out website source
         uses: actions/checkout@v4
