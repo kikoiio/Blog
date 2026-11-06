@@ -1,5 +1,6 @@
-import Terminal from '@/components/Terminal'
+import { albums } from '../.folio/gallery'
+import Gallery from './gallery'
 
-export default function Home() {
-  return <Terminal />
+export default function Page() {
+  return <Gallery albums={albums} />
 }

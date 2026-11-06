@@ -1,24 +1,45 @@
-name: Deploy to Cloudflare Pages
+name: Build and deploy Folio
 
 on:
   push:
-    branches:
-      - master
+    branches: [master, main]
   workflow_dispatch:
+    inputs:
+      revision:
+        description: Immutable archive revision, or latest
+        default: latest
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: cloudflare-pages-production
+  group: folio-production
   cancel-in-progress: true
 
 jobs:
   deploy:
+    if: vars.FOLIO_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      FOLIO_ARCHIVE_PATH: ${{ runner.temp }}/folio-archive
+      FOLIO_RELEASE_REVISION: ${{ inputs.revision || 'latest' }}
+      FOLIO_SOURCE_BUCKET: ${{ vars.FOLIO_SOURCE_BUCKET }}
+      FOLIO_MEDIA_BUCKET: ${{ vars.FOLIO_MEDIA_BUCKET }}
+      FOLIO_MEDIA_BASE_URL: ${{ vars.FOLIO_MEDIA_BASE_URL }}
+      FOLIO_BUILD_URL: ${{ vars.FOLIO_BUILD_URL }}
+      FOLIO_STORAGE_TOKEN: ${{ secrets.FOLIO_STORAGE_TOKEN }}
+      FOLIO_SITE_TITLE: ${{ vars.FOLIO_SITE_TITLE || 'Folio' }}
+      FOLIO_SITE_URL: ${{ vars.FOLIO_SITE_URL }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TMPDIR: ${{ runner.temp }}
     steps:
-      - name: Check out repository
+      - name: Check out website source
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -29,11 +50,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build static site
+      - name: Check source and synchronization
+        run: |
+          npm run lint
+          npm test
+
+      - name: Restore immutable archive from private R2
+        run: npm run restore-release
+
+      - name: Process pictures and build static site
+        env:
+          FOLIO_REMOTE_MEDIA: '1'
         run: npm run build
 
+      - name: Check TypeScript
+        run: npx tsc --noEmit --incremental false
+
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler@latest pages deploy out --project-name=blog
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: npx wrangler@4.137.0 pages deploy out --project-name="$PAGES_PROJECT" --branch="${{ github.event.repository.default_branch }}"
+
+      - name: Verify live pages, images and private source boundary
+        run: node scripts/verify-deployment.mjs

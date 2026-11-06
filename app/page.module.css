@@ -1,0 +1,193 @@
+.stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  padding: 2.6vh 0.55vw 7.4vh;
+  overflow: hidden;
+  background: #1a1e2b;
+  background-image: linear-gradient(150deg, #ffffff05, #00000024);
+  transition: background-color 650ms ease, color 650ms ease;
+}
+
+.panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: clamp(22px, 2.1vw, 36px);
+  background-image: linear-gradient(155deg, #ffffff18, #00000012);
+  transition: background-color 650ms ease;
+  box-shadow:
+    0 2px 3px #00000020,
+    0 12px 19px -6px #00000035,
+    0 29px 36px -12px #00000030;
+}
+
+.gallery {
+  position: absolute;
+  inset: clamp(10px, 1.2vw, 18px);
+}
+
+.photoFrame {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: clamp(14px, 1.4vw, 24px);
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoControls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid #ffffff40;
+  border-radius: 32px;
+  background: var(--controls-background);
+  transition: background-color 650ms ease;
+  color: #fff;
+  backdrop-filter: blur(12px);
+  font: 12px ui-sans-serif, system-ui, sans-serif;
+}
+
+.photoArrow,
+.photoDot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.photoArrow {
+  background: #ffffff30;
+  font: 24px ui-sans-serif, system-ui, sans-serif;
+}
+
+.photoDots {
+  display: flex;
+}
+
+.photoDot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+}
+
+.photoDot[aria-pressed='true']::before {
+  opacity: 1;
+}
+
+.photoArrow:hover,
+.photoDot:hover {
+  background: #ffffff48;
+}
+
+.photoArrow:focus-visible,
+.photoDot:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.photoCount {
+  min-width: 32px;
+  font-variant-numeric: tabular-nums;
+}
+
+.albumControl {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  max-width: calc(100% - 32px);
+  border: 1px solid #ffffff40;
+  border-radius: 24px;
+  background: var(--controls-background);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  transition: background-color 650ms ease;
+}
+
+.albumControl select {
+  display: block;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: 12px ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+  color-scheme: dark;
+}
+
+.albumControl select:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.albumControl option {
+  background: #20232b;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.empty {
+  place-self: center;
+  color: #e1e4ea;
+  font: 14px ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .panel,
+  .photoControls,
+  .albumControl {
+    transition: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .stage {
+    padding: 2.6vh 2vw 7.4vh;
+  }
+
+  .panel {
+    border-radius: 24px;
+  }
+
+  .photoControls {
+    bottom: 12px;
+    gap: 4px;
+    padding-inline: 6px;
+  }
+
+  .photoDot {
+    width: 30px;
+  }
+}
