@@ -41,10 +41,6 @@ CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校
 
 `npm run dev` 用于本地监听和预览，刷新页面显示变化，不自动发布。网站目录改名或移动后重启服务即可；归档目录移动时更新 `FOLIO_ARCHIVE_PATH` 后重启。
 
-## 原私有 GitHub 仓库的移除
-
-发布脚本不再读取归档 Git、调用 Git 命令或访问私有 GitHub 仓库，`FOLIO_ARCHIVE_REPOSITORY` 已移除。确认所需资料在本地与 R2 后，可以删除旧的远程私有归档仓库；不要删除本地归档文件夹。旧的本地 `.git/` 和 `release.json` 不参与新流程，脚本不会修改或删除它们。
-
 ## 恢复已发布原件
 
 `npm run restore-release` 读取导出的 shell 环境变量，不自动加载 `.env.local`。本机已有 Wrangler OAuth 登录时，指定恢复目录、桶和账户：
@@ -81,14 +77,8 @@ npm run restore-release
 | 公开媒体 | [folio-media.3145558167.workers.dev](https://folio-media.3145558167.workers.dev)，受限只读图片 |
 | 构建网关 | [folio-build.3145558167.workers.dev](https://folio-build.3145558167.workers.dev)，Bearer 鉴权 |
 | Pages 站点 | [blog-b99.pages.dev](https://blog-b99.pages.dev) |
-| 成功工作流 | [Actions run 42264516725](https://github.com/kikoiio/Folio/actions/runs/42264516725) |
+| 成功工作流 | [Actions run 42268829281](https://github.com/kikoiio/Folio/actions/runs/42268829281) |
 
-此次发布包含 2 个相册、20 张图片，原件共 151.7 MiB；`blogs/` 为空，文章 UI 未实现。CI 完成全部 20 个原件的校验恢复、lint、3 项测试、TypeScript 检查、完整 Next.js 构建、WebP 与配色生成、Pages 部署。
+当前快照包含 2 个相册、20 张图片和 `blogs/hello.md` 原文；文章阅读 UI 尚未实现。归档无需 Git 仓库，原件与版本清单直接保存到 R2。
 
-在线验证通过全部 20 张图片的 HEAD 请求、公开原件路径 404、无鉴权私有请求 401，以及鉴权后不存在对象 404。Playwright 等待图片实际解码、绘制完成后，桌面和手机检查通过前后切换、相册选择与页面无滚动溢出；截图保存在该工作流的 `folio-browser-check` artifact 中（保留 7 天）。
-
-### 取消私有 GitHub 归档依赖的验证
-
-2026-11-06，使用网站仓库之外、没有 Git 的临时普通目录，链接同一批本地资料执行真实发布。发布成功，临时目录未生成 `.git/` 或本地清单，旧私有仓库未产生新提交。原件与清单均直接保存到 R2，再触发 Folio 工作流。
-
-[验证工作流 42268829281](https://github.com/kikoiio/Folio/actions/runs/42268829281) 全部通过：5 项测试、类型检查、完整构建、上线后的图片访问与隐私检查、桌面和手机浏览器交互。此版快照含 20 张图片及新增的 `blogs/hello.md` 原文；文章阅读 UI 仍未实现。
+上述工作流通过 5 项测试、lint、TypeScript 检查、完整构建与 Pages 部署。在线检查覆盖全部图片访问、公开原件路径隔离及构建网关鉴权；桌面和手机浏览器检查覆盖图片实际解码、前后切换、相册选择与页面溢出。截图保存在该工作流的 `folio-browser-check` artifact 中，保留 7 天。

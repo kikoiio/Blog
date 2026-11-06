@@ -62,7 +62,7 @@ Originals and version manifests are immutable by content hash; `releases/latest.
 | Command | Purpose |
 |---|---|
 | `node scripts/setup-cloudflare.mjs` | First-time bucket, Worker and GitHub build configuration |
-| `npm run publish` | Incremental source upload, metadata-only Git update and cloud publication |
+| `npm run publish` | Incremental source upload and cloud publication |
 | `npm run restore-release` | Restore manifest-listed originals with checksums; requires exported configuration and storage authentication |
 | `npm run dev` | Synchronize, watch and preview locally |
 | `npm run sync` | Synchronize local preview once |
