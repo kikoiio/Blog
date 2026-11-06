@@ -61,8 +61,14 @@ export function cloudflareClient() {
       const response = await request(objectPath(bucket, key), { allowMissing: true, headers: { Range: 'bytes=0-0' } })
       if (!response) return false
       const range = response.headers.get('content-range')
-      const size = range ? Number(range.split('/').pop()) : Number(response.headers.get('content-length'))
-      await response.body?.cancel()
+      const length = response.headers.get('content-length')
+      let size
+      if (range) size = Number(range.split('/').pop())
+      else if (length && !response.headers.get('content-encoding')) size = Number(length)
+      if (size === undefined && expectedSize !== undefined) {
+        size = 0
+        for await (const chunk of response.body) size += chunk.byteLength
+      } else await response.body?.cancel()
       if (expectedSize !== undefined && size !== expectedSize) throw new Error(`Remote size mismatch: ${key}`)
       return true
     },
