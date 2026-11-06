@@ -41,6 +41,12 @@ CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校
 
 `npm run dev` 用于本地监听和预览，刷新页面显示变化，不自动发布。网站目录改名或移动后重启服务即可；归档目录移动时更新 `FOLIO_ARCHIVE_PATH` 后重启。
 
+## 自定义域名
+
+先在目标 Pages 项目的“自定义域”中关联根域名和 `www`，再为两个名称配置指向项目 `pages.dev` 地址的 CNAME。根域名需要在同一 Cloudflare 账户中添加 DNS 区域，并在注册商处使用该区域分配的名称服务器；切换前备份并核对完整 DNS 记录。
+
+域名与 HTTPS 均验证通过后，将 `.env.local` 和网站仓库 Actions Variable 中的 `FOLIO_SITE_URL` 更新为正式地址。DNS 传播期间保留旧托管，避免尚未更新的访问失去服务。
+
 ## 恢复已发布原件
 
 `npm run restore-release` 读取导出的 shell 环境变量，不自动加载 `.env.local`。本机已有 Wrangler OAuth 登录时，指定恢复目录、桶和账户：
@@ -77,7 +83,7 @@ npm run restore-release
 | 公开媒体 | [folio-media.3145558167.workers.dev](https://folio-media.3145558167.workers.dev)，受限只读图片 |
 | 构建网关 | [folio-build.3145558167.workers.dev](https://folio-build.3145558167.workers.dev)，Bearer 鉴权 |
 | Pages 站点 | [blog-b99.pages.dev](https://blog-b99.pages.dev) |
-| 成功工作流 | [Actions run 42268829281](https://github.com/kikoiio/Folio/actions/runs/42268829281) |
+| 成功工作流 | [Actions run 42275567656](https://github.com/kikoiio/Folio/actions/runs/42275567656) |
 
 当前快照包含 2 个相册、20 张图片和 `blogs/hello.md` 原文；文章阅读 UI 尚未实现。归档无需 Git 仓库，原件与版本清单直接保存到 R2。
 
