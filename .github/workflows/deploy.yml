@@ -74,3 +74,22 @@ jobs:
 
       - name: Verify live pages, images and private source boundary
         run: node scripts/verify-deployment.mjs
+
+      - name: Install cloud browser verification tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/folio-ui" --no-audit --no-fund --ignore-scripts playwright@1.65.0
+          node "$RUNNER_TEMP/folio-ui/node_modules/playwright/cli.js" install --with-deps chromium
+
+      - name: Verify live gallery on desktop and mobile
+        run: node scripts/verify-browser.mjs "$RUNNER_TEMP/folio-ui"
+
+      - name: Save browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: folio-browser-check
+          path: |
+            ${{ runner.temp }}/folio-desktop.png
+            ${{ runner.temp }}/folio-mobile.png
+          if-no-files-found: ignore
+          retention-days: 7
