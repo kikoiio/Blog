@@ -25,7 +25,7 @@
 | `CLOUDFLARE_API_TOKEN` | Actions Secret：Pages: Edit，仅在 CI 部署步骤使用 |
 | `FOLIO_PUBLISH_ENABLED` | Actions Variable：必须为 `true` 才运行部署任务，`publish` 上传完成后自动启用 |
 
-本地上传和首次资源配置使用 Wrangler OAuth。`gh` 需要设置网站仓库 Variables/Secrets 和运行 Actions 的权限；归档目录没有 Git 相关要求。将 CI 的 `FOLIO_BUILD_URL` 与存储 token 留在 CI 配置中，本地发布直接访问 Cloudflare REST。CI 只检出网站代码，不需要私有 GitHub 归档 checkout、读取 token 或 R2 API token。
+本地上传和首次资源配置使用 Wrangler OAuth。`gh` 需要设置网站仓库 Variables/Secrets 和运行 Actions 的权限。将 CI 的 `FOLIO_BUILD_URL` 与存储 token 留在 CI 配置中，本地发布直接访问 Cloudflare REST。CI 只检出网站代码，经构建网关读取归档，不需要 R2 API token。
 
 ## 日常更新
 
@@ -45,7 +45,7 @@ CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校
 
 先在目标 Pages 项目的“自定义域”中关联根域名和 `www`，再为两个名称配置指向项目 `pages.dev` 地址的 CNAME。根域名需要在同一 Cloudflare 账户中添加 DNS 区域，并在注册商处使用该区域分配的名称服务器；切换前备份并核对完整 DNS 记录。
 
-域名与 HTTPS 均验证通过后，将 `.env.local` 和网站仓库 Actions Variable 中的 `FOLIO_SITE_URL` 更新为正式地址。DNS 传播期间保留旧托管，避免尚未更新的访问失去服务。
+域名与 HTTPS 均验证通过后，将 `.env.local` 和网站仓库 Actions Variable 中的 `FOLIO_SITE_URL` 更新为正式地址。
 
 ## 恢复已发布原件
 
@@ -82,9 +82,10 @@ npm run restore-release
 | R2 桶 | `aries-originals` / `aries-media`，均关闭直接公开访问 |
 | 公开媒体 | [folio-media.3145558167.workers.dev](https://folio-media.3145558167.workers.dev)，受限只读图片 |
 | 构建网关 | [folio-build.3145558167.workers.dev](https://folio-build.3145558167.workers.dev)，Bearer 鉴权 |
-| Pages 站点 | [blog-b99.pages.dev](https://blog-b99.pages.dev) |
+| 正式站点 | [aries727.site](https://aries727.site) / [www.aries727.site](https://www.aries727.site)，Cloudflare 自定义域均为 active，HTTPS 返回 200 并显示新画廊 |
+| Pages 后备 | [blog-b99.pages.dev](https://blog-b99.pages.dev) |
 | 成功工作流 | [Actions run 42275567656](https://github.com/kikoiio/Folio/actions/runs/42275567656) |
 
-当前快照包含 2 个相册、20 张图片和 `blogs/hello.md` 原文；文章阅读 UI 尚未实现。归档无需 Git 仓库，原件与版本清单直接保存到 R2。
+该次发布快照包含 2 个相册、20 张图片和 `blogs/hello.md` 原文；文章阅读 UI 尚未实现。
 
 上述工作流通过 5 项测试、lint、TypeScript 检查、完整构建与 Pages 部署。在线检查覆盖全部图片访问、公开原件路径隔离及构建网关鉴权；桌面和手机浏览器检查覆盖图片实际解码、前后切换、相册选择与页面溢出。截图保存在该工作流的 `folio-browser-check` artifact 中，保留 7 天。

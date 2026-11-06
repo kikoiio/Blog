@@ -2,6 +2,8 @@
 
 A folder-driven personal website for your pictures and words, built with Next.js, React and TypeScript.
 
+Live site: [aries727.site](https://aries727.site) ([www](https://www.aries727.site)). Pages fallback: [blog-b99.pages.dev](https://blog-b99.pages.dev).
+
 Keep the reusable website code in one repository and your complete archive in an independent local directory. Private R2 storage holds originals; cloud CI generates web images and deploys the static site to Cloudflare Pages. Release manifests are stored alongside the originals in private R2; the archive does not need a Git repository.
 
 ## Archive layout
@@ -45,7 +47,7 @@ The initial publish uploads all selected originals; later publishes upload only 
 
 ## Daily updates and local preview
 
-Edit the archive, finish saving files, then run `npm run publish` from the Folio checkout. It uploads originals and release manifests using local Wrangler OAuth through Cloudflare REST, writes the immutable revision manifest and latest pointer to private R2, enables `FOLIO_PUBLISH_ENABLED=true`, and triggers `deploy.yml` with the content-hash revision. Neither publishing nor the workflow requires a private GitHub archive repository. GitHub is used only for the public website code and its Actions build.
+Edit the archive, finish saving files, then run `npm run publish` from the Folio checkout. It uploads originals and release manifests using local Wrangler OAuth through Cloudflare REST, writes the immutable revision manifest and latest pointer to private R2, enables `FOLIO_PUBLISH_ENABLED=true`, and triggers `deploy.yml` with the content-hash revision.
 
 For local preview, run `npm run dev`. It synchronizes and watches the archive; refresh the page after changes. Preview does not publish. If you rename or move the Folio checkout, restart the development server. If the archive moves, update `FOLIO_ARCHIVE_PATH` and restart.
 

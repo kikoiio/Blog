@@ -9,7 +9,6 @@
     "dev": "node scripts/dev.mjs",
     "prebuild": "node scripts/sync-archive.mjs",
     "build": "next build --webpack",
-    "start": "next start",
     "lint": "eslint",
     "sync": "node scripts/sync-archive.mjs",
     "test": "node --test tests/*.test.mjs",
