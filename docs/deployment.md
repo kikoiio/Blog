@@ -4,9 +4,9 @@
 
 ## 首次配置
 
-需要 Node.js 22+、已登录的 Wrangler OAuth、已执行 `gh auth login` 的 GitHub CLI，以及私有归档仓库的 Git 推送权限。Cloudflare 账户需启用 R2，并准备目标 Pages 项目。
+需要 Node.js 22+、已登录的 Wrangler OAuth、已执行 `gh auth login` 的 GitHub CLI，以及 Folio 网站仓库的 Actions 操作权限。Cloudflare 账户需启用 R2，并准备目标 Pages 项目。
 
-1. 在网站目录外整理完整 `blogs/`、`pictures/`。归档目录初始化 Git，`origin` 对应私有清单仓库；`.gitignore` 忽略两个原始目录，仅跟踪 `README.md`、`.gitignore`、生成的 `release.json`。先提交说明与忽略规则，避免发布时夹带其他暂存文件。
+1. 在网站目录外创建普通归档文件夹，整理完整 `blogs/`、`pictures/`。不需要初始化 Git、配置远程仓库或手工维护发布清单。
 2. 在网站目录执行 `npm ci`，复制 `.env.example` 为 `.env.local` 并填写下表本机配置。`.env.local` 保持未跟踪。设置必填的 `FOLIO_SITE_URL`，在网站 Actions Secrets 配置账户 ID 和仅用于 Pages 部署的 API token。
 3. 执行一次 `node scripts/setup-cloudflare.mjs`。脚本创建或复用两个桶，部署两个 Worker，生成存储 token，并写入 GitHub 构建变量和 secret；生成值保存在被忽略的 `.folio/`。两个桶均保持直接公开访问关闭。
 4. 原始文件夹整理完成后，在网站目录执行 `npm run publish`，一次提交完整允许发布的文件集合；初次上传全部所选文件，以后按内容哈希增量上传。
@@ -15,7 +15,6 @@
 |---|---|
 | `FOLIO_ARCHIVE_PATH` | `.env.local`：完整本地归档绝对路径；CI 为临时恢复目录 |
 | `FOLIO_SITE_TITLE` | `.env.local` → Actions Variable：站点标题 |
-| `FOLIO_ARCHIVE_REPOSITORY` | `.env.local`：私有清单仓库 `owner/archive`，仅本地发布使用 |
 | `FOLIO_WEBSITE_REPOSITORY` | `.env.local`：网站工作流仓库 `owner/site` |
 | `FOLIO_SOURCE_BUCKET` / `FOLIO_MEDIA_BUCKET` | `.env.local` → Actions Variables：两个独立桶名 |
 | `CLOUDFLARE_ACCOUNT_ID` | `.env.local` 及 Actions Secret：目标账户 ID |
@@ -26,7 +25,7 @@
 | `CLOUDFLARE_API_TOKEN` | Actions Secret：Pages: Edit，仅在 CI 部署步骤使用 |
 | `FOLIO_PUBLISH_ENABLED` | Actions Variable：必须为 `true` 才运行部署任务，`publish` 上传完成后自动启用 |
 
-本地上传和首次资源配置使用 Wrangler OAuth。`gh` 需要设置网站仓库 Variables/Secrets 和运行 Actions 的权限；Git 需要推送私有清单仓库。将 CI 的 `FOLIO_BUILD_URL` 与存储 token 留在 CI 配置中，本地发布直接访问 Cloudflare REST。CI 只检出网站代码，不需要私有 GitHub 归档 checkout、读取 token 或 R2 API token。
+本地上传和首次资源配置使用 Wrangler OAuth。`gh` 需要设置网站仓库 Variables/Secrets 和运行 Actions 的权限；归档目录没有 Git 相关要求。将 CI 的 `FOLIO_BUILD_URL` 与存储 token 留在 CI 配置中，本地发布直接访问 Cloudflare REST。CI 只检出网站代码，不需要私有 GitHub 归档 checkout、读取 token 或 R2 API token。
 
 ## 日常更新
 
@@ -36,11 +35,15 @@
 npm run publish
 ```
 
-脚本扫描允许的文件并计算 SHA-256，上传缺失原件到私有 source 桶，写入 `releases/<revision>.json`，将 `release.json` 提交并推送至私有归档 Git，再更新 `releases/latest.json`。最后自动启用发布门控，执行 `gh workflow run deploy.yml --repo <website-repository> -f revision=<hash>`。
+脚本扫描允许的文件并计算 SHA-256，上传缺失原件到私有 source 桶，写入 R2 的 `releases/<revision>.json` 与 `releases/latest.json`，然后直接触发网站工作流。最后自动启用发布门控，执行 `gh workflow run deploy.yml --repo <website-repository> -f revision=<hash>`。
 
 CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校验 SHA-256。在云端生成最长边不超过 2400、640 像素的 WebP 及配色，上传衍生图片，静态构建并部署 Pages，然后执行在线与浏览器验证。
 
 `npm run dev` 用于本地监听和预览，刷新页面显示变化，不自动发布。网站目录改名或移动后重启服务即可；归档目录移动时更新 `FOLIO_ARCHIVE_PATH` 后重启。
+
+## 原私有 GitHub 仓库的移除
+
+发布脚本不再读取归档 Git、调用 Git 命令或访问私有 GitHub 仓库，`FOLIO_ARCHIVE_REPOSITORY` 已移除。确认所需资料在本地与 R2 后，可以删除旧的远程私有归档仓库；不要删除本地归档文件夹。旧的本地 `.git/` 和 `release.json` 不参与新流程，脚本不会修改或删除它们。
 
 ## 恢复已发布原件
 
@@ -74,7 +77,6 @@ npm run restore-release
 | 资源 | 实例 |
 |---|---|
 | 网站源码 | [kikoiio/Folio](https://github.com/kikoiio/Folio) |
-| 私有清单仓库 | `kikoiio/Aries-Archive`，仅清单与说明、忽略规则 |
 | R2 桶 | `aries-originals` / `aries-media`，均关闭直接公开访问 |
 | 公开媒体 | [folio-media.3145558167.workers.dev](https://folio-media.3145558167.workers.dev)，受限只读图片 |
 | 构建网关 | [folio-build.3145558167.workers.dev](https://folio-build.3145558167.workers.dev)，Bearer 鉴权 |

@@ -10,11 +10,11 @@ Folio 是可复用的个人网站框架。网站代码可公开，完整文章�
 - 文章与相对附件放在 `blogs/`；图片按文件夹组织，不要求手写相册或配色数据。
 - 每个包含图片的文件夹形成相册，父目录形成分类，文件名自然排序。
 - 首次执行 `node scripts/setup-cloudflare.mjs` 配置资源；整理好完整归档后执行 `npm run publish`，以后同一命令增量发布。
-- `.env.local` 与生成缓存不进入 Git；私有归档 Git 仅保存生成的 `release.json`、`README.md` 和 `.gitignore`，忽略原始目录。
+- `.env.local` 与生成缓存不进入网站 Git；本地归档是普通文件夹，无需 Git 或远程仓库，版本清单与原件一起保存在私有 R2。
 
 ## 发布架构
 
-- 本地使用 Wrangler OAuth REST 上传内容哈希原件及 `releases/<revision>.json`，更新 `releases/latest.json`，记录私有 Git 清单后按 revision 触发网站工作流。
+- 本地使用 Wrangler OAuth REST 上传内容哈希原件及 `releases/<revision>.json`，更新 `releases/latest.json`，按 revision 直接触发 Folio 网站工作流。
 - 两个 R2 桶均关闭直接公开访问。`folio-media` 只绑定媒体桶，通过 `workers.dev` 公开受限的只读 WebP 图片。
 - `folio-build` 绑定两个桶，每个请求验证 Bearer token；source 仅允许 `GET`/`HEAD`，media 仅允许 `GET`/`HEAD`/`PUT`，不提供 `DELETE`。
 - CI 使用 `FOLIO_BUILD_URL` 与 secret `FOLIO_STORAGE_TOKEN`，从 R2 读取清单，仅恢复所列文件并验证校验和；无需检出私有 GitHub 归档或持有其 token。

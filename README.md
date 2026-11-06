@@ -2,7 +2,7 @@
 
 A folder-driven personal website for your pictures and words, built with Next.js, React and TypeScript.
 
-Keep the reusable website code in one repository and your complete archive in an independent local directory. Private R2 storage holds originals; cloud CI generates web images and deploys the static site to Cloudflare Pages. A private GitHub repository records release metadata only.
+Keep the reusable website code in one repository and your complete archive in an independent local directory. Private R2 storage holds originals; cloud CI generates web images and deploys the static site to Cloudflare Pages. Release manifests are stored alongside the originals in private R2; the archive does not need a Git repository.
 
 ## Archive layout
 
@@ -27,8 +27,8 @@ The UI provides a large image viewer, album selection, previous/next controls, c
 
 Requires Node.js 22+, Wrangler signed in with OAuth, and GitHub CLI signed in with `gh auth login`. Git must also be able to push to your private archive repository.
 
-1. Install dependencies with `npm ci`, then copy `.env.example` to `.env.local`. Keep `.env.local` untracked; set the absolute archive path, repository names, bucket names, Cloudflare account, Pages project and required `FOLIO_SITE_URL` as described in [deployment setup](docs/deployment.md).
-2. Initialize the independent archive as a private Git checkout. Ignore raw `blogs/` and `pictures/`; track only `README.md`, `.gitignore` and generated `release.json`. Set its `origin` to match `FOLIO_ARCHIVE_REPOSITORY`.
+1. Install dependencies with `npm ci`, then copy `.env.example` to `.env.local`. Keep `.env.local` untracked; set the absolute archive path, the website repository name, bucket names, Cloudflare account, Pages project and required `FOLIO_SITE_URL` as described in [deployment setup](docs/deployment.md).
+2. Create an ordinary archive directory outside the Folio checkout containing `blogs/` and `pictures/`. It does not need Git, a remote repository, or any publication metadata files.
 3. Enable R2 and prepare the Pages project and deployment credentials, then provision storage and Workers once:
 
 ```bash
@@ -45,7 +45,7 @@ The initial publish uploads all selected originals; later publishes upload only 
 
 ## Daily updates and local preview
 
-Edit the archive, finish saving files, then run `npm run publish` from the Folio checkout. It uploads originals and release manifests using local Wrangler OAuth through Cloudflare REST, commits and pushes only `release.json` to the private archive repository, enables `FOLIO_PUBLISH_ENABLED=true`, and triggers `deploy.yml` with the content-hash revision. The workflow requires no private GitHub archive checkout or archive token.
+Edit the archive, finish saving files, then run `npm run publish` from the Folio checkout. It uploads originals and release manifests using local Wrangler OAuth through Cloudflare REST, writes the immutable revision manifest and latest pointer to private R2, enables `FOLIO_PUBLISH_ENABLED=true`, and triggers `deploy.yml` with the content-hash revision. Neither publishing nor the workflow requires a private GitHub archive repository. GitHub is used only for the public website code and its Actions build.
 
 For local preview, run `npm run dev`. It synchronizes and watches the archive; refresh the page after changes. Preview does not publish. If you rename or move the Folio checkout, restart the development server. If the archive moves, update `FOLIO_ARCHIVE_PATH` and restart.
 
