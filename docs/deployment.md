@@ -1,78 +1,86 @@
-# Folio：R2、Workers 与清单发布
+# Folio 部署与发布
 
 更新日期：2026-11-06。
 
-本文记录已授权、正在部署的方案。**用户已告知 R2 激活；Workers 配置与发布集成仍在进行，尚未确认生产发布成功。** 脚本及流水线由主 agent 实现，现有文件不代表端到端验证已经完成。
-
-## 资料与访问边界
-
-| 位置 / 服务 | 内容与权限 |
-|---|---|
-| 独立本地归档 | 完整 `blogs/`、`pictures/`，不为上传或 GitHub 而裁剪 |
-| Folio 网站仓库 | 可公开的代码与工作流，不提交私有原件、缓存或凭证 |
-| 私有 GitHub 仓库 `Aries-Archive` | 仅生成的 `release.json`、`README.md`、`.gitignore`；排除原始 `blogs/`、`pictures/` |
-| 私有 R2 source bucket | 内容哈希原件、`releases/<revision>.json` 和 `latest.json`；不公开 |
-| 独立 R2 media bucket | 网页衍生图片，由 Worker 提供访问 |
-| `folio-media` Worker | 只绑定 `MEDIA` 桶；公开只读图片，允许 `GET`/`HEAD`，不允许写入或删除 |
-| `folio-build` Worker | 绑定 source 与 media 两个桶；每个请求必须通过 `FOLIO_STORAGE_TOKEN` 验证；source 仅 `GET`/`HEAD`，media 仅 `GET`/`HEAD`/`PUT`，不允许 `DELETE` |
-| Cloudflare Pages | 构建后的静态 Next.js 站点 |
-
-当前账户没有自定义域名，公开图片使用 `folio-media` 的 HTTPS `workers.dev` 地址，不使用 `r2.dev`。公开媒体 Worker 无法访问 source 桶。
-
-GitHub 保存清单记录，CI 的清单与文件来源是 R2。当前 `blogs/` 为空，网站 UI 仅有图片画廊，文章页面尚未实现。
-
 ## 首次配置
 
-1. 保留网站目录外完整的 `blogs/` 和 `pictures/`。准备私有 `Aries-Archive` 仓库并排除这两个原始目录，仅记录清单、说明和忽略规则。
-2. 在已激活的 R2 中准备独立的 source 与 media 桶。部署两个小型 Worker：`folio-media` 仅绑定 `MEDIA`，提供公开只读图片；`folio-build` 绑定两个桶，按上表限制方法。
-3. 生成私密的 `FOLIO_STORAGE_TOKEN`，将相同值配置为 `folio-build` 的 Worker secret 与 Folio GitHub Actions Secret。每个构建 Worker 请求都须携带 `Authorization: Bearer <token>`，包括 `GET` 和 `HEAD`。不要把此 token 放入网页或清单。
-4. 将 `folio-media` 的 `workers.dev` 地址设为 `FOLIO_MEDIA_BASE_URL`，将受保护构建 Worker 地址设为 `FOLIO_BUILD_URL`。配置目标 Pages 项目；仓库改名不会自动更改 Pages 项目，沿用 `blog` 项目时填写 `blog`。
-5. 本地复用 Wrangler OAuth 登录，通过 Cloudflare REST 上传 source 原件和清单；本地 Git/GitHub 登录需能写入私有清单仓库，并由 `gh` 触发网站工作流。CI 的现有 `CLOUDFLARE_API_TOKEN` 仅用于 Pages 部署，不用于 R2。
-6. 主 agent 完成集成后，运行首次 `npm run publish`，核对指定 revision 的工作流、公开图片与 Pages 结果，以及 source 私有和构建 Worker 鉴权，再确认发布完成。
+需要 Node.js 22+、已登录的 Wrangler OAuth、已执行 `gh auth login` 的 GitHub CLI，以及私有归档仓库的 Git 推送权限。Cloudflare 账户需启用 R2，并准备目标 Pages 项目。
 
-计划配置如下；部署仍在进行，不表示当前模板已读取全部变量。
+1. 在网站目录外整理完整 `blogs/`、`pictures/`。归档目录初始化 Git，`origin` 对应私有清单仓库；`.gitignore` 忽略两个原始目录，仅跟踪 `README.md`、`.gitignore`、生成的 `release.json`。先提交说明与忽略规则，避免发布时夹带其他暂存文件。
+2. 在网站目录执行 `npm ci`，复制 `.env.example` 为 `.env.local` 并填写下表本机配置。`.env.local` 保持未跟踪。设置必填的 `FOLIO_SITE_URL`，在网站 Actions Secrets 配置账户 ID 和仅用于 Pages 部署的 API token。
+3. 执行一次 `node scripts/setup-cloudflare.mjs`。脚本创建或复用两个桶，部署两个 Worker，生成存储 token，并写入 GitHub 构建变量和 secret；生成值保存在被忽略的 `.folio/`。两个桶均保持直接公开访问关闭。
+4. 原始文件夹整理完成后，在网站目录执行 `npm run publish`，一次提交完整允许发布的文件集合；初次上传全部所选文件，以后按内容哈希增量上传。
 
-| 配置 | 用途与配置位置 |
+| 配置 | 位置与用途 |
 |---|---|
-| `FOLIO_ARCHIVE_PATH` | 本机完整归档绝对路径；CI 使用临时恢复目录 |
-| `FOLIO_SITE_TITLE` | 站点标题；本机环境 / Actions Variable |
-| `FOLIO_ARCHIVE_REPOSITORY` | 私有清单记录仓库 `owner/Aries-Archive`；仅本地发布使用 |
-| `FOLIO_WEBSITE_REPOSITORY` | 工作流目标 `owner/Folio`；本地 `gh workflow run` 使用 |
-| `FOLIO_SOURCE_BUCKET` | 私有原件与清单桶名；本机环境 / Actions Variable，匹配 Worker 绑定 |
-| `FOLIO_MEDIA_BUCKET` | 衍生图片桶名；Actions Variable，匹配两个 Worker 的媒体绑定 |
-| `FOLIO_MEDIA_BASE_URL` | `folio-media` 的 HTTPS `workers.dev` 公开地址；Actions Variable |
-| `FOLIO_BUILD_URL` | 受保护的 `folio-build` HTTPS 地址；Actions Variable |
-| `FOLIO_STORAGE_TOKEN` | 生成的存储访问密钥；构建 Worker secret 与 Actions Secret，CI 每次存储请求使用 |
-| `CLOUDFLARE_ACCOUNT_ID` | 目标账户 ID；本机环境 / Actions 配置 |
-| `CLOUDFLARE_API_TOKEN` | 现有 Pages 部署 token（Pages: Edit）；Actions Secret，仅部署步骤使用 |
-| `CLOUDFLARE_PAGES_PROJECT` | 目标 Pages 项目名；Actions Variable |
+| `FOLIO_ARCHIVE_PATH` | `.env.local`：完整本地归档绝对路径；CI 为临时恢复目录 |
+| `FOLIO_SITE_TITLE` | `.env.local` → Actions Variable：站点标题 |
+| `FOLIO_ARCHIVE_REPOSITORY` | `.env.local`：私有清单仓库 `owner/archive`，仅本地发布使用 |
+| `FOLIO_WEBSITE_REPOSITORY` | `.env.local`：网站工作流仓库 `owner/site` |
+| `FOLIO_SOURCE_BUCKET` / `FOLIO_MEDIA_BUCKET` | `.env.local` → Actions Variables：两个独立桶名 |
+| `CLOUDFLARE_ACCOUNT_ID` | `.env.local` 及 Actions Secret：目标账户 ID |
+| `CLOUDFLARE_PAGES_PROJECT` | `.env.local` → Actions Variable：Pages 项目名 |
+| `FOLIO_SITE_URL` | 必填，`.env.local` → Actions Variable：完整 HTTPS 站点地址，用于生产验证 |
+| `FOLIO_MEDIA_BASE_URL` / `FOLIO_BUILD_URL` | setup 自动设置的 Actions Variables：公开媒体与受保护构建 Worker 地址 |
+| `FOLIO_STORAGE_TOKEN` | setup 生成的 Actions Secret，对应构建 Worker 的 `BUILD_TOKEN` secret |
+| `CLOUDFLARE_API_TOKEN` | Actions Secret：Pages: Edit，仅在 CI 部署步骤使用 |
+| `FOLIO_PUBLISH_ENABLED` | Actions Variable：必须为 `true` 才运行部署任务，`publish` 上传完成后自动启用 |
 
-本地发布走 Wrangler OAuth REST 上传；`FOLIO_BUILD_URL` 和 `FOLIO_STORAGE_TOKEN` 用于 CI 存储访问。CI 不需要私有 GitHub 归档 checkout、归档读取 token 或 R2 API token；只检出网站代码。Workers 通过桶绑定访问 R2。
+本地上传和首次资源配置使用 Wrangler OAuth。`gh` 需要设置网站仓库 Variables/Secrets 和运行 Actions 的权限；Git 需要推送私有清单仓库。将 CI 的 `FOLIO_BUILD_URL` 与存储 token 留在 CI 配置中，本地发布直接访问 Cloudflare REST。CI 只检出网站代码，不需要私有 GitHub 归档 checkout、读取 token 或 R2 API token。
 
-## 日常发布
+## 日常更新
 
-在本地修改 `blogs/`、`pictures/` 后，从 Folio 工作目录运行：
+修改本地文件、保存完毕后，在 Folio 工作目录运行：
 
 ```bash
 npm run publish
 ```
 
-发布依次执行：扫描允许发布的文件并计算内容哈希；使用 Wrangler OAuth REST 增量上传缺失的不可变原件；在私有 source 桶上传 `releases/<revision>.json` 和更新 `latest.json`；在 `Aries-Archive` 记录 `release.json`；触发网站工作流。等价的触发命令为：
+脚本扫描允许的文件并计算 SHA-256，上传缺失原件到私有 source 桶，写入 `releases/<revision>.json`，将 `release.json` 提交并推送至私有归档 Git，再更新 `releases/latest.json`。最后自动启用发布门控，执行 `gh workflow run deploy.yml --repo <website-repository> -f revision=<hash>`。
+
+CI 经 Bearer 构建网关读取指定版本清单，只恢复所列文件并校验 SHA-256。在云端生成最长边不超过 2400、640 像素的 WebP 及配色，上传衍生图片，静态构建并部署 Pages，然后执行在线与浏览器验证。
+
+`npm run dev` 用于本地监听和预览，刷新页面显示变化，不自动发布。网站目录改名或移动后重启服务即可；归档目录移动时更新 `FOLIO_ARCHIVE_PATH` 后重启。
+
+## 恢复已发布原件
+
+`npm run restore-release` 读取导出的 shell 环境变量，不自动加载 `.env.local`。本机已有 Wrangler OAuth 登录时，指定恢复目录、桶和账户：
 
 ```bash
-gh workflow run deploy.yml --repo "$FOLIO_WEBSITE_REPOSITORY" -f "revision=<hash>"
+export FOLIO_ARCHIVE_PATH=/absolute/path/to/Restored-Archive
+export FOLIO_SOURCE_BUCKET=your-source-bucket
+export CLOUDFLARE_ACCOUNT_ID=your-account-id
+npm run restore-release
 ```
 
-其中 `<hash>` 是本次发布的 revision。CI 经 `FOLIO_BUILD_URL` 并在每次请求携带存储 token，直接从 R2 读取 `releases/<revision>.json`，只下载清单列出的原件。在云端生成有尺寸上限的 WebP 变体和配色，经构建 Worker 上传媒体，再构建静态站点并用现有 Pages token 部署。
+默认恢复 `releases/latest.json`，指定 `FOLIO_RELEASE_REVISION=<hash>` 可恢复固定版本。也可配置 `FOLIO_BUILD_URL` 与 `FOLIO_STORAGE_TOKEN`，通过受保护网关读取。恢复仅覆盖清单所列文件并逐个校验，不包含从未发布的本地文件；完整本地归档仍需保留。
 
-本地发布不执行生产图片压缩、配色分析或完整构建。`npm run dev` 是本地同步、监听和预览，`npm run sync` 是本地单次同步；两者不自动发布。现有本地同步仍复制原图，不能据此判断云端 WebP 流程已验证。
+## 访问与版本边界
 
-## 版本与公开范围
+| 服务 | 权限 |
+|---|---|
+| 两个 R2 桶 | 均禁用直接公开访问；source 保存原件与清单，media 保存衍生图片与配色缓存 |
+| `folio-media` | 仅绑定 `MEDIA`，只公开匹配路径的 WebP 图片 `GET`/`HEAD`；不公开原件、清单或配色缓存 |
+| `folio-build` | 绑定两个桶，每次请求均验证 Bearer；source 仅 `GET`/`HEAD`，media 仅 `GET`/`HEAD`/`PUT`，均无 `DELETE` |
 
-原件内容改变后生成新的哈希与对象引用；`releases/<revision>.json` 固定该版本，`latest.json` 是可更新的便利指针。发布触发的 CI 使用传入 revision，不跟随可能被另一次发布更新的 latest，从而避免混用版本。
+公开图片使用 `workers.dev`，不使用 `r2.dev`。WebP 不携带原始 EXIF，原图不进入公开站点。内容哈希原件与固定版本清单不可变；`releases/latest.json` 是可更新指针，发布触发的 CI 固定使用传入 revision。
 
-正常发布不删除远程原件或衍生图片，两个 Worker 均不提供 `DELETE`。本地删除、重命名只影响后续清单，旧版本引用的不可变对象保留。
+正常发布不删除远程对象，本地删除或重命名只影响后续清单，不撤销已有公开 URL。迁出公开 Git 的原件不会从其历史自动消失。R2、Workers、Actions 与 Pages 均有额度和计费条件，不保证全流程免费。
 
-原件私有，网页衍生图片经 `folio-media` 公开；从新清单移除图片不会撤销已有公开 URL。不要把完整归档、原件或凭证放入公开构建产物。曾进入公开 Git 历史的原件不会因迁移自动消失。
+## 实例与生产验证
 
-不保证全流程免费；R2、Workers、GitHub Actions 与 Pages 均受各自额度及计费条件约束。重型处理、构建和验证在已获授权的云端 CI 执行；本文不表示部署成功或检查已通过。
+2026-11-06 生产发布及端到端验证通过：
+
+| 资源 | 实例 |
+|---|---|
+| 网站源码 | [kikoiio/Folio](https://github.com/kikoiio/Folio) |
+| 私有清单仓库 | `kikoiio/Aries-Archive`，仅清单与说明、忽略规则 |
+| R2 桶 | `aries-originals` / `aries-media`，均关闭直接公开访问 |
+| 公开媒体 | [folio-media.3145558167.workers.dev](https://folio-media.3145558167.workers.dev)，受限只读图片 |
+| 构建网关 | [folio-build.3145558167.workers.dev](https://folio-build.3145558167.workers.dev)，Bearer 鉴权 |
+| Pages 站点 | [blog-b99.pages.dev](https://blog-b99.pages.dev) |
+| 成功工作流 | [Actions run 42264516725](https://github.com/kikoiio/Folio/actions/runs/42264516725) |
+
+此次发布包含 2 个相册、20 张图片，原件共 151.7 MiB；`blogs/` 为空，文章 UI 未实现。CI 完成全部 20 个原件的校验恢复、lint、3 项测试、TypeScript 检查、完整 Next.js 构建、WebP 与配色生成、Pages 部署。
+
+在线验证通过全部 20 张图片的 HEAD 请求、公开原件路径 404、无鉴权私有请求 401，以及鉴权后不存在对象 404。Playwright 等待图片实际解码、绘制完成后，桌面和手机检查通过前后切换、相册选择与页面无滚动溢出；截图保存在该工作流的 `folio-browser-check` artifact 中（保留 7 天）。
