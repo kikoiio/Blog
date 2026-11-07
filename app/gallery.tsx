@@ -3,7 +3,8 @@
 import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import type { GalleryAlbum, GalleryPhoto } from '../lib/gallery-types'
-import { filmstripLayout } from '../lib/filmstrip-layout.mjs'
+import { filmstripLayout, filmstripTransform } from '../lib/filmstrip-layout.mjs'
+import { MOBILE_PORTRAIT_QUERY, gallerySwipeDirection, type GalleryAxis, type GallerySwipe } from '../lib/gallery-gestures'
 import { heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
 import { currentAlbum, rememberAlbum, rememberPhoto, subscribeAlbum } from '../lib/gallery-navigation'
 import styles from './page.module.css'
@@ -104,12 +105,8 @@ const Photograph = memo(function Photograph({ image, active, hero, requested, is
   )
 })
 
-function frameTransform(frame: Frame) {
-  return `translate3d(${frame.x * 100}%, ${frame.y}%, ${frame.z}px) rotateY(${frame.rotation}deg) scale(${frame.scale})`
-}
-
-function paintFrame(node: HTMLAnchorElement, frame: Frame) {
-  node.style.transform = frameTransform(frame)
+function paintFrame(node: HTMLAnchorElement, frame: Frame, axis: GalleryAxis) {
+  node.style.transform = filmstripTransform(frame, axis)
   node.style.zIndex = String(frame.layer)
 }
 
@@ -120,6 +117,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
   const strip = useRef<HTMLDivElement>(null)
   const nodes = useRef(new Map<number, HTMLAnchorElement>())
   const dimensions = useRef(emptyViewport)
+  const axis = useRef<GalleryAxis>('horizontal')
   const [view, setView] = useState<FilmstripView>(() => ({
     frames: filmstripLayout(initialIndex, 0, count, 0),
     activeIndex: initialIndex,
@@ -138,7 +136,8 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
   const paint = useCallback(() => {
     const state = motion.current
     const reveal = smooth(state.zoom)
-    const frames = filmstripLayout(state.position, reveal, count, dimensions.current.width)
+    const frames = filmstripLayout(state.position, reveal, count,
+      axis.current === 'vertical' ? dimensions.current.height : dimensions.current.width)
     layout.current = frames
     const activeIndex = Math.round(state.position)
     const moving = state.position !== state.target || state.zoom !== state.zoomTarget
@@ -169,7 +168,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     }
     for (const frame of frames) {
       const node = nodes.current.get(frame.slot)
-      if (node) paintFrame(node, frame)
+      if (node) paintFrame(node, frame, axis.current)
     }
   }, [count, photos])
 
@@ -225,6 +224,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     const resizeObserver = new ResizeObserver(entries => {
       const bounds = entries[0]?.contentRect
       if (!bounds) return
+      axis.current = window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal'
       dimensions.current = {
         width: bounds.width,
         height: bounds.height,
@@ -272,12 +272,12 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     if (!node) { nodes.current.delete(slot); return }
     nodes.current.set(slot, node)
     const frame = layout.current.find(frame => frame.slot === slot)
-    if (frame) paintFrame(node, frame)
+    if (frame) paintFrame(node, frame, axis.current)
   }, [])
   const isRequested = useCallback((target: SettledPhoto) => sameSettlement(target, requestedPhoto(motion.current, dimensions.current)), [])
   const select = useCallback((index: number) => moveTo(index, 0, true), [moveTo])
   const step = useCallback((direction: number) => moveTo(Math.round(motion.current.target) + direction, 0, true), [moveTo])
-  return { viewport, panel, strip, registerFrame, isRequested, ...view, select, step }
+  return { viewport, panel, strip, axis, registerFrame, isRequested, ...view, select, step }
 }
 
 export default function Gallery({ albums, reading, children }: {
@@ -304,10 +304,20 @@ function AlbumGallery({ album, reading, children }: {
 }) {
   const { photos } = album
   const initialIndex = Math.min(positions.get(album.id) ?? 0, photos.length - 1)
-  const { viewport, panel, strip, frames, activeIndex, moving, settled, requested, isRequested, registerFrame, select, step } = useFilmstrip(photos, initialIndex)
-  const gesture = useRef<{ x: number; y: number } | null>(null)
+  const { viewport, panel, strip, axis, frames, activeIndex, moving, settled, requested, isRequested, registerFrame, select, step } = useFilmstrip(photos, initialIndex)
+  const gesture = useRef<GallerySwipe | null>(null)
   const suppressClickUntil = useRef(0)
   const photo = photos[activeIndex]
+  useEffect(() => {
+    const cancelMultiTouch = (event: PointerEvent) => {
+      if (gesture.current && event.pointerType === 'touch' && !event.isPrimary) {
+        gesture.current = null
+        suppressClickUntil.current = Infinity
+      }
+    }
+    document.addEventListener('pointerdown', cancelMultiTouch, true)
+    return () => document.removeEventListener('pointerdown', cancelMultiTouch, true)
+  }, [])
   useEffect(() => {
     positions.set(album.id, activeIndex)
     rememberAlbum(album.id)
@@ -323,9 +333,11 @@ function AlbumGallery({ album, reading, children }: {
     <main id="content" tabIndex={-1} ref={viewport} className={styles.stage} style={initialStyle.stage} data-reading={reading} onKeyDown={event => {
       if (reading) return
       if (event.target instanceof Element && event.target.closest('select, dialog')) return
-      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      const forward = event.key === 'ArrowRight' || (axis.current === 'vertical' && event.key === 'ArrowDown')
+      const backward = event.key === 'ArrowLeft' || (axis.current === 'vertical' && event.key === 'ArrowUp')
+      if (forward || backward) {
         event.preventDefault()
-        step(event.key === 'ArrowRight' ? 1 : -1)
+        step(forward ? 1 : -1)
       }
     }}>
       <div ref={panel} className={styles.panelShell} style={initialStyle.panel} data-content-panel>
@@ -333,18 +345,32 @@ function AlbumGallery({ album, reading, children }: {
           <section className={styles.gallery} aria-label={album.title} aria-roledescription="图片轮播" inert={reading}>
             <div ref={strip} className={styles.filmstrip} data-moving={moving} data-settled={settled !== null}
               onPointerDown={event => {
-                if (event.pointerType !== 'mouse') gesture.current = { x: event.clientX, y: event.clientY }
+                if (!event.isPrimary || event.button !== 0) return
+                suppressClickUntil.current = 0
+                if (event.pointerType === 'mouse') return
+                gesture.current = {
+                  pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+                  axis: window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal',
+                }
               }}
-              onPointerCancel={() => { gesture.current = null }}
+              onPointerCancel={() => {
+                gesture.current = null
+                suppressClickUntil.current = performance.now() + 350
+              }}
               onPointerUp={event => {
                 const start = gesture.current
                 gesture.current = null
                 if (!start) return
-                const dx = event.clientX - start.x
-                const dy = event.clientY - start.y
-                if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) {
                   suppressClickUntil.current = performance.now() + 350
-                  step(dx < 0 ? 1 : -1)
+                }
+                const direction = gallerySwipeDirection(start, {
+                  pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+                  axis: window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal',
+                })
+                if (direction) {
+                  suppressClickUntil.current = performance.now() + 350
+                  step(direction)
                 }
               }}>
               {frames.map(frame => {
@@ -362,9 +388,9 @@ function AlbumGallery({ album, reading, children }: {
                     tabIndex={frame.visible ? 0 : -1}
                     onClick={event => {
                       event.preventDefault()
-                      if (performance.now() >= suppressClickUntil.current) select(slot)
+                      if (event.detail === 0 || performance.now() >= suppressClickUntil.current) select(slot)
                     }}
-                    style={{ zIndex: frame.layer, transform: frameTransform(frame) }}
+                    style={{ zIndex: frame.layer, transform: filmstripTransform(frame, axis.current) }}
                   >
                     {frame.visible && <Photograph image={image} active={slot === activeIndex}
                       hero={slot === initialIndex && settled?.revision === 0}

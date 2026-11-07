@@ -160,12 +160,27 @@
   height: 100%;
   object-fit: var(--photo-fit);
   object-position: center;
+  border-radius: inherit;
 }
 
 @media (max-width: 760px) and (orientation: portrait) {
   .gallery { bottom: calc(clamp(10px, 1.2vw, 18px) + 36px); }
-  .filmstrip { --photo-fit: contain; }
-  .photoFrame { box-shadow: none; }
+  .filmstrip {
+    --photo-fit: contain;
+    touch-action: pan-x pinch-zoom;
+  }
+  .photoFrame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+  }
+  .photo {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+  }
 }
 
 @media (max-width: 1100px) and (max-height: 600px) and (orientation: landscape) {
@@ -177,7 +192,8 @@
       max(12px, env(safe-area-inset-left, 0px));
   }
   .gallery { inset: 6px; }
-  .filmstrip { --photo-fit: contain; }
+  .filmstrip,
+  .photoFrame { border-radius: max(0px, calc(var(--photo-radius) - 6px)); }
   .photoFrame { box-shadow: none; }
 }
 
