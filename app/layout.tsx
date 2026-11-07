@@ -10,8 +10,9 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Extensions such as Trancy may inject attributes into <html> before hydration.
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
         <SkipLink />
         {children}

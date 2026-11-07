@@ -114,7 +114,8 @@ export async function writeSite(site, projectRoot) {
   } else {
     await fs.rm(path.join(projectRoot, 'public/favicon.ico'), { force: true })
   }
-  const { image: _image, ...config } = site
+  const config = { ...site }
+  delete config.image
   const source = `import type { SiteConfig } from '../lib/site-types'\n\nexport const site = ${JSON.stringify({ ...config, icons }, null, 2)} satisfies SiteConfig\n`
   const output = path.join(projectRoot, '.folio/site.ts')
   let previous
