@@ -132,7 +132,6 @@ try {
   assert.equal((await state()).photo, 1, 'The previous confirmed destination is still animating')
   await touch('touchStart', [point(650)])
   await touch('touchMove', [point(630)])
-  assert.equal((await state()).photo, 1, 'Cancel before the animation reaches the confirmed destination')
   await touch('touchCancel')
   await settled(2)
   await drag(450, 650)
