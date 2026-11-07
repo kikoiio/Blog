@@ -150,6 +150,15 @@ export default function SiteHeader({ title, albums, articleIndexSrc }: { title: 
 
   return (
     <header className={styles.header} aria-label={`${title} · 网站管理`} data-revealed={navigationOpen} data-pinned={expanded}
+      onPointerDownCapture={event => {
+        if (event.isPrimary) suppressHandleClickUntil.current = 0
+      }}
+      onClickCapture={event => {
+        if (event.detail > 0 && performance.now() < suppressHandleClickUntil.current) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }}
       onKeyDown={event => {
         if (event.key === 'Escape' && landscape && revealed && !expanded) {
           event.preventDefault()
