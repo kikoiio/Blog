@@ -1,5 +1,6 @@
 export async function serveObject(request, bucket, key) {
-  const object = request.method === 'HEAD' ? await bucket.head(key) : await bucket.get(key, { range: request.headers })
+  const object = request.method === 'HEAD' ? await bucket.head(key)
+    : await bucket.get(key, request.headers.has('Range') ? { range: request.headers } : undefined)
   if (!object) return new Response('Not found', { status: 404 })
   const headers = new Headers()
   object.writeHttpMetadata(headers)
@@ -9,7 +10,7 @@ export async function serveObject(request, bucket, key) {
   headers.set('Cache-Control', 'public, max-age=31536000, immutable')
   if (request.headers.get('If-None-Match') === object.httpEtag) return new Response(null, { status: 304, headers })
   let status = 200
-  if (object.range) {
+  if (request.method === 'GET' && request.headers.has('Range') && object.range) {
     const offset = object.range.offset ?? Math.max(0, object.size - object.range.suffix)
     const length = object.range.length ?? object.range.suffix
     headers.set('Content-Range', `bytes ${offset}-${offset + length - 1}/${object.size}`)

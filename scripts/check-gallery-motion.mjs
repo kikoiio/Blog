@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import { createServer } from 'node:http'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { settledSource } from '../lib/gallery-performance.ts'
 
 if (!process.env.CI) throw new Error('Run browser checks in CI')
 const source = await fs.readFile('.folio/gallery.ts', 'utf8')
@@ -152,6 +153,41 @@ try {
   await page.goto(url)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-moving] > a')].some(frame => frame.style.transform.includes('rotateY(')))
   await settled(1)
+  const initialSource = await page.locator('[data-active="true"] img').evaluate(async image => {
+    await image.decode()
+    return image.currentSrc
+  })
+  const galleryViewport = await page.locator('[data-moving]').evaluate(strip => ({
+    width: strip.getBoundingClientRect().width, height: strip.getBoundingClientRect().height,
+    dpr: devicePixelRatio, fit: getComputedStyle(strip).getPropertyValue('--photo-fit').trim(),
+  }))
+  const neighbourSource = settledSource(album.photos[1], galleryViewport).src
+  await page.waitForFunction(src => performance.getEntriesByName(new URL(src, document.baseURI).href).length > 0, neighbourSource)
+  await page.locator('[data-moving] [data-active="true"]').focus()
+  await page.keyboard.press('ArrowRight')
+  await settled(2)
+  await page.locator('[data-active="true"] img').evaluate(image => image.decode())
+  await page.evaluate(() => {
+    window.galleryMountedSources = []
+    window.galleryCacheObserver = new MutationObserver(records => {
+      for (const record of records) for (const node of record.addedNodes) {
+        if (!(node instanceof Element)) continue
+        const images = node.matches('img') ? [node] : node.querySelectorAll('img')
+        for (const image of images) window.galleryMountedSources.push(image.src)
+      }
+    })
+    window.galleryCacheObserver.observe(document.querySelector('[data-moving]'), { childList: true, subtree: true })
+  })
+  await page.keyboard.press('ArrowLeft')
+  await settled(1)
+  const remounted = await page.evaluate(() => {
+    window.galleryCacheObserver.disconnect()
+    return window.galleryMountedSources
+  })
+  assert(remounted.includes(initialSource), 'Returning to a photo must mount its remembered full-size source immediately')
+  const initialVariants = new Set(album.photos[0].sources.map(source => new URL(source.src, url).href))
+  assert(remounted.filter(src => initialVariants.has(src)).every(src => src === initialSource), 'A revisited photo must not restart from a thumbnail')
+  console.log('Gallery caching checks passed: neighbour loads before selection and revisiting preserves the full-size source')
   await page.locator('[data-moving]').hover()
   for (let index = 0; index < 6; index++) await page.mouse.wheel(0, 120)
   await page.waitForFunction(() => Number(document.querySelector('[data-content-panel]').style.getPropertyValue('--paint-reveal')) > 0.5)

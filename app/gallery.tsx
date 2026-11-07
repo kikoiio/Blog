@@ -7,6 +7,7 @@ import { filmstripLayout, filmstripTransform } from '../lib/filmstrip-layout.mjs
 import { MOBILE_QUERY, galleryDragTarget, galleryDragDestination, gallerySwipeDirection, type GalleryAxis, type GallerySwipe, type GalleryDragOrigin } from '../lib/gallery-gestures'
 import { advanceFilmstrip, heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
 import { currentAlbum, rememberAlbum, rememberPhoto, subscribeAlbum } from '../lib/gallery-navigation'
+import { allowPhotoPrefetch, photoCache } from '../lib/gallery-photo-cache'
 import styles from './page.module.css'
 
 type PanelStyle = CSSProperties & { '--paint-reveal': number; '--panel-side': string }
@@ -20,53 +21,39 @@ const smooth = (value: number) => value * value * (3 - 2 * value)
 const positions = new Map<string, number>()
 const emptyViewport: GalleryViewport = { width: 0, height: 0, dpr: 1, fit: 'cover' }
 
-// Keep only a few detached decoded images, including in-flight requests. Live img
-// nodes retain their own resource; eviction never changes a displayed photograph.
-const decodedPhotos = new Map<string, { image: HTMLImageElement; promise: Promise<boolean> }>()
-function decodePhoto(src: string): Promise<boolean> {
-  const cached = decodedPhotos.get(src)
-  if (cached) {
-    decodedPhotos.delete(src)
-    decodedPhotos.set(src, cached)
-    return cached.promise
-  }
-  const image = new window.Image()
-  image.decoding = 'async'
-  image.fetchPriority = 'high'
-  image.src = src
-  const promise = image.decode().then(() => true, () => {
-    if (decodedPhotos.get(src)?.image === image) decodedPhotos.delete(src)
-    return false
-  })
-  decodedPhotos.set(src, { image, promise })
-  while (decodedPhotos.size > 3) {
-    const oldest = decodedPhotos.keys().next().value
-    if (oldest === undefined) break
-    const entry = decodedPhotos.get(oldest)
-    decodedPhotos.delete(oldest)
-    if (entry) entry.image.src = ''
-  }
-  return promise
-}
-
-const Photograph = memo(function Photograph({ image, active, hero, requested, isRequested }: {
+const Photograph = memo(function Photograph({ image, active, hero, requested, isRequested, previousPhoto, nextPhoto, reading }: {
   image: GalleryPhoto
   active: boolean
   hero: boolean
   requested: SettledPhoto | null
   isRequested: (target: SettledPhoto) => boolean
+  previousPhoto: GalleryPhoto | undefined
+  nextPhoto: GalleryPhoto | undefined
+  reading: boolean
 }) {
   const element = useRef<HTMLImageElement>(null)
-  // A mounted, decoded photograph keeps its source through every gesture. Only
-  // newly visible photographs start at 640; active-index changes do not reset it.
-  const [source, setSource] = useState<PhotographSource>(() => hero
-    ? { kind: 'responsive', image: heroImage(image) }
-    : { kind: 'fixed', src: thumbnailSource(image) })
+  const [loadedSource, setLoadedSource] = useState<ReturnType<typeof photoSources>[number] | null>(null)
+  const [source, setSource] = useState<PhotographSource>(() => {
+    const recalled = photoCache.recalled(image)
+    return recalled ? { kind: 'fixed', src: recalled.src } : hero
+      ? { kind: 'responsive', image: heroImage(image) }
+      : { kind: 'fixed', src: thumbnailSource(image) }
+  })
+  const rememberLoaded = useCallback(() => {
+    const node = element.current
+    if (!node?.complete || !node.naturalWidth) return
+    const loaded = photoSources(image).find(candidate => new URL(candidate.src, document.baseURI).href === node.currentSrc)
+    if (loaded) {
+      photoCache.remember(image, loaded)
+      setLoadedSource(loaded)
+    }
+  }, [image])
+  useEffect(rememberLoaded, [rememberLoaded])
 
   useEffect(() => {
     // The initial responsive hero already has a browser-selected request. Do not
     // compete with it or add a second preload (React 19 can emit one itself).
-    if (!requested || requested.revision === 0) return
+    if (!requested || (requested.revision === 0 && source.kind === 'responsive')) return
     const next = settledSource(image, requested.viewport)
     const node = element.current
     if (node?.complete && node.naturalWidth > 0) {
@@ -76,13 +63,30 @@ const Photograph = memo(function Photograph({ image, active, hero, requested, is
       if (new URL(next.src, document.baseURI).href === currentSrc) return
     }
     let cancelled = false
-    void decodePhoto(next.src).then(decoded => {
+    void photoCache.decode(image, next).then(decoded => {
       // A new destination invalidates the decode before React commits it.
       // The selected image can become sharp while its animation is running.
       if (decoded && !cancelled && isRequested(requested)) setSource({ kind: 'fixed', src: next.src })
     })
     return () => { cancelled = true }
-  }, [image, requested, isRequested])
+  }, [image, requested, isRequested, source.kind])
+
+  useEffect(() => {
+    if (reading || !requested || !loadedSource || loadedSource.width < settledSource(image, requested.viewport).width
+      || !allowPhotoPrefetch('connection' in navigator ? navigator.connection : undefined)) return
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      // Finish the selected image first, then warm at most two neighbours in order.
+      for (const neighbour of [nextPhoto, previousPhoto]) {
+        if (cancelled || !isRequested(requested)) break
+        if (!neighbour) continue
+        const target = settledSource(neighbour, requested.viewport)
+        const recalled = photoCache.recalled(neighbour)
+        await photoCache.decode(neighbour, recalled && recalled.width >= target.width ? recalled : target, 'low')
+      }
+    }, 200)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [image, requested, loadedSource, previousPhoto, nextPhoto, isRequested, reading])
 
   const attributes = source.kind === 'responsive' ? source.image : { src: source.src }
   const upgrading = requested !== null && source.kind === 'fixed'
@@ -100,6 +104,7 @@ const Photograph = memo(function Photograph({ image, active, hero, requested, is
       loading="eager"
       fetchPriority={active && (source.kind === 'responsive' || requested) ? 'high' : 'auto'}
       decoding="async"
+      onLoad={rememberLoaded}
       data-upgrading={upgrading}
       draggable={false}
     />
@@ -450,7 +455,8 @@ function AlbumGallery({ album, reading, children }: {
                   >
                     {frame.visible && <Photograph image={image} active={slot === activeIndex}
                       hero={slot === initialIndex && settled?.revision === 0}
-                      requested={requested?.slot === slot ? requested : null} isRequested={isRequested} />}
+                      requested={requested?.slot === slot ? requested : null} isRequested={isRequested}
+                      previousPhoto={photos[slot - 1]} nextPhoto={photos[slot + 1]} reading={reading} />}
                   </a>
                 )
               })}

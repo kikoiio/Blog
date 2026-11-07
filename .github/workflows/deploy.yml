@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check photo reuse and cacheable image responses
+        run: node --test scripts/check-photo-cache.mjs
+
       - name: Restore immutable archive from private R2
         run: npm run restore-release
 
