@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom'
 import type { GalleryAlbum, GalleryPhoto } from '../lib/gallery-types'
 import { filmstripLayout, filmstripTransform } from '../lib/filmstrip-layout.mjs'
 import { MOBILE_QUERY, galleryDragTarget, galleryDragDestination, gallerySwipeDirection, type GalleryAxis, type GallerySwipe, type GalleryDragOrigin } from '../lib/gallery-gestures'
-import { heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
+import { advanceFilmstrip, heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
 import { currentAlbum, rememberAlbum, rememberPhoto, subscribeAlbum } from '../lib/gallery-navigation'
 import styles from './page.module.css'
 
@@ -176,18 +176,9 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
 
   const tick = useCallback(function tick(time: number) {
     const state = motion.current
-    const elapsed = Math.min(time - state.lastTime, 40)
+    const elapsed = time - state.lastTime
     state.lastTime = time
-    const blend = 1 - Math.exp(-elapsed / 110)
-    const approach = (value: number, destination: number) => Math.abs(destination - value) < 0.0001
-      ? destination : value + (destination - value) * blend
-    state.position = approach(state.position, state.target)
-    if (state.focus && Math.abs(state.position - state.target) < 0.015) {
-      state.position = state.target
-      state.focus = false
-      state.zoomTarget = 0
-    }
-    state.zoom = approach(state.zoom, state.zoomTarget)
+    advanceFilmstrip(state, elapsed)
     paint()
     state.frame = state.position !== state.target || state.zoom !== state.zoomTarget
       ? requestAnimationFrame(tick) : 0

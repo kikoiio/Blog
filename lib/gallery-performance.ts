@@ -12,6 +12,20 @@ export type FilmstripMotion = {
   revision: number
 }
 
+export function advanceFilmstrip(state: FilmstripMotion, elapsed: number): void {
+  // A queued animation frame can precede the pointer event's performance.now().
+  const blend = 1 - Math.exp(-Math.max(0, Math.min(elapsed, 40)) / 110)
+  const approach = (value: number, destination: number) => Math.abs(destination - value) < 0.0001
+    ? destination : value + (destination - value) * blend
+  state.position = approach(state.position, state.target)
+  if (state.focus && Math.abs(state.position - state.target) < 0.015) {
+    state.position = state.target
+    state.focus = false
+    state.zoomTarget = 0
+  }
+  state.zoom = approach(state.zoom, state.zoomTarget)
+}
+
 export function photoSources(photo: GalleryPhoto): PhotoSource[] {
   const sources = photo.sources?.length ? photo.sources : [photo]
   // Width descriptors must be unique, including when a small original was not enlarged.
