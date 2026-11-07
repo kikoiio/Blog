@@ -41,7 +41,7 @@ let page
 const errors = []
 try {
   browser = await chromium.launch({ headless: true, args: ['--disable-gpu', '--ozone-platform=x11'] })
-  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' })
   page = await mobile.newPage()
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(url)
@@ -89,7 +89,11 @@ try {
   await drag(650, 450)
   await page.waitForTimeout(250)
   const preview = await state()
-  console.log('Mobile touch preview', JSON.stringify({ ...preview, pointerEvents: await page.evaluate(() => window.galleryPointerLog) }))
+  console.log('Mobile touch preview', JSON.stringify({ ...preview, errors, environment: await page.evaluate(() => ({
+    pointerEvents: window.galleryPointerLog,
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    touchAction: getComputedStyle(document.querySelector('[data-moving]')).touchAction,
+  })) }))
   assert(preview.reveal > 0.5, 'Touch movement must reveal the desktop panel treatment before release')
   assert(preview.frames.length > 1, 'Touch movement must show neighbouring photographs')
   assert(preview.frames.every(frame => frame.scale < 0.9 && frame.vertical))
@@ -143,7 +147,7 @@ try {
   await settled(2)
   await mobile.close()
 
-  page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' })
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(url)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-moving] > a')].some(frame => frame.style.transform.includes('rotateY(')))
