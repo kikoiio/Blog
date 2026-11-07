@@ -118,6 +118,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
   const strip = useRef<HTMLDivElement>(null)
   const nodes = useRef(new Map<number, HTMLAnchorElement>())
   const dimensions = useRef(emptyViewport)
+  const photoExtents = useRef<number[]>([])
   const axis = useRef<GalleryAxis>('horizontal')
   const drag = useRef<(GalleryDragOrigin & { selected: number; target: number }) | null>(null)
   const [view, setView] = useState<FilmstripView>(() => ({
@@ -139,7 +140,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     const state = motion.current
     const reveal = smooth(state.zoom)
     const frames = filmstripLayout(state.position, reveal, count,
-      axis.current === 'vertical' ? dimensions.current.height : dimensions.current.width)
+      axis.current === 'vertical' ? dimensions.current.height : dimensions.current.width, photoExtents.current)
     layout.current = frames
     const activeIndex = Math.round(state.position)
     const moving = state.position !== state.target || state.zoom !== state.zoomTarget
@@ -248,6 +249,9 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
         dpr: window.devicePixelRatio || 1,
         fit: getComputedStyle(filmstrip).getPropertyValue('--photo-fit').trim() === 'contain' ? 'contain' : 'cover',
       }
+      photoExtents.current = nextAxis === 'vertical' && bounds.height > 0
+        ? photos.map(photo => Math.min(1, bounds.width * photo.height / photo.width / bounds.height))
+        : []
       schedule()
     })
     resizeObserver.observe(filmstrip)
@@ -283,7 +287,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
       cancelAnimationFrame(state.frame)
       state.frame = 0
     }
-  }, [count, moveTo, schedule, finishDrag])
+  }, [count, moveTo, schedule, finishDrag, photos])
 
   const registerFrame = useCallback((slot: number, node: HTMLAnchorElement | null) => {
     if (!node) { nodes.current.delete(slot); return }

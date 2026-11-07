@@ -173,12 +173,14 @@
     align-items: center;
     justify-content: center;
     box-shadow: none;
+    pointer-events: none;
   }
   .photo {
     width: auto;
     height: auto;
     max-width: 100%;
     max-height: 100%;
+    pointer-events: auto;
   }
 }
 
