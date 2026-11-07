@@ -12,3 +12,6 @@
 
 /favicon.ico
   Cache-Control: private, no-store, max-age=0
+
+/folio-release.json
+  Cache-Control: no-store

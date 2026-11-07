@@ -44,7 +44,7 @@ try { storageToken = await fs.readFile(tokenFile, 'utf8') } catch (error) {
 async function deployWorker(name, main, bindings) {
   const form = new FormData()
   form.set('metadata', new Blob([JSON.stringify({ main_module: main, compatibility_date: '2026-11-01', bindings })], { type: 'application/json' }))
-  for (const filename of main === 'build.mjs' ? ['build.mjs', 'media.mjs'] : ['media.mjs']) {
+  for (const filename of main === 'build.mjs' ? ['build.mjs', 'media.mjs', 'maintenance.mjs', 'storage-keys.mjs'] : ['media.mjs']) {
     form.set(filename, new Blob([await fs.readFile(path.join(projectRoot, 'workers', filename))], { type: 'application/javascript+module' }), filename)
   }
   const result = await (await client.request(`workers/scripts/${name}`, { method: 'PUT', body: () => form })).json()

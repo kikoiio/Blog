@@ -1,10 +1,12 @@
 import { serveObject } from './media.mjs'
+import { maintenance } from './maintenance.mjs'
 
 const buildWorker = {
   async fetch(request, env) {
     if (!env.BUILD_TOKEN || request.headers.get('Authorization') !== `Bearer ${env.BUILD_TOKEN}`) {
       return new Response('Unauthorized', { status: 401, headers: { 'Cache-Control': 'no-store' } })
     }
+    if (new URL(request.url).pathname.startsWith('/maintenance/')) return maintenance(request, env)
     const match = new URL(request.url).pathname.match(/^\/r2\/buckets\/([^/]+)\/objects\/(.+)$/)
     if (!match) return new Response('Not found', { status: 404 })
     const bucketName = decodeURIComponent(match[1])

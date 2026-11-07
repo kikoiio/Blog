@@ -11,10 +11,10 @@ export function required(name) {
   return value
 }
 
-export function cloudflareClient() {
+export function cloudflareClient(options = {}) {
   const account = required('CLOUDFLARE_ACCOUNT_ID')
-  const gateway = process.env.FOLIO_BUILD_URL
-  let token = gateway ? required('FOLIO_STORAGE_TOKEN') : process.env.CLOUDFLARE_API_TOKEN
+  const gateway = options.gateway ?? process.env.FOLIO_BUILD_URL
+  let token = options.token ?? (gateway ? required('FOLIO_STORAGE_TOKEN') : process.env.CLOUDFLARE_API_TOKEN)
   if (!token && !process.env.CI) {
     const auth = JSON.parse(execFileSync('wrangler', ['auth', 'token', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }))
     token = auth.token

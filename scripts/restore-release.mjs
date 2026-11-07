@@ -7,6 +7,7 @@ import { hashFile, validateRelease } from './release.mjs'
 export async function restoreRelease({ client, bucket, destination, revision = 'latest' }) {
   if (revision !== 'latest' && !/^[a-f0-9]{64}$/.test(revision)) throw new Error('Invalid release revision')
   const release = validateRelease(await client.getJSON(bucket, `releases/${revision}.json`))
+  if (revision !== 'latest' && release.revision !== revision) throw new Error('Requested release revision mismatch')
   destination = path.resolve(destination)
   for (const directory of ['blogs', 'pictures']) await fs.mkdir(path.join(destination, directory), { recursive: true })
   for (const entry of release.files) {
