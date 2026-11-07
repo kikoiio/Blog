@@ -178,6 +178,7 @@ try {
     })
     window.galleryCacheObserver.observe(document.querySelector('[data-moving]'), { childList: true, subtree: true })
   })
+  await page.locator('[data-moving] [data-active="true"]').focus()
   await page.keyboard.press('ArrowLeft')
   await settled(1)
   const remounted = await page.evaluate(() => {
@@ -202,6 +203,12 @@ try {
   assert.deepEqual(errors, [])
   console.log('Gallery browser checks passed: touch preview, release, reversal, short swipe, cancel, multi-touch, interruption, reduced motion, desktop wheel and keyboard')
 } catch (error) {
+  if (page && !page.isClosed()) console.error('Gallery failure state', await page.evaluate(() => ({
+    moving: document.querySelector('[data-moving]')?.dataset.moving,
+    settled: document.querySelector('[data-moving]')?.dataset.settled,
+    selected: document.querySelector('[data-active="true"]')?.getAttribute('aria-label'),
+    focused: document.activeElement?.outerHTML.slice(0, 300),
+  })).catch(() => null), errors)
   if (page && !page.isClosed()) await page.screenshot({ path: `${screenshots}/failure.png` }).catch(() => {})
   throw error
 } finally {
