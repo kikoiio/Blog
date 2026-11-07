@@ -76,10 +76,11 @@ try {
     }),
   }))
   async function settled(photo) {
-    await page.waitForFunction(() => {
+    await page.waitForFunction(expected => {
       const strip = document.querySelector('[data-moving]')
       return strip?.dataset.settled === 'true' && strip.dataset.moving === 'false'
-    })
+        && strip.querySelector('[data-active="true"]')?.getAttribute('aria-label') === `放大第 ${expected} 张图片`
+    }, photo)
     const result = await state()
     assert.equal(result.photo, photo)
     assert.equal(result.reveal, 0)
