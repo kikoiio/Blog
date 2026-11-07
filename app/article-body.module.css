@@ -1,0 +1,34 @@
+.prose { font-size: 16px; line-height: 1.95; overflow-wrap: anywhere; }
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+.prose p { margin: 0 0 1.5em; }
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 { color: var(--ink); font-weight: 550; line-height: 1.5; scroll-margin-top: 32px; }
+.prose h1 { font-size: 30px; margin: 2em 0 1em; }
+.prose h2 { font-size: 25px; margin: 2.2em 0 1em; letter-spacing: -.5px; }
+.prose h3 { font-size: 20px; margin: 1.8em 0 .8em; }
+.prose h4, .prose h5, .prose h6 { font-size: 17px; margin: 1.8em 0 .8em; }
+.prose a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.prose a:hover { color: var(--ink); }
+.prose strong { font-weight: 650; }
+.prose blockquote { margin: 2em 0; padding: 2px 0 2px 22px; border-left: 2px solid var(--quote-line, #b5a0af); color: var(--muted); }
+.prose blockquote > :last-child { margin-bottom: 0; }
+.prose ul, .prose ol { padding-left: 1.5em; margin: 1em 0 1.5em; }
+.prose li { padding-left: 5px; margin-block: .4em; }
+.prose li > p { margin-bottom: .5em; }
+.prose li > ul, .prose li > ol { margin-block: .5em; }
+.prose hr { margin: 2.8em 0; border: 0; border-top: 1px solid var(--line); }
+.prose img { display: block; max-width: 100%; height: auto; margin: 2em auto .7em; border-radius: 10px; }
+.prose pre { max-width: 100%; overflow-x: auto; margin: 1.8em 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--code-bg, #ede9ed); font-size: 13px; line-height: 1.8; tab-size: 2; }
+.prose code { padding: .15em .4em; border-radius: 4px; background: var(--inline-code-bg, #ebe5ea); font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: .86em; }
+.prose pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+.prose :global(.table-scroll) { max-width: 100%; overflow-x: auto; margin: 1.8em 0; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.7; }
+.prose th, .prose td { padding: 12px 16px; border: 1px solid var(--line); text-align: left; min-width: 100px; }
+.prose th { font-weight: 550; background: var(--table-heading, #eee8ed); }
+.prose input[type='checkbox'] { accent-color: var(--accent); }
+@media (max-width: 760px) {
+  .prose { font-size: 15px; line-height: 1.95; }
+  .prose h2 { font-size: 23px; }
+  .prose h3 { font-size: 19px; }
+  .prose pre { padding: 16px; font-size: 12px; }
+}

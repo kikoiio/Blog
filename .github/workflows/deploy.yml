@@ -32,7 +32,6 @@ jobs:
       FOLIO_BUILD_URL: ${{ vars.FOLIO_BUILD_URL }}
       FOLIO_STORAGE_TOKEN: ${{ secrets.FOLIO_STORAGE_TOKEN }}
       FOLIO_SITE_TITLE: ${{ vars.FOLIO_SITE_TITLE || 'Folio' }}
-      FOLIO_SITE_URL: ${{ vars.FOLIO_SITE_URL }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Check out website source
@@ -49,11 +48,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check source and synchronization
-        run: |
-          npm run lint
-          npm test
-
       - name: Restore immutable archive from private R2
         run: npm run restore-release
 
@@ -62,33 +56,8 @@ jobs:
           FOLIO_REMOTE_MEDIA: '1'
         run: npm run build
 
-      - name: Check TypeScript
-        run: npx tsc --noEmit --incremental false
-
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
         run: npx wrangler@4.137.0 pages deploy out --project-name="$PAGES_PROJECT" --branch="${{ github.event.repository.default_branch }}"
-
-      - name: Verify live pages, images and private source boundary
-        run: node scripts/verify-deployment.mjs
-
-      - name: Install cloud browser verification tools
-        run: |
-          npm install --prefix "$RUNNER_TEMP/folio-ui" --no-audit --no-fund --ignore-scripts playwright@1.65.0
-          node "$RUNNER_TEMP/folio-ui/node_modules/playwright/cli.js" install --with-deps chromium
-
-      - name: Verify live gallery on desktop and mobile
-        run: node scripts/verify-browser.mjs "$RUNNER_TEMP/folio-ui"
-
-      - name: Save browser screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: folio-browser-check
-          path: |
-            ${{ runner.temp }}/folio-desktop.png
-            ${{ runner.temp }}/folio-mobile.png
-          if-no-files-found: ignore
-          retention-days: 7

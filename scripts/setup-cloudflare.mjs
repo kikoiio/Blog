@@ -68,7 +68,6 @@ const variables = {
   FOLIO_MEDIA_BASE_URL: `https://${mediaWorker}.${subdomain}.workers.dev`,
   FOLIO_BUILD_URL: `https://${buildWorker}.${subdomain}.workers.dev`,
   FOLIO_SITE_TITLE: process.env.FOLIO_SITE_TITLE || 'Folio',
-  FOLIO_SITE_URL: required('FOLIO_SITE_URL'),
   CLOUDFLARE_PAGES_PROJECT: required('CLOUDFLARE_PAGES_PROJECT'),
 }
 for (const [name, value] of Object.entries(variables)) {

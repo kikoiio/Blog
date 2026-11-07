@@ -12,7 +12,7 @@ const buildWorker = {
     const source = bucketName === env.SOURCE_BUCKET
     const media = bucketName === env.MEDIA_BUCKET
     const sourceKey = /^sources\/[a-f0-9]{64}$/.test(key) || /^releases\/(latest|[a-f0-9]{64})\.json$/.test(key)
-    const mediaKey = /^images\/v1\/[a-f0-9]{64}\/(2400|640)\.webp$/.test(key) || /^metadata\/v1\/[a-f0-9]{64}\.json$/.test(key)
+    const mediaKey = /^images\/(?:v1\/[a-f0-9]{64}\/(?:2400|640)|v2\/[a-f0-9]{64}\/(?:2400|1600|640))\.webp$/.test(key) || /^metadata\/v[12]\/[a-f0-9]{64}\.json$/.test(key)
     if ((!source || !sourceKey) && (!media || !mediaKey)) return new Response('Not found', { status: 404 })
     const bucket = source ? env.SOURCES : env.MEDIA
     if (['GET', 'HEAD'].includes(request.method)) {

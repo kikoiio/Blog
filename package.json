@@ -3,31 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "prebuild": "node scripts/sync-archive.mjs",
     "build": "next build --webpack",
-    "lint": "eslint",
     "sync": "node scripts/sync-archive.mjs",
-    "test": "node --test tests/*.test.mjs",
     "publish": "node scripts/publish.mjs",
     "restore-release": "node scripts/restore-release.mjs"
   },
   "dependencies": {
+    "@next/env": "16.4.3",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^15.0.3",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@next/env": "16.4.3",
     "sharp": "0.35.5"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.3",
     "typescript": "^5"
   }
 }

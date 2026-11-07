@@ -1,6 +1,8 @@
 export type GalleryPhoto = {
   id: string
   src: string
+  thumbnailSrc?: string
+  sources?: { src: string; width: number; height: number }[]
   alt: string
   width: number
   height: number

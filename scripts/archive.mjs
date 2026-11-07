@@ -3,7 +3,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import sharp from 'sharp'
-import { remotePhotoPublisher } from './media.mjs'
+import { localPhotoPublisher, remotePhotoPublisher } from './media.mjs'
+import { readArticles } from './articles.mjs'
+import { writeArticleAssets } from './article-assets.mjs'
 
 const require = createRequire(import.meta.url)
 const { loadEnvConfig } = require('@next/env')
@@ -98,6 +100,8 @@ export async function syncArchive() {
   const nextCache = {}
   const albums = new Map()
   const expectedMedia = new Set()
+  const publishPhoto = remotePhoto ?? localPhotoPublisher(generatedRoot, mediaRoot, expectedMedia)
+  let articles = []
 
   async function copy(source, relative) {
     const destination = path.join(mediaRoot, relative)
@@ -121,11 +125,10 @@ export async function syncArchive() {
       const source = path.join(picturesRoot, relative)
       const stat = await fs.stat(source)
       const fingerprint = `${source}:${stat.size}:${stat.mtimeMs}`
-      const cached = previousCache[relative]
-      const details = remotePhoto
-        ? await remotePhoto(source, () => readPhoto(source))
-        : cached?.fingerprint === fingerprint ? cached.details : await readPhoto(source)
-      nextCache[relative] = { fingerprint, details }
+      const cacheKey = `pictures/${relative}`
+      const cached = previousCache[cacheKey]
+      const details = await publishPhoto(source, () => readPhoto(source), cached?.fingerprint === fingerprint ? cached.details : undefined)
+      nextCache[cacheKey] = { fingerprint, details }
       const albumId = path.dirname(relative).split(path.sep).join('/')
       if (!albums.has(albumId)) {
         albums.set(albumId, {
@@ -137,21 +140,34 @@ export async function syncArchive() {
       const id = relative.split(path.sep).join('/')
       albums.get(albumId).photos.push({
         id,
-        src: details.src ?? `/media/pictures/${id.split('/').map(encodeURIComponent).join('/')}`,
         alt: `${albums.get(albumId).title} — ${path.parse(relative).name}`,
         ...details,
       })
-      if (!remotePhoto) await copy(source, path.join('pictures', relative))
     }
 
     const blogsRoot = path.join(archiveRoot, 'blogs')
-    for (const relative of await walk(blogsRoot)) {
+    const blogFiles = await walk(blogsRoot)
+    const articleAssets = new Map()
+    for (const relative of blogFiles) {
       if (/\.(md|mdx)$/i.test(relative)) continue
-      await copy(path.join(blogsRoot, relative), path.join('blogs', relative))
+      const source = path.join(blogsRoot, relative)
+      if (imageExtensions.has(path.extname(relative).toLowerCase())) {
+        const stat = await fs.stat(source)
+        const fingerprint = `${source}:${stat.size}:${stat.mtimeMs}`
+        const cacheKey = `blogs/${relative}`
+        const cached = previousCache[cacheKey]
+        const details = await publishPhoto(source, () => readPhoto(source), cached?.fingerprint === fingerprint ? cached.details : undefined)
+        nextCache[cacheKey] = { fingerprint, details }
+        articleAssets.set(relative.split(path.sep).join('/'), details.sources.find(item => Math.max(item.width, item.height) >= 1600)?.src ?? details.src)
+      } else await copy(source, path.join('blogs', relative))
     }
+    articles = await readArticles(blogsRoot, blogFiles, articleAssets)
   }
 
+  const articleRoot = path.join(projectRoot, 'public/articles')
+  const articleAssets = await writeArticleAssets(articles, articleRoot)
   await writeIfChanged(path.join(generatedRoot, 'gallery.ts'), `import type { GalleryAlbum } from '../lib/gallery-types'\n\nexport const albums: GalleryAlbum[] = ${JSON.stringify([...albums.values()], null, 2)}\n`)
+  await writeIfChanged(path.join(generatedRoot, 'articles.ts'), `export const articleIndexSrc = ${JSON.stringify(articleAssets.indexSrc)}\n`)
   await writeIfChanged(path.join(generatedRoot, 'cache.json'), `${JSON.stringify(nextCache)}\n`)
   // Prune only generated media, after the archive has been read successfully.
   const existing = await fs.stat(mediaRoot).catch(error => {
@@ -161,5 +177,9 @@ export async function syncArchive() {
   if (existing) for (const relative of await walk(mediaRoot)) {
     if (!expectedMedia.has(relative)) await fs.unlink(path.join(mediaRoot, relative))
   }
-  return { albums: albums.size, photos: Object.keys(nextCache).length }
+  const expectedArticles = new Set(articleAssets.files)
+  for (const relative of await walk(articleRoot)) {
+    if (!expectedArticles.has(relative)) await fs.unlink(path.join(articleRoot, relative))
+  }
+  return { albums: albums.size, photos: [...albums.values()].reduce((count, album) => count + album.photos.length, 0), articles: articles.length }
 }

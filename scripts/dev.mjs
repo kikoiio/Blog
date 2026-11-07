@@ -16,7 +16,7 @@ async function update() {
     do {
       pending = false
       const result = await syncArchive()
-      console.log(`Folio: synced ${result.photos} pictures`)
+      console.log(`Folio: synced ${result.photos} pictures, ${result.articles} articles`)
     } while (pending && !closing)
   } catch (error) {
     console.error('Folio: archive sync failed', error)

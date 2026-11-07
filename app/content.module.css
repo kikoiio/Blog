@@ -1,0 +1,5 @@
+.shell { width: min(1160px, calc(100% - 96px)); margin: 0 auto; padding: 36px 0 64px; }
+.empty { padding: 48px 0; }
+.empty h1 { font-size: 28px; font-weight: 500; }
+.empty p { color: var(--muted); font-size: 14px; line-height: 1.9; }
+@media (max-width: 760px) { .shell { width: calc(100% - 40px); padding: 16px 0 40px; } }

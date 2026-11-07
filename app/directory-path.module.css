@@ -1,0 +1,33 @@
+.path { display: flex; align-items: center; gap: 2px; min-width: 0; margin: -8px -6px 10px; color: #bfb8c3; }
+.pathButton {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #c4bdc8;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+.breadcrumbs { display: flex; align-items: center; min-width: 0; margin: 0; padding: 0; overflow-x: auto; overscroll-behavior-x: contain; list-style: none; scrollbar-width: none; }
+.breadcrumbs li { display: flex; align-items: center; flex-shrink: 0; gap: 2px; font-size: 12px; }
+.breadcrumbs li > svg { flex-shrink: 0; color: #746c7b; }
+.crumbName, .crumbButton { display: block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crumbName { padding: 12px 8px; color: #f4f1f3; }
+.crumbButton { min-height: 44px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; color: inherit; font-size: inherit; cursor: pointer; transition: background 160ms ease, color 160ms ease; }
+
+.path[data-wrap='true'] { align-items: flex-start; flex-shrink: 0; margin: 0 0 10px; }
+.path[data-wrap='true'] .breadcrumbs { flex: 1; flex-wrap: wrap; overflow: visible; }
+.path[data-wrap='true'] .breadcrumbs li { min-width: 0; max-width: 100%; flex-shrink: 1; }
+.path[data-wrap='true'] .crumbName, .path[data-wrap='true'] .crumbButton {
+  min-width: 0;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

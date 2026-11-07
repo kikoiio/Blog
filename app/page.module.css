@@ -1,38 +1,156 @@
 .stage {
+  --photo-radius: clamp(14px, 1.4vw, 24px);
   position: fixed;
   inset: 0;
   display: grid;
-  padding: 2.6vh 0.55vw 7.4vh;
+  padding: 2.6vh clamp(12px, 1.8vw, 36px) var(--dock-height);
   overflow: hidden;
-  background: #1a1e2b;
+  background: #181818;
   background-image: linear-gradient(150deg, #ffffff05, #00000024);
+  color: #ededed;
   transition: background-color 650ms ease, color 650ms ease;
 }
 
-.panel {
+.panelShell {
   position: relative;
+  isolation: isolate;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
-  border-radius: clamp(22px, 2.1vw, 36px);
-  background-image: linear-gradient(155deg, #ffffff18, #00000012);
+  border-radius: var(--photo-radius);
+  background-color: #e2d8dd;
   transition: background-color 650ms ease;
   box-shadow:
-    0 2px 3px #00000020,
-    0 12px 19px -6px #00000035,
-    0 29px 36px -12px #00000030;
+    0 2px 3px #30212c40,
+    0 12px 14px -4px #392b3559,
+    0 30px 32px -16px #49354170,
+    0 54px 52px -28px #614b5b66;
+}
+
+.panelShell::before {
+  content: '';
+  position: absolute;
+  inset: 6px 0 -9px;
+  border-radius: inherit;
+  background-color: var(--panel-side, #b4a0ad);
+  background-image: linear-gradient(180deg, #ffffff38, #00000018 75%, #00000038);
+  box-shadow:
+    inset 0 -1px 0 #ffffff4d,
+    0 1px 0 #5e45577a,
+    0 5px 7px #24192033;
+  transition: background-color 650ms ease;
+  pointer-events: none;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: inherit;
+  background-color: inherit;
+  background-image: linear-gradient(155deg, #ffffff08, #00000008);
+}
+
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--paint-reveal, 0);
+}
+
+.panel::before {
+  background-color: #e2d8dd;
+  background-image:
+    radial-gradient(ellipse 110% 85% at 18% -35%, #ffffff38, #fff0 72%),
+    radial-gradient(ellipse 85% 120% at 110% 82%, #98748824, #98748800 68%),
+    linear-gradient(118deg,
+      #d4c7cf 0%,
+      #e3d9df 19%,
+      #eee7eb 28%,
+      #ded2d9 39%,
+      #cdbdc8 49%,
+      #dfd2da 62%,
+      #e9e0e5 78%,
+      #d3c4ce 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffffbf,
+    inset 1px 0 0 #ffffff85,
+    inset -1px 0 0 #9f7b9180,
+    inset 0 -1px 0 #916a83bf,
+    inset 0 5px 6px -3px #ffffff80,
+    inset 4px 0 6px -3px #ffffff59,
+    inset -4px 0 6px -3px #b48fa4b3,
+    inset 0 -6px 8px -3px #9771899e;
+}
+
+.panel::after {
+  inset: 1px;
+  border-radius: max(0px, calc(var(--photo-radius) - 1px));
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='flake'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath fill='%23fff' opacity='.16' filter='url(%23flake)' d='M0 0h160v160H0z'/%3E%3C/svg%3E"),
+    linear-gradient(118deg,
+      #fff0 18%,
+      #ffffff08 23%,
+      #ffffff1c 27.5%,
+      #ffffff30 29%,
+      #ffffff10 33%,
+      #fff0 41%),
+    linear-gradient(178deg,
+      #ffffff99 0%,
+      #ffffff20 1.2%,
+      #fff0 4%,
+      #fff0 91%,
+      #ffffff18 97.5%,
+      #ffffff66 99%,
+      #fff0 100%);
+  background-size: 160px 160px, 100% 100%, 100% 100%;
+  background-blend-mode: soft-light, normal, normal;
 }
 
 .gallery {
   position: absolute;
+  z-index: 1;
   inset: clamp(10px, 1.2vw, 18px);
 }
 
+.filmstrip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--photo-radius);
+  perspective: 1200px;
+  touch-action: pan-y pinch-zoom;
+}
+
 .photoFrame {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
   overflow: hidden;
-  border-radius: clamp(14px, 1.4vw, 24px);
+  border-radius: var(--photo-radius);
+  box-shadow:
+    0 3px 6px #2417203d,
+    0 22px 34px -10px #24172047;
+  transform-origin: center;
+}
+
+.photoFrame:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -5px;
+}
+
+.photoFrame[data-visible='false'] { visibility: hidden; }
+
+.filmstrip[data-moving='true'] .photoFrame[data-visible='true'] {
+  will-change: transform;
 }
 
 .photo {
@@ -42,152 +160,36 @@
   object-fit: cover;
 }
 
-.photoControls {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  border: 1px solid #ffffff40;
-  border-radius: 32px;
-  background: var(--controls-background);
-  transition: background-color 650ms ease;
-  color: #fff;
-  backdrop-filter: blur(12px);
-  font: 12px ui-sans-serif, system-ui, sans-serif;
-}
-
-.photoArrow,
-.photoDot {
+.empty {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-
-.photoArrow {
-  background: #ffffff30;
-  font: 24px ui-sans-serif, system-ui, sans-serif;
-}
-
-.photoDots {
-  display: flex;
-}
-
-.photoDot::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.3;
-}
-
-.photoDot[aria-pressed='true']::before {
-  opacity: 1;
-}
-
-.photoArrow:hover,
-.photoDot:hover {
-  background: #ffffff48;
-}
-
-.photoArrow:focus-visible,
-.photoDot:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
-.photoCount {
-  min-width: 32px;
-  font-variant-numeric: tabular-nums;
-}
-
-.albumControl {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  max-width: calc(100% - 32px);
-  border: 1px solid #ffffff40;
-  border-radius: 24px;
-  background: var(--controls-background);
-  color: #fff;
-  backdrop-filter: blur(12px);
-  transition: background-color 650ms ease;
-}
-
-.albumControl select {
-  display: block;
-  max-width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-  color: inherit;
-  font: 12px ui-sans-serif, system-ui, sans-serif;
-  cursor: pointer;
-  color-scheme: dark;
-}
-
-.albumControl select:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-}
-
-.albumControl option {
-  background: #20232b;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.empty {
-  place-self: center;
-  color: #e1e4ea;
+  height: 100%;
+  margin: 0;
+  color: var(--muted);
   font: 14px ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .photoFrame {
+    transform: none !important;
+  }
+
+  .photoFrame[data-active='false'] {
+    display: none;
+  }
+
   .stage,
-  .panel,
-  .photoControls,
-  .albumControl {
+  .panelShell,
+  .panelShell::before {
     transition: none;
   }
 }
 
 @media (max-width: 600px) {
-  .stage {
-    padding: 2.6vh 2vw 7.4vh;
-  }
-
-  .panel {
-    border-radius: 24px;
-  }
-
-  .photoControls {
-    bottom: 12px;
-    gap: 4px;
-    padding-inline: 6px;
-  }
-
-  .photoDot {
-    width: 30px;
-  }
+  .stage { padding: 2.6vh 12px var(--dock-height); }
 }
+
+.readingStage { background-color: var(--page); color: var(--ink); }
+.readingPanel { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--paper); }
+.readingPanel:focus-visible { outline-offset: -5px; }
+@media (prefers-reduced-motion: no-preference) { .readingPanel { scroll-behavior: smooth; } }

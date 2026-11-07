@@ -23,7 +23,7 @@ const mediaWorker = {
   async fetch(request, env) {
     if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 })
     const key = new URL(request.url).pathname.slice(1)
-    if (!/^images\/v1\/[a-f0-9]{64}\/(2400|640)\.webp$/.test(key)) return new Response('Not found', { status: 404 })
+    if (!/^images\/(?:v1\/[a-f0-9]{64}\/(?:2400|640)|v2\/[a-f0-9]{64}\/(?:2400|1600|640))\.webp$/.test(key)) return new Response('Not found', { status: 404 })
     return serveObject(request, env.MEDIA, key)
   },
 }
