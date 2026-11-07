@@ -16,7 +16,7 @@ type PhotographSource = { kind: 'responsive'; image: ReturnType<typeof heroImage
 const clamp = (value: number) => Math.max(0, Math.min(1, value))
 const smooth = (value: number) => value * value * (3 - 2 * value)
 const positions = new Map<string, number>()
-const emptyViewport: GalleryViewport = { width: 0, height: 0, dpr: 1 }
+const emptyViewport: GalleryViewport = { width: 0, height: 0, dpr: 1, fit: 'cover' }
 
 // Keep only a few detached decoded images, including in-flight requests. Live img
 // nodes retain their own resource; eviction never changes a displayed photograph.
@@ -225,7 +225,12 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     const resizeObserver = new ResizeObserver(entries => {
       const bounds = entries[0]?.contentRect
       if (!bounds) return
-      dimensions.current = { width: bounds.width, height: bounds.height, dpr: window.devicePixelRatio || 1 }
+      dimensions.current = {
+        width: bounds.width,
+        height: bounds.height,
+        dpr: window.devicePixelRatio || 1,
+        fit: getComputedStyle(filmstrip).getPropertyValue('--photo-fit').trim() === 'contain' ? 'contain' : 'cover',
+      }
       schedule()
     })
     resizeObserver.observe(filmstrip)

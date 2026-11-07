@@ -1,7 +1,9 @@
 import type { GalleryPhoto } from './gallery-types'
 
+export const MOBILE_LANDSCAPE_QUERY = '(max-width: 1100px) and (max-height: 600px) and (orientation: landscape)'
+
 export type PhotoSource = NonNullable<GalleryPhoto['sources']>[number]
-export type GalleryViewport = { width: number; height: number; dpr: number }
+export type GalleryViewport = { width: number; height: number; dpr: number; fit: 'cover' | 'contain' }
 export type SettledPhoto = { slot: number; revision: number; viewport: GalleryViewport }
 export type FilmstripMotion = {
   position: number
@@ -28,10 +30,12 @@ export function thumbnailSource(photo: GalleryPhoto): string {
 export function settledSource(photo: GalleryPhoto, viewport: GalleryViewport): PhotoSource {
   const sources = photoSources(photo)
   const fullSize = sources.filter(source => Math.max(source.width, source.height) > 640)
-  const candidates = fullSize.length ? fullSize : sources
-  // object-fit: cover can be height-limited: a portrait in a wide panel needs more
-  // source pixels than its displayed height suggests (and vice versa).
-  const requiredWidth = Math.max(viewport.width, viewport.height * photo.width / photo.height) * viewport.dpr
+  const candidates = viewport.fit === 'contain' || !fullSize.length ? sources : fullSize
+  const widthAtHeight = viewport.height * photo.width / photo.height
+  // Contain stops at the first edge; cover needs enough pixels to fill both.
+  const requiredWidth = (viewport.fit === 'contain'
+    ? Math.min(viewport.width, widthAtHeight)
+    : Math.max(viewport.width, widthAtHeight)) * viewport.dpr
   return candidates.find(source => source.width >= requiredWidth)
     ?? candidates.at(-1)
     ?? photo
@@ -39,16 +43,19 @@ export function settledSource(photo: GalleryPhoto, viewport: GalleryViewport): P
 
 export function heroImage(photo: GalleryPhoto) {
   const sources = photoSources(photo)
-  const mainSources = sources.filter(source => Math.max(source.width, source.height) > 640)
-  const candidates = mainSources.length ? mainSources : sources
   const inset = 'clamp(10px, 1.2vw, 18px)'
   const width = `calc(100vw - 2 * clamp(12px, 1.8vw, 36px) - 2 * ${inset})`
   const height = `calc(97.4vh - max(9dvh, calc(82px + env(safe-area-inset-bottom, 0px))) - 2 * ${inset})`
+  const portraitWidth = `min(${width}, calc((${height} - 36px) * ${photo.width / photo.height}))`
+  // Landscape uses the full dynamic viewport, safe-area padding, and two 6px gallery insets.
+  const landscapeWidth = 'calc(100vw - max(12px, env(safe-area-inset-left, 0px)) - max(12px, env(safe-area-inset-right, 0px)) - 12px)'
+  const landscapeHeight = 'calc(100dvh - max(8px, env(safe-area-inset-top, 0px)) - max(28px, calc(12px + env(safe-area-inset-bottom, 0px))) - 12px)'
+  const landscapeImageWidth = `min(${landscapeWidth}, calc(${landscapeHeight} * ${photo.width / photo.height}))`
   return {
     src: photo.src,
-    srcSet: candidates.length > 1 ? candidates.map(source => `${source.src} ${source.width}w`).join(', ') : undefined,
-    // Match the full-size panel and account for cover cropping before hydration.
-    sizes: `max(${width}, calc(${height} * ${photo.width / photo.height}))`,
+    srcSet: sources.length > 1 ? sources.map(source => `${source.src} ${source.width}w`).join(', ') : undefined,
+    // Match mobile containment before hydration; the desktop panel still uses cover.
+    sizes: `(max-width: 760px) and (orientation: portrait) ${portraitWidth}, ${MOBILE_LANDSCAPE_QUERY} ${landscapeImageWidth}, max(${width}, calc(${height} * ${photo.width / photo.height}))`,
   }
 }
 
@@ -70,7 +77,7 @@ export function sameSettlement(left: SettledPhoto | null, right: SettledPhoto | 
   return left === right || (left !== null && right !== null
     && left.slot === right.slot && left.revision === right.revision
     && left.viewport.width === right.viewport.width && left.viewport.height === right.viewport.height
-    && left.viewport.dpr === right.viewport.dpr)
+    && left.viewport.dpr === right.viewport.dpr && left.viewport.fit === right.viewport.fit)
 }
 
 export function sameFrameWindow(
