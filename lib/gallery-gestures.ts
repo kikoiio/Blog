@@ -1,4 +1,4 @@
-export const MOBILE_PORTRAIT_QUERY = '(max-width: 760px) and (orientation: portrait)'
+export const MOBILE_QUERY = '(max-width: 760px)'
 
 export type GalleryAxis = 'horizontal' | 'vertical'
 export type GallerySwipe = { pointerId: number; x: number; y: number; axis: GalleryAxis }

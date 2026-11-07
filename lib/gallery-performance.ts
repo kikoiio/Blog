@@ -1,7 +1,5 @@
 import type { GalleryPhoto } from './gallery-types'
 
-export const MOBILE_LANDSCAPE_QUERY = '(max-width: 1100px) and (max-height: 600px) and (orientation: landscape)'
-
 export type PhotoSource = NonNullable<GalleryPhoto['sources']>[number]
 export type GalleryViewport = { width: number; height: number; dpr: number; fit: 'cover' | 'contain' }
 export type SettledPhoto = { slot: number; revision: number; viewport: GalleryViewport }
@@ -46,16 +44,12 @@ export function heroImage(photo: GalleryPhoto) {
   const inset = 'clamp(10px, 1.2vw, 18px)'
   const width = `calc(100vw - 2 * clamp(12px, 1.8vw, 36px) - 2 * ${inset})`
   const height = `calc(97.4vh - max(9dvh, calc(82px + env(safe-area-inset-bottom, 0px))) - 2 * ${inset})`
-  const portraitWidth = `min(${width}, calc((${height} - 36px) * ${photo.width / photo.height}))`
-  // Landscape uses the full dynamic viewport, safe-area padding, and two 6px gallery insets.
-  const landscapeWidth = 'calc(100vw - max(12px, env(safe-area-inset-left, 0px)) - max(12px, env(safe-area-inset-right, 0px)) - 12px)'
-  const landscapeHeight = 'calc(100dvh - max(8px, env(safe-area-inset-top, 0px)) - max(28px, calc(12px + env(safe-area-inset-bottom, 0px))) - 12px)'
-  const landscapeImageWidth = `min(${landscapeWidth}, calc(${landscapeHeight} * ${photo.width / photo.height}))`
+  const mobileWidth = `min(${width}, calc(${height} * ${photo.width / photo.height}))`
   return {
     src: photo.src,
     srcSet: sources.length > 1 ? sources.map(source => `${source.src} ${source.width}w`).join(', ') : undefined,
     // Match mobile containment before hydration; desktop keeps cover sizing.
-    sizes: `(max-width: 760px) and (orientation: portrait) ${portraitWidth}, ${MOBILE_LANDSCAPE_QUERY} ${landscapeImageWidth}, max(${width}, calc(${height} * ${photo.width / photo.height}))`,
+    sizes: `(max-width: 760px) ${mobileWidth}, max(${width}, calc(${height} * ${photo.width / photo.height}))`,
   }
 }
 

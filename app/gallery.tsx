@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore, t
 import { flushSync } from 'react-dom'
 import type { GalleryAlbum, GalleryPhoto } from '../lib/gallery-types'
 import { filmstripLayout, filmstripTransform } from '../lib/filmstrip-layout.mjs'
-import { MOBILE_PORTRAIT_QUERY, gallerySwipeDirection, type GalleryAxis, type GallerySwipe } from '../lib/gallery-gestures'
+import { MOBILE_QUERY, gallerySwipeDirection, type GalleryAxis, type GallerySwipe } from '../lib/gallery-gestures'
 import { heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
 import { currentAlbum, rememberAlbum, rememberPhoto, subscribeAlbum } from '../lib/gallery-navigation'
 import styles from './page.module.css'
@@ -224,7 +224,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     const resizeObserver = new ResizeObserver(entries => {
       const bounds = entries[0]?.contentRect
       if (!bounds) return
-      axis.current = window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal'
+      axis.current = window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal'
       dimensions.current = {
         width: bounds.width,
         height: bounds.height,
@@ -350,7 +350,7 @@ function AlbumGallery({ album, reading, children }: {
                 if (event.pointerType === 'mouse') return
                 gesture.current = {
                   pointerId: event.pointerId, x: event.clientX, y: event.clientY,
-                  axis: window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal',
+                  axis: window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal',
                 }
               }}
               onPointerCancel={() => {
@@ -366,7 +366,7 @@ function AlbumGallery({ album, reading, children }: {
                 }
                 const direction = gallerySwipeDirection(start, {
                   pointerId: event.pointerId, x: event.clientX, y: event.clientY,
-                  axis: window.matchMedia(MOBILE_PORTRAIT_QUERY).matches ? 'vertical' : 'horizontal',
+                  axis: window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal',
                 })
                 if (direction) {
                   suppressClickUntil.current = performance.now() + 350

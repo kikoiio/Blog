@@ -13,39 +13,6 @@
   pointer-events: none;
 }
 
-.orientationHint {
-  display: none;
-  position: absolute;
-  bottom: calc(var(--dock-height) + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 5px 10px;
-  border: 1px solid #ffffff18;
-  border-radius: 20px;
-  background: #17161bd9;
-  color: #e0d9e2;
-  font-size: 11px;
-  line-height: 16px;
-  white-space: nowrap;
-}
-
-.islandHandle { display: none; }
-
-.orientationPhone { transform-origin: 10px 10px; }
-
-@keyframes rotatePhone {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-90deg); }
-}
-
-@media (max-width: 760px) and (orientation: portrait) {
-  .orientationHint { display: flex; }
-  .orientationPhone { animation: rotatePhone 1.8s ease-in-out infinite; }
-}
-
 .brand {
   border: 0;
   border-radius: 18px;
@@ -182,58 +149,12 @@ span.brand { display: flex; align-items: center; cursor: default; }
 
 .albumCard:active { transform: scale(.98); }
 
-@media (max-width: 1100px) and (max-height: 600px) and (orientation: landscape) {
-  .island {
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    transition:
-      width 420ms var(--island-ease), border-radius 360ms var(--island-ease), border-color 200ms ease,
-      transform 220ms var(--island-ease), opacity 160ms ease, visibility 0s 220ms;
-  }
-  .header[data-revealed='false'] .island {
-    transform: translateY(calc(100% + 24px + env(safe-area-inset-bottom, 0px)));
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .header[data-revealed='true'] .island { transition-delay: 0s; }
-  .islandHandle {
-    position: fixed;
-    bottom: env(safe-area-inset-bottom, 0px);
-    left: 50%;
-    display: grid;
-    place-items: center;
-    width: 88px;
-    height: 44px;
-    padding: 0;
-    border: 0;
-    border-radius: 22px;
-    transform: translateX(-50%);
-    background: transparent;
-    color: #f4f1f3;
-    cursor: pointer;
-    pointer-events: auto;
-    touch-action: none;
-  }
-  .islandHandle span {
-    width: 32px;
-    height: 4px;
-    border-radius: 4px;
-    background: currentColor;
-    box-shadow: 0 1px 4px #0008;
-    pointer-events: none;
-  }
-  .islandHandle:active { background: #17161b80; }
-  .header[data-revealed='true'] .islandHandle { bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
-  .header[data-pinned='true'] .islandHandle { display: none; }
-}
-
 @media (max-width: 540px) {
   .island[data-expanded='true'] { --island-width: 396px; border-radius: 25px; }
   .albumPanel { padding: 16px 12px 10px; }
   .albumGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .orientationPhone { animation: none; transform: rotate(-30deg); }
   .island, .drawer, .albumPanel, .albumCard { transition: none; }
   .albumPanel, .albumCard:active { transform: none; }
 }

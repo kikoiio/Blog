@@ -163,9 +163,11 @@
   border-radius: inherit;
 }
 
-@media (max-width: 760px) and (orientation: portrait),
-  (max-width: 1100px) and (max-height: 600px) and (orientation: landscape) {
-  .filmstrip { --photo-fit: contain; }
+@media (max-width: 760px) {
+  .filmstrip {
+    --photo-fit: contain;
+    touch-action: pan-x pinch-zoom;
+  }
   .photoFrame {
     display: flex;
     align-items: center;
@@ -178,25 +180,6 @@
     max-width: 100%;
     max-height: 100%;
   }
-}
-
-@media (max-width: 760px) and (orientation: portrait) {
-  .gallery { bottom: calc(clamp(10px, 1.2vw, 18px) + 36px); }
-  .filmstrip { touch-action: pan-x pinch-zoom; }
-}
-
-@media (max-width: 1100px) and (max-height: 600px) and (orientation: landscape) {
-  .stage[data-reading='false'] {
-    padding:
-      max(8px, env(safe-area-inset-top, 0px))
-      max(12px, env(safe-area-inset-right, 0px))
-      max(28px, calc(12px + env(safe-area-inset-bottom, 0px)))
-      max(12px, env(safe-area-inset-left, 0px));
-  }
-  .gallery { inset: 6px; }
-  .filmstrip,
-  .photoFrame { border-radius: max(0px, calc(var(--photo-radius) - 6px)); }
-  .photoFrame { box-shadow: none; }
 }
 
 .empty {

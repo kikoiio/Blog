@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import type { GalleryAlbum } from '../lib/gallery-types'
 import type { SiteContact } from '../lib/site-types'
-import { MOBILE_LANDSCAPE_QUERY } from '../lib/gallery-performance'
 import { buildGalleryTree, findGalleryFolder, galleryEntries } from '../lib/gallery-tree.mjs'
 import { changeAlbum, currentAlbum, currentPhoto, subscribeAlbum, subscribePhoto } from '../lib/gallery-navigation'
 import { closeArticle, closeReading, closeWriting, openArticle, toggleArticle, toggleWriting, useReadingView, useWritingView } from '../lib/reading-navigation'
@@ -23,8 +22,6 @@ type IslandStyle = CSSProperties & { '--island-accent': string }
 
 const emptyAlbum = () => ''
 const emptyPhoto = () => null
-const desktopViewport = () => false
-const mobileLandscape = () => window.matchMedia(MOBILE_LANDSCAPE_QUERY).matches
 
 function IslandClock() {
   const [now, setNow] = useState<Date | null>(null)
@@ -50,20 +47,8 @@ export default function SiteHeader({ title, contacts, albums, articleIndexSrc }:
   const view = useReadingView()
   const writing = useWritingView()
   const reading = view.kind !== 'closed'
-  const [revealed, setRevealed] = useState(false)
-  const subscribeLandscape = useCallback((notify: () => void) => {
-    const media = window.matchMedia(MOBILE_LANDSCAPE_QUERY)
-    const change = () => {
-      setRevealed(false)
-      notify()
-    }
-    media.addEventListener('change', change)
-    return () => media.removeEventListener('change', change)
-  }, [])
-  const landscape = useSyncExternalStore(subscribeLandscape, mobileLandscape, desktopViewport)
   const [picker, setPicker] = useState<'unopened' | 'closed' | 'open' | 'contact'>('unopened')
   const closePicker = useCallback(() => {
-    setRevealed(true)
     setPicker(state => state === 'unopened' ? state : 'closed')
     if (writing.kind === 'index') closeWriting()
   }, [writing.kind])
@@ -72,10 +57,6 @@ export default function SiteHeader({ title, contacts, albums, articleIndexSrc }:
   const folder = findGalleryFolder(tree, folderPath) ?? tree
   const entries = galleryEntries(folder)
   const island = useRef<HTMLDivElement>(null)
-  const islandId = useId()
-  const handle = useRef<HTMLButtonElement>(null)
-  const gesture = useRef<{ pointerId: number; x: number; y: number } | null>(null)
-  const suppressHandleClickUntil = useRef(0)
   const grid = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const contactTrigger = useRef<HTMLButtonElement>(null)
@@ -92,29 +73,12 @@ export default function SiteHeader({ title, contacts, albums, articleIndexSrc }:
   const showWriting = writing.kind === 'index' && !showAlbums && !showContact
   const writingDirectory = writing.kind === 'index' ? writing.directory : ''
   const expanded = showAlbums || showContact || showWriting
-  const navigationOpen = revealed || expanded
   const islandStyle: IslandStyle = { '--island-accent': selection?.albumId === album?.id ? selection?.swatch ?? '#775c70' : album?.swatch ?? '#775c70' }
 
   function closeAlbums() {
     closePicker()
     trigger.current?.focus({ preventScroll: true })
   }
-
-  function concealNavigation() {
-    if (island.current?.contains(document.activeElement)) handle.current?.focus({ preventScroll: true })
-    setRevealed(false)
-  }
-
-  useEffect(() => {
-    function cancelMultiTouch(event: PointerEvent) {
-      if (gesture.current && event.pointerType === 'touch' && !event.isPrimary) {
-        gesture.current = null
-        suppressHandleClickUntil.current = Infinity
-      }
-    }
-    document.addEventListener('pointerdown', cancelMultiTouch, true)
-    return () => document.removeEventListener('pointerdown', cancelMultiTouch, true)
-  }, [])
 
   useEffect(() => {
     if (!expanded && !reading) return
@@ -150,61 +114,8 @@ export default function SiteHeader({ title, contacts, albums, articleIndexSrc }:
   }, [showAlbums, showContact, showWriting, expanded, reading, folder.path, closePicker])
 
   return (
-    <header className={styles.header} aria-label={`${title} · 网站管理`} data-revealed={navigationOpen} data-pinned={expanded}
-      onPointerDownCapture={event => {
-        if (event.isPrimary) suppressHandleClickUntil.current = 0
-      }}
-      onClickCapture={event => {
-        if (event.detail > 0 && performance.now() < suppressHandleClickUntil.current) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-      }}
-      onKeyDown={event => {
-        if (event.key === 'Escape' && landscape && revealed && !expanded) {
-          event.preventDefault()
-          event.stopPropagation()
-          concealNavigation()
-        }
-      }}>
-      {album?.cover && !reading && !expanded && <p className={styles.orientationHint} data-orientation-hint>
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect className={styles.orientationPhone} x="6" y="3" width="8" height="14" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M3 7a7 7 0 0 1 9-4M3 7V3m0 4h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        请转动手机
-      </p>}
-      <button ref={handle} type="button" className={styles.islandHandle} data-island-handle
-        aria-label={navigationOpen ? '收起导航' : '展开导航'} aria-expanded={navigationOpen} aria-controls={islandId} disabled={expanded}
-        onPointerDown={event => {
-          if (!landscape || !event.isPrimary || event.button !== 0) { gesture.current = null; return }
-          suppressHandleClickUntil.current = 0
-          gesture.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
-          event.currentTarget.setPointerCapture(event.pointerId)
-        }}
-        onPointerCancel={() => { gesture.current = null }}
-        onLostPointerCapture={() => { gesture.current = null }}
-        onPointerUp={event => {
-          const start = gesture.current
-          gesture.current = null
-          if (!start || start.pointerId !== event.pointerId) return
-          const dx = event.clientX - start.x
-          const dy = event.clientY - start.y
-          suppressHandleClickUntil.current = performance.now() + 350
-          if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) {
-            if (navigationOpen) concealNavigation()
-            else setRevealed(true)
-            return
-          }
-          if (Math.abs(dy) < 24 || Math.abs(dy) <= Math.abs(dx) * 1.2) return
-          if (dy < 0) setRevealed(true)
-          else concealNavigation()
-        }}
-        onClick={event => {
-          if (event.detail > 0 && performance.now() < suppressHandleClickUntil.current) return
-          if (navigationOpen) concealNavigation()
-          else setRevealed(true)
-        }}><span aria-hidden="true" /></button>
-      <div ref={island} id={islandId} className={styles.island} data-navigation-island style={islandStyle} data-expanded={expanded} data-contact={showContact} data-writing={showWriting} data-reading={view.kind === 'article'}
-        inert={landscape && !navigationOpen}
-        onFocusCapture={() => setRevealed(true)}
+    <header className={styles.header} aria-label={`${title} · 网站管理`}>
+      <div ref={island} className={styles.island} data-navigation-island style={islandStyle} data-expanded={expanded} data-contact={showContact} data-writing={showWriting} data-reading={view.kind === 'article'}
         onBlur={event => {
           if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) closePicker()
         }}>
