@@ -31,7 +31,6 @@ jobs:
       FOLIO_MEDIA_BASE_URL: ${{ vars.FOLIO_MEDIA_BASE_URL }}
       FOLIO_BUILD_URL: ${{ vars.FOLIO_BUILD_URL }}
       FOLIO_STORAGE_TOKEN: ${{ secrets.FOLIO_STORAGE_TOKEN }}
-      FOLIO_SITE_TITLE: ${{ vars.FOLIO_SITE_TITLE || 'Folio' }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Check out website source

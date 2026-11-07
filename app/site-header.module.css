@@ -75,6 +75,7 @@
 }
 
 .brand { min-width: 0; }
+span.brand { display: flex; align-items: center; cursor: default; }
 
 .island {
   --island-width: 300px;
@@ -239,13 +240,16 @@
 
 .island[data-contact='true'] { --island-width: 300px; }
 .brand[aria-expanded='true'] { background: #ffffff10; }
+.contactPanel:not([hidden]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .contactLink {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin: 0 auto;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 10px;
+  overflow-wrap: anywhere;
   border: 1px solid #ffffff18;
   border-radius: 14px;
   background: #ffffff06;

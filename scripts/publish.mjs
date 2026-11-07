@@ -5,8 +5,10 @@ import { archiveRoot, projectRoot } from './archive.mjs'
 import { createRelease } from './release.mjs'
 import { cloudflareClient, required } from './cloudflare.mjs'
 import { publishRelease } from './publish-release.mjs'
+import { readSite } from './site-config.mjs'
 
 if (!archiveRoot) throw new Error('Set FOLIO_ARCHIVE_PATH before publishing')
+await readSite(archiveRoot)
 const release = await createRelease(archiveRoot)
 await fs.mkdir(path.join(projectRoot, '.folio'), { recursive: true })
 const manifest = path.join(projectRoot, '.folio/release.json')

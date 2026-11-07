@@ -5,6 +5,7 @@ import path from 'node:path'
 
 const pictureTypes = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif'])
 const blogTypes = new Set([...pictureTypes, '.md', '.mdx', '.svg', '.gif', '.pdf', '.txt'])
+const siteFiles = new Set(['site/config.json', 'site/icon.png'])
 const sort = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
 const hashPattern = /^[a-f0-9]{64}$/
 
@@ -20,6 +21,7 @@ export function revisionFor(files) {
 
 export function validArchivePath(value) {
   if (typeof value !== 'string' || value.includes('\\') || value.includes('\0')) return false
+  if (siteFiles.has(value)) return true
   const parts = value.split('/')
   if (!['blogs', 'pictures'].includes(parts.shift()) || parts.length === 0) return false
   if (parts.some(part => !part || part.startsWith('.'))) return false
@@ -46,12 +48,20 @@ export function validateRelease(value) {
 
 export async function createRelease(root) {
   const files = []
-  async function walk(relative) {
+  async function walk(relative, optional = false) {
+    let directory
+    try {
+      directory = await fs.lstat(path.join(root, relative))
+    } catch (error) {
+      if (optional && error.code === 'ENOENT') return
+      throw error
+    }
+    if (!directory.isDirectory()) return
     const entries = await fs.readdir(path.join(root, relative), { withFileTypes: true })
     for (const entry of entries.sort((a, b) => sort.compare(a.name, b.name))) {
       if (entry.name.startsWith('.')) continue
       const name = `${relative}/${entry.name}`
-      if (entry.isDirectory()) await walk(name)
+      if (entry.isDirectory() && relative !== 'site') await walk(name)
       else if (entry.isFile() && validArchivePath(name)) {
         const source = path.join(root, name)
         const before = await fs.stat(source)
@@ -63,5 +73,6 @@ export async function createRelease(root) {
     }
   }
   for (const directory of ['blogs', 'pictures']) await walk(directory)
+  await walk('site', true)
   return validateRelease({ version: 1, revision: revisionFor(files), files })
 }

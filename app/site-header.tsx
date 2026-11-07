@@ -4,6 +4,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import type { GalleryAlbum } from '../lib/gallery-types'
+import type { SiteContact } from '../lib/site-types'
 import { MOBILE_LANDSCAPE_QUERY } from '../lib/gallery-performance'
 import { buildGalleryTree, findGalleryFolder, galleryEntries } from '../lib/gallery-tree.mjs'
 import { changeAlbum, currentAlbum, currentPhoto, subscribeAlbum, subscribePhoto } from '../lib/gallery-navigation'
@@ -42,7 +43,7 @@ function IslandClock() {
   return <time className={styles.clock} dateTime={now ? time : undefined} aria-label={now ? `本地时间 ${time}` : '本地时间'}>{time}</time>
 }
 
-export default function SiteHeader({ title, albums, articleIndexSrc }: { title: string; albums: NavigationAlbum[]; articleIndexSrc: string }) {
+export default function SiteHeader({ title, contacts, albums, articleIndexSrc }: { title: string; contacts: SiteContact[]; albums: NavigationAlbum[]; articleIndexSrc: string }) {
   const albumId = useSyncExternalStore(subscribeAlbum, currentAlbum, emptyAlbum)
   const selection = useSyncExternalStore(subscribePhoto, currentPhoto, emptyPhoto)
   const album = albums.find(item => item.id === albumId) ?? albums[0]
@@ -87,7 +88,7 @@ export default function SiteHeader({ title, albums, articleIndexSrc }: { title: 
   const selectedEntry = useRef<HTMLButtonElement>(null)
   const panelId = useId()
   const showAlbums = picker === 'open' && !!album
-  const showContact = picker === 'contact'
+  const showContact = picker === 'contact' && contacts.length > 0
   const showWriting = writing.kind === 'index' && !showAlbums && !showContact
   const writingDirectory = writing.kind === 'index' ? writing.directory : ''
   const expanded = showAlbums || showContact || showWriting
@@ -243,22 +244,26 @@ export default function SiteHeader({ title, albums, articleIndexSrc }: { title: 
                 openArticle({ slug })
               }} />}
             </section>
-            <section id={contactPanelId} hidden={!showContact} className={styles.albumPanel} aria-label="联系方式">
-              <a ref={contactLink} className={styles.contactLink} href="https://github.com/kikoiio" target="_blank" rel="noopener noreferrer" aria-label="GitHub：kikoiio（在新标签页打开）">
+            <section id={contactPanelId} hidden={!showContact} className={`${styles.albumPanel} ${styles.contactPanel}`} aria-label="联系方式">
+              {contacts.map((contact, index) => <a key={contact.url} ref={index === 0 ? contactLink : undefined} className={styles.contactLink} href={contact.url}
+                target={contact.url.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer"
+                aria-label={`${contact.label}${contact.url.startsWith('https:') ? '（在新标签页打开）' : ''}`}>
+                {contact.url.startsWith('https://github.com/') ?
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .75a11.25 11.25 0 0 0-3.558 21.923c.563.104.769-.244.769-.542 0-.267-.01-.975-.015-1.913-3.13.68-3.79-1.508-3.79-1.508-.511-1.3-1.25-1.646-1.25-1.646-1.022-.699.077-.685.077-.685 1.13.08 1.725 1.16 1.725 1.16 1.005 1.722 2.636 1.225 3.278.937.102-.728.393-1.225.715-1.507-2.5-.285-5.129-1.25-5.129-5.566 0-1.23.44-2.234 1.16-3.022-.116-.285-.503-1.43.11-2.98 0 0 .945-.303 3.095 1.155a10.8 10.8 0 0 1 5.625 0c2.15-1.458 3.094-1.155 3.094-1.155.614 1.55.227 2.695.111 2.98.722.788 1.158 1.792 1.158 3.022 0 4.327-2.633 5.278-5.141 5.557.404.35.765 1.043.765 2.1 0 1.516-.014 2.739-.014 3.111 0 .3.203.65.774.54A11.25 11.25 0 0 0 12 .75Z" /></svg>
-              </a>
+                  : <span>{contact.label}</span>}
+              </a>)}
             </section>
           </div>
         </div>
 
         <div className={styles.dock}>
           <IslandClock />
-          <button ref={contactTrigger} type="button" className={styles.brand} data-site-brand
+          {contacts.length > 0 ? <button ref={contactTrigger} type="button" className={styles.brand} data-site-brand
             aria-label={`${title} · 联系方式`} aria-expanded={showContact} aria-controls={contactPanelId}
             onClick={() => {
               closeWriting()
               setPicker(state => state === 'contact' ? 'closed' : 'contact')
-            }}>{title}</button>
+            }}>{title}</button> : <span className={styles.brand} data-site-brand>{title}</span>}
           <div className={styles.navigation} role="group" aria-label="浏览方式">
             <button ref={trigger} type="button" aria-label="切换图库" aria-expanded={showAlbums} aria-controls={panelId}
               data-active={!reading} disabled={!album} onClick={() => {

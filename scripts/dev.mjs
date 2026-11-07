@@ -26,7 +26,7 @@ async function update() {
 }
 
 const watcher = archiveRoot ? watch(archiveRoot, { recursive: true }, (_event, filename) => {
-  if (!filename || !/^(blogs|pictures)(\/|\\)/.test(filename)) return
+  if (!filename || !/^(blogs|pictures|site)(\/|\\|$)/.test(filename)) return
   clearTimeout(timer)
   timer = setTimeout(update, 600)
 }) : null

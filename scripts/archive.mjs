@@ -6,6 +6,7 @@ import sharp from 'sharp'
 import { localPhotoPublisher, remotePhotoPublisher } from './media.mjs'
 import { readArticles } from './articles.mjs'
 import { writeArticleAssets } from './article-assets.mjs'
+import { readSite, writeSite } from './site-config.mjs'
 
 const require = createRequire(import.meta.url)
 const { loadEnvConfig } = require('@next/env')
@@ -82,6 +83,7 @@ async function readPhoto(source) {
 }
 
 export async function syncArchive() {
+  const site = await readSite(archiveRoot)
   const remotePhoto = process.env.FOLIO_REMOTE_MEDIA === '1' ? remotePhotoPublisher(generatedRoot) : null
   if (archiveRoot) {
     if (archiveRoot === projectRoot || archiveRoot.startsWith(`${projectRoot}${path.sep}`)) {
@@ -166,6 +168,7 @@ export async function syncArchive() {
 
   const articleRoot = path.join(projectRoot, 'public/articles')
   const articleAssets = await writeArticleAssets(articles, articleRoot)
+  await writeSite(site, projectRoot)
   await writeIfChanged(path.join(generatedRoot, 'gallery.ts'), `import type { GalleryAlbum } from '../lib/gallery-types'\n\nexport const albums: GalleryAlbum[] = ${JSON.stringify([...albums.values()], null, 2)}\n`)
   await writeIfChanged(path.join(generatedRoot, 'articles.ts'), `export const articleIndexSrc = ${JSON.stringify(articleAssets.indexSrc)}\n`)
   await writeIfChanged(path.join(generatedRoot, 'cache.json'), `${JSON.stringify(nextCache)}\n`)

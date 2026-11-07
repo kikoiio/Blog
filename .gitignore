@@ -8,6 +8,8 @@
 /coverage/
 /public/media/
 /public/articles/
+/public/site/
+/public/favicon.ico
 /.folio/
 /.tmp/
 /.wrangler/

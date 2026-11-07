@@ -1,0 +1,8 @@
+{
+  "title": "My Journal",
+  "description": "记录影像、文字与日常。",
+  "contacts": [
+    { "label": "GitHub", "url": "https://github.com/your-name" },
+    { "label": "Email", "url": "mailto:hello@example.com" }
+  ]
+}

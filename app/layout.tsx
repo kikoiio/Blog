@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
+import { site } from '../.folio/site'
 import SkipLink from './skip-link'
 import './globals.css'
 
-const title = process.env.FOLIO_SITE_TITLE || 'Folio'
-
 export const metadata: Metadata = {
-  title: { default: title, template: `%s · ${title}` },
-  description: '用影像和文字，记录值得留下的日常。',
+  title: { default: site.title, template: `%s · ${site.title}` },
+  description: site.description,
+  icons: site.icons,
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
