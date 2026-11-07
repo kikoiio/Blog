@@ -50,11 +50,11 @@ export function heroImage(photo: GalleryPhoto) {
   // Landscape uses the full dynamic viewport, safe-area padding, and two 6px gallery insets.
   const landscapeWidth = 'calc(100vw - max(12px, env(safe-area-inset-left, 0px)) - max(12px, env(safe-area-inset-right, 0px)) - 12px)'
   const landscapeHeight = 'calc(100dvh - max(8px, env(safe-area-inset-top, 0px)) - max(28px, calc(12px + env(safe-area-inset-bottom, 0px))) - 12px)'
-  const landscapeImageWidth = `max(${landscapeWidth}, calc(${landscapeHeight} * ${photo.width / photo.height}))`
+  const landscapeImageWidth = `min(${landscapeWidth}, calc(${landscapeHeight} * ${photo.width / photo.height}))`
   return {
     src: photo.src,
     srcSet: sources.length > 1 ? sources.map(source => `${source.src} ${source.width}w`).join(', ') : undefined,
-    // Match portrait containment and landscape/desktop cover before hydration.
+    // Match mobile containment before hydration; desktop keeps cover sizing.
     sizes: `(max-width: 760px) and (orientation: portrait) ${portraitWidth}, ${MOBILE_LANDSCAPE_QUERY} ${landscapeImageWidth}, max(${width}, calc(${height} * ${photo.width / photo.height}))`,
   }
 }
