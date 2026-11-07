@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore, t
 import { flushSync } from 'react-dom'
 import type { GalleryAlbum, GalleryPhoto } from '../lib/gallery-types'
 import { filmstripLayout, filmstripTransform } from '../lib/filmstrip-layout.mjs'
-import { MOBILE_QUERY, gallerySwipeDirection, type GalleryAxis, type GallerySwipe } from '../lib/gallery-gestures'
+import { MOBILE_QUERY, galleryDragTarget, galleryDragDestination, gallerySwipeDirection, type GalleryAxis, type GallerySwipe, type GalleryDragOrigin } from '../lib/gallery-gestures'
 import { heroImage, photoSources, sameFrameWindow, sameSettlement, requestedPhoto, settledPhoto, settledSource, thumbnailSource, type FilmstripMotion, type GalleryViewport, type SettledPhoto } from '../lib/gallery-performance'
 import { currentAlbum, rememberAlbum, rememberPhoto, subscribeAlbum } from '../lib/gallery-navigation'
 import styles from './page.module.css'
@@ -13,6 +13,7 @@ type PanelStyle = CSSProperties & { '--paint-reveal': number; '--panel-side': st
 type Frame = ReturnType<typeof filmstripLayout>[number]
 type FilmstripView = { frames: Frame[]; activeIndex: number; moving: boolean; settled: SettledPhoto | null; requested: SettledPhoto | null }
 type PhotographSource = { kind: 'responsive'; image: ReturnType<typeof heroImage> } | { kind: 'fixed'; src: string }
+type TouchGesture = GallerySwipe & { kind: 'pending' | 'dragging' }
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value))
 const smooth = (value: number) => value * value * (3 - 2 * value)
@@ -118,6 +119,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
   const nodes = useRef(new Map<number, HTMLAnchorElement>())
   const dimensions = useRef(emptyViewport)
   const axis = useRef<GalleryAxis>('horizontal')
+  const drag = useRef<(GalleryDragOrigin & { selected: number; target: number }) | null>(null)
   const [view, setView] = useState<FilmstripView>(() => ({
     frames: filmstripLayout(initialIndex, 0, count, 0),
     activeIndex: initialIndex,
@@ -217,6 +219,28 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     schedule()
   }, [count, schedule])
 
+  const beginDrag = useCallback(() => {
+    if (count < 2) return
+    const state = motion.current
+    drag.current = { position: state.position, zoom: state.zoom, selected: state.target, target: state.position }
+  }, [count])
+
+  const dragTo = useCallback((distance: number) => {
+    const origin = drag.current
+    if (!origin) return
+    const length = axis.current === 'vertical' ? dimensions.current.height : dimensions.current.width
+    const next = galleryDragTarget(origin, distance, length, count)
+    origin.target = next.target
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) moveTo(next.target, next.zoomTarget)
+  }, [count, moveTo])
+
+  const finishDrag = useCallback((direction: -1 | 0 | 1 = 0) => {
+    const origin = drag.current
+    drag.current = null
+    if (!origin) return
+    moveTo(galleryDragDestination(origin.selected, origin.target, direction, count), 0, true)
+  }, [count, moveTo])
+
   useEffect(() => {
     const element = viewport.current
     const filmstrip = strip.current
@@ -224,7 +248,9 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
     const resizeObserver = new ResizeObserver(entries => {
       const bounds = entries[0]?.contentRect
       if (!bounds) return
-      axis.current = window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal'
+      const nextAxis = window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal'
+      if (axis.current !== nextAxis) finishDrag()
+      axis.current = nextAxis
       dimensions.current = {
         width: bounds.width,
         height: bounds.height,
@@ -266,7 +292,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
       cancelAnimationFrame(state.frame)
       state.frame = 0
     }
-  }, [count, moveTo, schedule])
+  }, [count, moveTo, schedule, finishDrag])
 
   const registerFrame = useCallback((slot: number, node: HTMLAnchorElement | null) => {
     if (!node) { nodes.current.delete(slot); return }
@@ -277,7 +303,7 @@ function useFilmstrip(photos: GalleryPhoto[], initialIndex: number) {
   const isRequested = useCallback((target: SettledPhoto) => sameSettlement(target, requestedPhoto(motion.current, dimensions.current)), [])
   const select = useCallback((index: number) => moveTo(index, 0, true), [moveTo])
   const step = useCallback((direction: number) => moveTo(Math.round(motion.current.target) + direction, 0, true), [moveTo])
-  return { viewport, panel, strip, axis, registerFrame, isRequested, ...view, select, step }
+  return { viewport, panel, strip, axis, registerFrame, isRequested, ...view, select, step, beginDrag, dragTo, finishDrag }
 }
 
 export default function Gallery({ albums, reading, children }: {
@@ -304,20 +330,28 @@ function AlbumGallery({ album, reading, children }: {
 }) {
   const { photos } = album
   const initialIndex = Math.min(positions.get(album.id) ?? 0, photos.length - 1)
-  const { viewport, panel, strip, axis, frames, activeIndex, moving, settled, requested, isRequested, registerFrame, select, step } = useFilmstrip(photos, initialIndex)
-  const gesture = useRef<GallerySwipe | null>(null)
+  const { viewport, panel, strip, axis, frames, activeIndex, moving, settled, requested, isRequested, registerFrame, select, step, beginDrag, dragTo, finishDrag } = useFilmstrip(photos, initialIndex)
+  const gesture = useRef<TouchGesture | null>(null)
   const suppressClickUntil = useRef(0)
   const photo = photos[activeIndex]
+  const cancelGesture = useCallback(() => {
+    gesture.current = null
+    suppressClickUntil.current = performance.now() + 350
+    finishDrag()
+  }, [finishDrag])
   useEffect(() => {
     const cancelMultiTouch = (event: PointerEvent) => {
       if (gesture.current && event.pointerType === 'touch' && !event.isPrimary) {
-        gesture.current = null
+        cancelGesture()
         suppressClickUntil.current = Infinity
       }
     }
     document.addEventListener('pointerdown', cancelMultiTouch, true)
     return () => document.removeEventListener('pointerdown', cancelMultiTouch, true)
-  }, [])
+  }, [cancelGesture])
+  useEffect(() => {
+    if (reading) cancelGesture()
+  }, [reading, cancelGesture])
   useEffect(() => {
     positions.set(album.id, activeIndex)
     rememberAlbum(album.id)
@@ -349,13 +383,32 @@ function AlbumGallery({ album, reading, children }: {
                 suppressClickUntil.current = 0
                 if (event.pointerType === 'mouse') return
                 gesture.current = {
-                  pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+                  kind: 'pending', pointerId: event.pointerId, x: event.clientX, y: event.clientY,
                   axis: window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal',
                 }
               }}
-              onPointerCancel={() => {
-                gesture.current = null
-                suppressClickUntil.current = performance.now() + 350
+              onPointerMove={event => {
+                const start = gesture.current
+                if (!start || start.pointerId !== event.pointerId) return
+                const currentAxis = window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal'
+                if (start.axis !== currentAxis) { cancelGesture(); return }
+                const dx = event.clientX - start.x
+                const dy = event.clientY - start.y
+                const distance = start.axis === 'vertical' ? dy : dx
+                const crossDistance = start.axis === 'vertical' ? dx : dy
+                if (start.kind === 'pending') {
+                  if (Math.hypot(dx, dy) < 10) return
+                  if (Math.abs(distance) <= Math.abs(crossDistance) * 1.2) { cancelGesture(); return }
+                  gesture.current = { ...start, kind: 'dragging' }
+                  beginDrag()
+                  event.currentTarget.setPointerCapture(event.pointerId)
+                }
+                suppressClickUntil.current = Infinity
+                dragTo(-distance)
+              }}
+              onPointerCancel={cancelGesture}
+              onLostPointerCapture={event => {
+                if (event.target === event.currentTarget && gesture.current?.pointerId === event.pointerId) cancelGesture()
               }}
               onPointerUp={event => {
                 const start = gesture.current
@@ -368,7 +421,12 @@ function AlbumGallery({ album, reading, children }: {
                   pointerId: event.pointerId, x: event.clientX, y: event.clientY,
                   axis: window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal',
                 })
-                if (direction) {
+                if (start.kind === 'dragging') {
+                  suppressClickUntil.current = performance.now() + 350
+                  const sameAxis = start.axis === (window.matchMedia(MOBILE_QUERY).matches ? 'vertical' : 'horizontal')
+                  if (sameAxis) dragTo(start.axis === 'vertical' ? start.y - event.clientY : start.x - event.clientX)
+                  finishDrag(direction)
+                } else if (direction) {
                   suppressClickUntil.current = performance.now() + 350
                   step(direction)
                 }

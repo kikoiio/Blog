@@ -55,6 +55,23 @@ jobs:
           FOLIO_REMOTE_MEDIA: '1'
         run: npm run build
 
+      - name: Install browser for gallery interaction checks
+        run: |
+          npm install --prefix "$RUNNER_TEMP/folio-browser" --ignore-scripts --no-audit --no-fund playwright@1.65.0
+          node "$RUNNER_TEMP/folio-browser/node_modules/playwright/cli.js" install --with-deps chromium
+
+      - name: Check mobile gestures and desktop gallery motion
+        run: env -u WAYLAND_DISPLAY node scripts/check-gallery-motion.mjs "$RUNNER_TEMP/folio-browser"
+
+      - name: Save gallery interaction screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gallery-motion
+          path: .tmp/gallery-motion/
+          if-no-files-found: ignore
+          retention-days: 3
+
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
