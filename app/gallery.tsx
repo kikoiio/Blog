@@ -379,6 +379,7 @@ function AlbumGallery({ album, reading, children }: {
           <section className={styles.gallery} aria-label={album.title} aria-roledescription="图片轮播" inert={reading}>
             <div ref={strip} className={styles.filmstrip} data-moving={moving} data-settled={settled !== null}
               onPointerDown={event => {
+                if (gesture.current && gesture.current.pointerId !== event.pointerId) return
                 if (!event.isPrimary || event.button !== 0) return
                 suppressClickUntil.current = 0
                 if (event.pointerType === 'mouse') return
@@ -406,14 +407,16 @@ function AlbumGallery({ album, reading, children }: {
                 suppressClickUntil.current = Infinity
                 dragTo(-distance)
               }}
-              onPointerCancel={cancelGesture}
+              onPointerCancel={event => {
+                if (gesture.current?.pointerId === event.pointerId) cancelGesture()
+              }}
               onLostPointerCapture={event => {
                 if (event.target === event.currentTarget && gesture.current?.pointerId === event.pointerId) cancelGesture()
               }}
               onPointerUp={event => {
                 const start = gesture.current
+                if (!start || start.pointerId !== event.pointerId) return
                 gesture.current = null
-                if (!start) return
                 if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) {
                   suppressClickUntil.current = performance.now() + 350
                 }

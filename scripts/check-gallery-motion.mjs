@@ -46,6 +46,16 @@ try {
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(url)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-moving] > a')].some(frame => frame.style.transform.includes('rotateX(')))
+  await page.evaluate(() => {
+    window.galleryPointerLog = []
+    for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'gotpointercapture', 'lostpointercapture']) {
+      document.addEventListener(type, event => window.galleryPointerLog.push({
+        type, pointerId: event.pointerId, pointerType: event.pointerType, primary: event.isPrimary,
+        button: event.button, x: event.clientX, y: event.clientY,
+        gallery: !!event.target.closest('[data-moving]'), target: event.target.tagName,
+      }), true)
+    }
+  })
   const cdp = await mobile.newCDPSession(page)
   const point = (y, id = 0, x = 195) => ({ x, y, id, radiusX: 4, radiusY: 4, force: 1 })
   const touch = (type, points = []) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points })
@@ -79,12 +89,14 @@ try {
   await drag(650, 450)
   await page.waitForTimeout(250)
   const preview = await state()
+  console.log('Mobile touch preview', JSON.stringify({ ...preview, pointerEvents: await page.evaluate(() => window.galleryPointerLog) }))
   assert(preview.reveal > 0.5, 'Touch movement must reveal the desktop panel treatment before release')
   assert(preview.frames.length > 1, 'Touch movement must show neighbouring photographs')
   assert(preview.frames.every(frame => frame.scale < 0.9 && frame.vertical))
   assert(preview.frames.some(frame => frame.depth < 0), 'Touch movement must preserve the desktop depth effect')
   await page.locator('[data-visible="true"] img').evaluateAll(images => Promise.all(images.map(image => image.decode())))
   await page.screenshot({ path: `${screenshots}/mobile-drag.png` })
+  await page.mouse.click(195, 500)
   await touch('touchEnd')
   await settled(2)
   await page.screenshot({ path: `${screenshots}/mobile-settled.png` })
@@ -111,9 +123,12 @@ try {
   await touch('touchEnd')
   await settled(1)
 
-  await drag(650, 450)
-  await touch('touchEnd')
   await drag(650, 590)
+  await touch('touchEnd')
+  assert.equal((await state()).photo, 1, 'The previous confirmed destination is still animating')
+  await touch('touchStart', [point(650)])
+  await touch('touchMove', [point(630)])
+  assert.equal((await state()).photo, 1, 'Cancel before the animation reaches the confirmed destination')
   await touch('touchCancel')
   await settled(2)
   await drag(450, 650)
